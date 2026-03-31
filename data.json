@@ -6,7 +6,9 @@
       "participant_type": "player",
       "sport": "other",
       "active": true,
-      "participants": [],
+      "participants": [
+        "Ден"
+      ],
       "matches": []
     }
   ],
