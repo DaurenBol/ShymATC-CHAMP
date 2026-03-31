@@ -7,7 +7,8 @@
       "sport": "other",
       "active": true,
       "participants": [
-        "Ден"
+        "Ден",
+        "Бен"
       ],
       "matches": []
     }
