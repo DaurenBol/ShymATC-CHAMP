@@ -36,7 +36,8 @@
       "sport": "football",
       "active": true,
       "participants": [
-        "боба"
+        "боба",
+        "мома"
       ],
       "matches": []
     }
