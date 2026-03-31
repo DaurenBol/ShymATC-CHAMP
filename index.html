@@ -429,7 +429,6 @@ async function loadData() {
     processData(data);
   } catch(e) {
     console.error("Failed to load data:", e);
-    loadDemoData();
   }
   renderTeam(); renderChess(); renderMatches(); renderStats();
   updateHomeHero();
@@ -490,25 +489,7 @@ function processData(data) {
   RECENT = RECENT.slice(0, 5);
 }
 
-function updateHomeHero() {
-  const active = TEAMS.length > 0;
-  // hero updates if needed
-}
-
-function loadDemoData() {
-  TEAMS=[
-    {name:'FC Альфа',  abbr:'А', c:'#e8ff47',bg:'rgba(232,255,71,.13)', p:14,w:10,d:2,l:2,gf:31,ga:12,form:['W','W','D','W','L']},
-    {name:'СК Барс',   abbr:'Б', c:'#47a8ff',bg:'rgba(71,168,255,.13)',  p:14,w:9, d:3,l:2,gf:27,ga:14,form:['W','W','W','D','W']},
-    {name:'ФК Беркут', abbr:'Бк',c:'#ff6b47',bg:'rgba(255,107,71,.13)',  p:14,w:7, d:4,l:3,gf:22,ga:16,form:['D','W','W','L','W']},
-  ];
-  PLAYERS=[
-    {name:'Али К.',  pts:4.5,w:4,d:1,l:0,elo:1920,delta:+45,c:'#e8ff47',bg:'rgba(232,255,71,.13)'},
-    {name:'Данияр С.',pts:4.0,w:3,d:2,l:0,elo:1880,delta:+22,c:'#47a8ff',bg:'rgba(71,168,255,.13)'},
-  ];
-  RECENT=[{home:'FC Альфа',away:'СК Барс',sh:2,sa:1,date:'29 Мар'}];
-  UPCOMING=[{time:'15:00',home:'FC Альфа',away:'ФК Беркут',date:'1 Апр'}];
-  GOALS=[8,12,9,14,11,7,15,10];
-}
+function updateHomeHero() {}
 
 let dark=true;
 function toggleTheme(){
