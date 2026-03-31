@@ -19,6 +19,15 @@
         "/"
       ],
       "matches": []
+    },
+    {
+      "id": "event_002",
+      "name": "PS 2026",
+      "participant_type": "player",
+      "sport": "football",
+      "active": true,
+      "participants": [],
+      "matches": []
     }
   ],
   "admins": [
