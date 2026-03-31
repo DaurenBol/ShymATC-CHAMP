@@ -11,7 +11,9 @@
       "date_end": "Есімхан",
       "rules": "Есімхан",
       "active": true,
-      "participants": [],
+      "participants": [
+        "Есімхан"
+      ],
       "matches": [],
       "created_at": "31.03.2026 12:44"
     }
