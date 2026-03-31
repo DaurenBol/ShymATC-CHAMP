@@ -1,5 +1,21 @@
 {
-  "events": [],
+  "events": [
+    {
+      "id": "ev_001",
+      "name": "FC26 champ",
+      "event_type": "league",
+      "category": "football",
+      "participation_format": "individual",
+      "venue_type": "playstation",
+      "date_start": "Yessimkhan",
+      "date_end": "Akmal",
+      "rules": "Max",
+      "active": true,
+      "participants": [],
+      "matches": [],
+      "created_at": "31.03.2026 12:41"
+    }
+  ],
   "admins": [
     2070550,
     552027474
