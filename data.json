@@ -108,6 +108,14 @@
           "score_away": 3,
           "played": true,
           "date": "31.03.2026"
+        },
+        {
+          "home": "Есімхан",
+          "away": "Алмат",
+          "score_home": 2,
+          "score_away": 0,
+          "played": true,
+          "date": "31.03.2026"
         }
       ],
       "created_at": "31.03.2026 12:44"
