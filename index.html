@@ -231,87 +231,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
   <!-- HOME -->
   <div class="page active" id="page-home">
-    <div class="home-hero">
-      <div class="hero-eyebrow">⚽ Активный турнир</div>
-      <div class="hero-title">Корп. Лига 2026</div>
-      <div class="hero-sub">Шымкент · Круговой · 8 команд</div>
-      <div class="hero-prog-row">
-        <div>
-          <div class="prog-lbl">Туры</div>
-          <div class="prog-val">14/22</div>
-          <div class="prog-bar"><div class="prog-fill" style="width:64%;background:var(--accent)"></div></div>
-        </div>
-        <div>
-          <div class="prog-lbl">Матчи</div>
-          <div class="prog-val">56/88</div>
-          <div class="prog-bar"><div class="prog-fill" style="width:64%;background:var(--accent2)"></div></div>
-        </div>
-        <div>
-          <div class="prog-lbl">Голов</div>
-          <div class="prog-val">148</div>
-          <div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--accent3)"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-lbl">Команд</div>
-        <div class="stat-val">8</div>
-        <div class="stat-sub">в турнире</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-lbl">Лидер</div>
-        <div class="stat-val">FC А</div>
-        <div class="stat-sub">32 очка</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-lbl">Г/матч</div>
-        <div class="stat-val">2.6</div>
-        <div class="stat-sub">среднее</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-lbl">Туров</div>
-        <div class="stat-val">8</div>
-        <div class="stat-sub">до финала</div>
-      </div>
-    </div>
-
+    <div id="home-hero-wrap"></div>
+    <div class="stats-grid" id="home-stats"></div>
     <div class="events-wrap">
       <div class="section-title">Все события</div>
-      <div class="event-card type-football" onclick="goPage('standings')">
-        <div class="ev-icon football">⚽</div>
-        <div class="ev-info">
-          <div class="ev-name">Корп. Лига 2026</div>
-          <div class="ev-meta">8 команд · тур 14/22</div>
-        </div>
-        <div class="ev-right">
-          <div class="badge badge-live">Live</div>
-          <div class="ev-arrow">›</div>
-        </div>
-      </div>
-      <div class="event-card type-chess" onclick="switchToChess()">
-        <div class="ev-icon chess">♟</div>
-        <div class="ev-info">
-          <div class="ev-name">Chess Open 2026</div>
-          <div class="ev-meta">12 игроков · раунд 5/7</div>
-        </div>
-        <div class="ev-right">
-          <div class="badge badge-live">Live</div>
-          <div class="ev-arrow">›</div>
-        </div>
-      </div>
-      <div class="event-card type-tennis">
-        <div class="ev-icon tennis">🎾</div>
-        <div class="ev-info">
-          <div class="ev-name">Tennis Cup 2025</div>
-          <div class="ev-meta">16 игроков · завершён</div>
-        </div>
-        <div class="ev-right">
-          <div class="badge badge-done">Done</div>
-          <div class="ev-arrow">›</div>
-        </div>
-      </div>
+      <div id="events-list"></div>
     </div>
   </div>
 
@@ -319,36 +243,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="page" id="page-standings">
     <div class="standings-wrap">
       <div class="section-title">Таблица</div>
-      <div class="chip-row">
-        <button class="chip active" id="chip-team" onclick="switchType('team',this)">⚽ Футбол</button>
-        <button class="chip" id="chip-chess" onclick="switchType('chess',this)">♟ Шахматы</button>
-      </div>
-
-      <div id="st-team">
-        <div class="table-card">
-          <div class="t-head col-t">
-            <div class="th">#</div><div class="th left">Команда</div>
-            <div class="th">В</div><div class="th">Н</div><div class="th">П</div>
-            <div class="th">±</div><div class="th">Оч</div>
-          </div>
-          <div id="team-rows"></div>
-        </div>
-        <div class="legend">
-          <div class="leg-item"><div class="leg-dot" style="background:var(--accent)"></div>Плей-офф</div>
-          <div class="leg-item"><div class="leg-dot" style="background:var(--accent3)"></div>Вылет</div>
-        </div>
-      </div>
-
-      <div id="st-chess" style="display:none">
-        <div class="table-card">
-          <div class="t-head col-i">
-            <div class="th">#</div><div class="th left">Игрок</div>
-            <div class="th">Оч</div><div class="th">В</div><div class="th">Н</div><div class="th">П</div>
-            <div class="th">ELO Δ</div>
-          </div>
-          <div id="chess-rows"></div>
-        </div>
-      </div>
+      <div class="chip-row" id="standings-chips"></div>
+      <div id="standings-content"></div>
     </div>
   </div>
 
@@ -356,10 +252,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="page" id="page-matches">
     <div class="matches-wrap">
       <div class="section-title">Матчи</div>
-      <div class="ms-lbl">📅 Ближайшие</div>
-      <div id="upcoming"></div>
-      <div class="ms-lbl">🏁 Последние результаты</div>
-      <div id="recent"></div>
+      <div id="matches-content"></div>
     </div>
   </div>
 
@@ -367,19 +260,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="page" id="page-stats">
     <div class="stats-wrap">
       <div class="section-title">Статистика</div>
-      <div class="chart-card">
-        <div class="chart-title">Голы по турам</div>
-        <div class="mini-chart" id="gchart"></div>
-      </div>
-      <div class="card-sec">
-        <div class="cs-title">🥅 Бомбардиры</div>
-        <div id="scorers"></div>
-      </div>
-      <div class="card-sec">
-        <div class="cs-title">♟ Рейтинг ELO — Chess Open</div>
-        <div id="elo-list"></div>
-      </div>
-
+      <div id="stats-content"></div>
       <div style="text-align:center;padding:28px 0 10px;">
         <div style="display:inline-flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;transition:color .3s;">
           <span style="width:24px;height:1px;background:var(--border2);display:inline-block;"></span>
@@ -387,7 +268,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           <span style="width:24px;height:1px;background:var(--border2);display:inline-block;"></span>
         </div>
       </div>
-
     </div>
   </div>
 
@@ -415,82 +295,292 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <script>
 const DATA_URL = "https://daurenbol.github.io/ShymATC-CHAMP/data.json";
 
-let TEAMS = [];
-let PLAYERS = [];
-let RECENT = [];
-let UPCOMING = [];
-let SCORERS = [];
-let GOALS = [];
+const SPORT_ICONS = {
+  football:'⚽', efootball:'🎮', chess:'♟', tennis:'🎾',
+  basketball:'🏀', ufc:'🥊', business:'💼', education:'🎓', other:'🏆'
+};
+const VENUE_ICONS = {
+  offline:'📍', online:'🌐', playstation:'🎮', pc:'💻',
+  xbox:'🎯', mobile:'📱', telegram:'✈️', zoom:'📹', other_venue:'🔧'
+};
+const TYPE_LABELS = {
+  tournament:'Турнир', league:'Лига', championship:'Чемпионат',
+  cup:'Кубок', single:'Разовое', meetup:'Встреча',
+  training:'Тренировка', registration:'Регистрация', other:'Событие'
+};
+const COLORS = ['#e8ff47','#47a8ff','#ff6b47','#ffd700','#a78bfa','#34d399','#f87171','#fb923c'];
+const BGS = ['rgba(232,255,71,.13)','rgba(71,168,255,.13)','rgba(255,107,71,.13)','rgba(255,215,0,.13)','rgba(167,139,250,.13)','rgba(52,211,153,.13)','rgba(248,113,113,.13)','rgba(251,146,60,.13)'];
+
+let RAW_DATA = null;
+let CURRENT_EVENT_ID = null;
+
+function ini(s){ return s.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase(); }
+function medal(i){ return i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1; }
 
 async function loadData() {
   try {
     const r = await fetch(DATA_URL + "?t=" + Date.now());
-    const data = await r.json();
-    processData(data);
+    RAW_DATA = await r.json();
   } catch(e) {
-    console.error("Failed to load data:", e);
+    console.error("Failed to load:", e);
+    RAW_DATA = {events:[], admins:[]};
   }
-  renderTeam(); renderChess(); renderMatches(); renderStats();
-  updateHomeHero();
+  renderAll();
 }
 
-function processData(data) {
-  TEAMS = []; PLAYERS = []; RECENT = []; UPCOMING = []; SCORERS = []; GOALS = [];
-  const events = data.events || [];
-  const active = events.filter(e => e.active);
-
-  active.forEach(ev => {
-    if (ev.participant_type === "player" && ev.sport !== "football" && ev.sport !== "fifa") {
-      // Individual (chess etc)
-      ev.participants.forEach((p, i) => {
-        const colors = ['#e8ff47','#47a8ff','#ff6b47','#ffd700','#a78bfa','#34d399'];
-        const bgs = ['rgba(232,255,71,.13)','rgba(71,168,255,.13)','rgba(255,107,71,.13)','rgba(255,215,0,.13)','rgba(167,139,250,.13)','rgba(52,211,153,.13)'];
-        PLAYERS.push({name: p, pts: 0, w: 0, d: 0, l: 0, elo: 1500, delta: 0, c: colors[i % colors.length], bg: bgs[i % bgs.length]});
-      });
-      ev.matches.filter(m => m.played).forEach(m => {
-        const ph = PLAYERS.find(p => p.name === m.home);
-        const pa = PLAYERS.find(p => p.name === m.away);
-        if (ph && pa) {
-          if (m.score_home > m.score_away) { ph.w++; pa.l++; ph.pts += 1; }
-          else if (m.score_home < m.score_away) { pa.w++; ph.l++; pa.pts += 1; }
-          else { ph.d++; pa.d++; ph.pts += 0.5; pa.pts += 0.5; }
-        }
-      });
-    } else {
-      // Team or FIFA (players as teams)
-      const colors = ['#e8ff47','#47a8ff','#ff6b47','#ffd700','#a78bfa','#34d399','#f87171','#fb923c'];
-      const bgs = ['rgba(232,255,71,.13)','rgba(71,168,255,.13)','rgba(255,107,71,.13)','rgba(255,215,0,.13)','rgba(167,139,250,.13)','rgba(52,211,153,.13)','rgba(248,113,113,.13)','rgba(251,146,60,.13)'];
-      const standings = {};
-      ev.participants.forEach((p, i) => {
-        standings[p] = {name: p, abbr: p.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase(), c: colors[i % colors.length], bg: bgs[i % bgs.length], p:0, w:0, d:0, l:0, gf:0, ga:0, form:[]};
-      });
-      ev.matches.filter(m => m.played).forEach(m => {
-        RECENT.unshift({home: m.home, away: m.away, sh: m.score_home, sa: m.score_away, date: m.date || ''});
-        if (standings[m.home] && standings[m.away]) {
-          standings[m.home].p++; standings[m.away].p++;
-          standings[m.home].gf += m.score_home; standings[m.home].ga += m.score_away;
-          standings[m.away].gf += m.score_away; standings[m.away].ga += m.score_home;
-          if (m.score_home > m.score_away) {
-            standings[m.home].w++; standings[m.away].l++;
-            standings[m.home].form.push('W'); standings[m.away].form.push('L');
-          } else if (m.score_home < m.score_away) {
-            standings[m.away].w++; standings[m.home].l++;
-            standings[m.home].form.push('L'); standings[m.away].form.push('W');
-          } else {
-            standings[m.home].d++; standings[m.away].d++;
-            standings[m.home].form.push('D'); standings[m.away].form.push('D');
-          }
-        }
-      });
-      TEAMS = Object.values(standings);
-      GOALS = ev.matches.filter(m=>m.played).map(m => m.score_home + m.score_away);
-    }
+function calcStandings(event) {
+  const st = {};
+  event.participants.forEach(p => { st[p] = {name:p,p:0,w:0,d:0,l:0,gf:0,ga:0}; });
+  (event.matches||[]).filter(m=>m.played).forEach(m => {
+    const {home:h, away:a, score_home:sh, score_away:sa} = m;
+    [[h,sh,sa],[a,sa,sh]].forEach(([name,gf,ga]) => {
+      if(st[name]){st[name].p++;st[name].gf+=gf;st[name].ga+=ga;}
+    });
+    if(sh>sa){if(st[h])st[h].w++;if(st[a])st[a].l++;}
+    else if(sh<sa){if(st[a])st[a].w++;if(st[h])st[h].l++;}
+    else{if(st[h])st[h].d++;if(st[a])st[a].d++;}
   });
-  RECENT = RECENT.slice(0, 5);
+  return Object.values(st).sort((a,b)=>(b.w*3+b.d)-(a.w*3+a.d)||(b.gf-b.ga)-(a.gf-a.ga));
 }
 
-function updateHomeHero() {}
+function renderAll() {
+  if(!RAW_DATA) return;
+  renderHome();
+  renderStandings();
+  renderMatches();
+  renderStats();
+}
 
+// ── HOME ──
+function renderHome() {
+  const events = RAW_DATA.events || [];
+  const active = events.filter(e=>e.active);
+  const first = active[0];
+
+  // Hero
+  const heroWrap = document.getElementById('home-hero-wrap');
+  if(first) {
+    const mp = (first.matches||[]).filter(m=>m.played).length;
+    const icon = SPORT_ICONS[first.category] || '🏆';
+    const venue = VENUE_ICONS[first.venue_type] || '📍';
+    const typeLabel = TYPE_LABELS[first.event_type] || 'Событие';
+    heroWrap.innerHTML = `
+    <div class="home-hero">
+      <div class="hero-eyebrow">${icon} ${typeLabel}</div>
+      <div class="hero-title">${first.name}</div>
+      <div class="hero-sub">${venue} ${first.venue_type||''} · ${first.participants.length} участников</div>
+      <div class="hero-prog-row">
+        <div>
+          <div class="prog-lbl">Участников</div>
+          <div class="prog-val">${first.participants.length}</div>
+          <div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--accent)"></div></div>
+        </div>
+        <div>
+          <div class="prog-lbl">Матчей</div>
+          <div class="prog-val">${mp}</div>
+          <div class="prog-bar"><div class="prog-fill" style="width:${mp>0?Math.min(mp*10,100):5}%;background:var(--accent2)"></div></div>
+        </div>
+        <div>
+          <div class="prog-lbl">Событий</div>
+          <div class="prog-val">${active.length}</div>
+          <div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--accent3)"></div></div>
+        </div>
+      </div>
+    </div>`;
+  } else {
+    heroWrap.innerHTML = `<div class="home-hero"><div class="hero-eyebrow">Нет активных событий</div><div class="hero-title">ShymATC-CHAMP</div><div class="hero-sub">Создай первое событие через бота</div></div>`;
+  }
+
+  // Stats cards
+  const statsEl = document.getElementById('home-stats');
+  const totalMatches = events.reduce((s,e)=>s+(e.matches||[]).filter(m=>m.played).length,0);
+  const totalParticipants = [...new Set(events.flatMap(e=>e.participants||[]))].length;
+  const leader = first && first.participants.length > 0 ? (() => {
+    const rows = calcStandings(first);
+    return rows[0] ? rows[0].name.split(' ')[0] : '—';
+  })() : '—';
+  statsEl.innerHTML = `
+    <div class="stat-card"><div class="stat-lbl">Событий</div><div class="stat-val">${events.length}</div><div class="stat-sub">всего</div></div>
+    <div class="stat-card"><div class="stat-lbl">Лидер</div><div class="stat-val" style="font-size:22px;padding-top:4px">${leader}</div><div class="stat-sub">текущий</div></div>
+    <div class="stat-card"><div class="stat-lbl">Матчей</div><div class="stat-val">${totalMatches}</div><div class="stat-sub">сыграно</div></div>
+    <div class="stat-card"><div class="stat-lbl">Участников</div><div class="stat-val">${totalParticipants}</div><div class="stat-sub">уникальных</div></div>`;
+
+  // Events list
+  const listEl = document.getElementById('events-list');
+  if(!events.length) {
+    listEl.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">Событий нет — создай через бота</div>`;
+    return;
+  }
+  listEl.innerHTML = events.map((e,i) => {
+    const icon = SPORT_ICONS[e.category] || '🏆';
+    const mp = (e.matches||[]).filter(m=>m.played).length;
+    const badge = e.active
+      ? `<div class="badge badge-live">Live</div>`
+      : `<div class="badge badge-done">Done</div>`;
+    return `<div class="event-card" style="border-left-color:${COLORS[i%COLORS.length]}" onclick="selectEvent('${e.id}')">
+      <div class="ev-icon" style="background:${BGS[i%BGS.length]};font-size:22px;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${icon}</div>
+      <div class="ev-info">
+        <div class="ev-name">${e.name}</div>
+        <div class="ev-meta">${e.participants.length} уч. · ${mp} матчей · ${TYPE_LABELS[e.event_type]||''}</div>
+      </div>
+      <div class="ev-right">${badge}<div class="ev-arrow">›</div></div>
+    </div>`;
+  }).join('');
+}
+
+function selectEvent(id) {
+  CURRENT_EVENT_ID = id;
+  goPage('standings');
+  renderStandings();
+}
+
+// ── STANDINGS ──
+function renderStandings() {
+  const events = (RAW_DATA?.events||[]).filter(e=>e.active);
+  const chips = document.getElementById('standings-chips');
+  const content = document.getElementById('standings-content');
+
+  if(!events.length) {
+    chips.innerHTML = '';
+    content.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">Нет активных событий</div>`;
+    return;
+  }
+
+  if(!CURRENT_EVENT_ID || !events.find(e=>e.id===CURRENT_EVENT_ID)) {
+    CURRENT_EVENT_ID = events[0].id;
+  }
+
+  chips.innerHTML = events.map((e,i) => {
+    const icon = SPORT_ICONS[e.category] || '🏆';
+    const active = e.id === CURRENT_EVENT_ID ? 'active' : '';
+    return `<button class="chip ${active}" onclick="selectChip('${e.id}',this)">${icon} ${e.name}</button>`;
+  }).join('');
+
+  const ev = events.find(e=>e.id===CURRENT_EVENT_ID) || events[0];
+  renderEventTable(ev, content);
+}
+
+function selectChip(id, btn) {
+  CURRENT_EVENT_ID = id;
+  document.querySelectorAll('#standings-chips .chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  const ev = (RAW_DATA?.events||[]).find(e=>e.id===id);
+  if(ev) renderEventTable(ev, document.getElementById('standings-content'));
+}
+
+function renderEventTable(ev, container) {
+  const rows = calcStandings(ev);
+  if(!rows.length) {
+    container.innerHTML = `<div style="padding:32px;text-align:center;color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">Участников нет</div>`;
+    return;
+  }
+  const rowsHtml = rows.map((r,i) => {
+    const pts = r.w*3+r.d;
+    const gd = r.gf-r.ga;
+    const zc = i<Math.ceil(rows.length/2) ? 'var(--accent)' : i>=rows.length-Math.floor(rows.length/4) ? 'var(--accent3)' : 'transparent';
+    const gdCls = gd>=0 ? 'gp' : 'gn';
+    const abbr = ini(r.name);
+    const c = COLORS[rows.indexOf(r)%COLORS.length];
+    const bg = BGS[rows.indexOf(r)%BGS.length];
+    return `<div class="t-row col-t">
+      <div class="zone-line" style="background:${zc}"></div>
+      <div class="rk" style="color:${i<3?c:'var(--text3)'}">${medal(i)}</div>
+      <div class="team-c"><div class="t-ava" style="background:${bg};color:${c}">${abbr}</div><div class="t-nm">${r.name}</div></div>
+      <div class="cn" style="color:var(--accent)">${r.w}</div>
+      <div class="cn">${r.d}</div>
+      <div class="cn" style="color:var(--accent3)">${r.l}</div>
+      <div class="cn ${gdCls}">${gd>=0?'+'+gd:gd}</div>
+      <div class="cp">${pts}</div>
+    </div>`;
+  }).join('');
+  container.innerHTML = `
+    <div class="table-card">
+      <div class="t-head col-t">
+        <div class="th">#</div><div class="th left">Участник</div>
+        <div class="th">В</div><div class="th">Н</div><div class="th">П</div>
+        <div class="th">±</div><div class="th">Оч</div>
+      </div>
+      ${rowsHtml}
+    </div>
+    <div class="legend" style="margin-top:10px">
+      <div class="leg-item"><div class="leg-dot" style="background:var(--accent)"></div>Топ</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--accent3)"></div>Низ</div>
+    </div>`;
+}
+
+// ── MATCHES ──
+function renderMatches() {
+  const events = RAW_DATA?.events || [];
+  const content = document.getElementById('matches-content');
+  const allMatches = [];
+  events.forEach(ev => {
+    (ev.matches||[]).filter(m=>m.played).forEach(m => allMatches.unshift({...m, eventName: ev.name}));
+  });
+  if(!allMatches.length) {
+    content.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">Матчей пока нет</div>`;
+    return;
+  }
+  content.innerHTML = `<div class="ms-lbl">🏁 Последние результаты</div>` +
+    allMatches.slice(0,10).map(m => {
+      const hw=m.score_home>m.score_away, aw=m.score_away>m.score_home;
+      return `<div class="match-card">
+        <div class="m-date">${m.date||''} · ${m.eventName}</div>
+        <div class="m-body">
+          <div class="m-team m-home ${hw?'mw':'ml'}">${m.home}</div>
+          <div class="m-score">${m.score_home} : ${m.score_away}</div>
+          <div class="m-team m-away ${aw?'mw':'ml'}">${m.away}</div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+// ── STATS ──
+function renderStats() {
+  const events = RAW_DATA?.events || [];
+  const content = document.getElementById('stats-content');
+  const active = events.filter(e=>e.active);
+  if(!active.length) {
+    content.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">Нет данных</div>`;
+    return;
+  }
+  let html = '';
+  active.forEach(ev => {
+    const rows = calcStandings(ev);
+    if(!rows.length) return;
+    const goals = (ev.matches||[]).filter(m=>m.played).map(m=>m.score_home+m.score_away);
+    const icon = SPORT_ICONS[ev.category]||'🏆';
+    // Goals chart
+    if(goals.length > 0) {
+      const mx = Math.max(...goals, 1);
+      html += `<div class="chart-card">
+        <div class="chart-title">${icon} ${ev.name} — голы по матчам</div>
+        <div class="mini-chart">${goals.map((g,i)=>`
+          <div class="bc">
+            <div class="bar" style="height:${Math.round(g/mx*48)}px;background:${i===goals.length-1?'var(--accent)':'rgba(120,120,160,.35)'}"></div>
+            <div class="blbl">${i+1}</div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }
+    // Top scorers (by wins)
+    html += `<div class="card-sec">
+      <div class="cs-title">${icon} ${ev.name} — таблица</div>
+      <div>${rows.slice(0,5).map((r,i)=>{
+        const pts=r.w*3+r.d;
+        const c=COLORS[i%COLORS.length], bg=BGS[i%BGS.length];
+        return `<div class="sc-row">
+          <div class="sc-rk">${medal(i)}</div>
+          <div class="sc-av" style="background:${bg};color:${c}">${ini(r.name)}</div>
+          <div class="sc-inf"><div class="sc-nm">${r.name}</div><div class="sc-tm">${r.w}П · ${r.d}Н · ${r.l}Пр</div></div>
+          <div class="sc-g">${pts}</div>
+        </div>`;}).join('')}
+      </div>
+    </div>`;
+  });
+  content.innerHTML = html || `<div style="padding:40px;text-align:center;color:var(--text3);">Нет данных</div>`;
+}
+
+// ── NAVIGATION ──
 let dark=true;
 function toggleTheme(){
   dark=!dark;
@@ -504,115 +594,6 @@ function goPage(name){
   document.getElementById('page-'+name).classList.add('active');
   document.getElementById('nav-'+name).classList.add('active');
   document.getElementById('scroll-root').scrollTop=0;
-}
-
-function switchToChess(){
-  goPage('standings');
-  switchType('chess',document.getElementById('chip-chess'));
-}
-
-function switchType(t,btn){
-  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('st-team').style.display=t==='team'?'':'none';
-  document.getElementById('st-chess').style.display=t==='chess'?'':'none';
-}
-
-function ini(s){return s.split(' ').map(n=>n[0]).join('');}
-function medal(i){return i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;}
-
-function renderTeam(){
-  const s=[...TEAMS].sort((a,b)=>{
-    const pa=a.w*3+a.d,pb=b.w*3+b.d;
-    return pa!==pb?pb-pa:(b.gf-b.ga)-(a.gf-a.ga);
-  });
-  document.getElementById('team-rows').innerHTML=s.map((t,i)=>{
-    const pts=t.w*3+t.d,gd=t.gf-t.ga,rank=i+1;
-    const zc=rank<=4?'var(--accent)':rank>=7?'var(--accent3)':'transparent';
-    const gdCls=gd>=0?'gp':'gn',gdStr=gd>=0?'+'+gd:gd;
-    const fh=t.form.slice(-3).map(f=>`<div class="fd ${f==='W'?'fw':f==='D'?'fdraw':'fl'}">${f}</div>`).join('');
-    return`<div class="t-row col-t">
-      <div class="zone-line" style="background:${zc}"></div>
-      <div class="rk" style="color:${rank<=3?t.c:'var(--text3)'}">${medal(i)}</div>
-      <div class="team-c"><div class="t-ava" style="background:${t.bg};color:${t.c}">${t.abbr}</div><div class="t-nm">${t.name}</div></div>
-      <div class="cn" style="color:var(--accent)">${t.w}</div>
-      <div class="cn">${t.d}</div>
-      <div class="cn" style="color:var(--accent3)">${t.l}</div>
-      <div class="cn ${gdCls}">${gdStr}</div>
-      <div class="cp">${pts}</div>
-    </div>`;
-  }).join('');
-}
-
-function renderChess(){
-  document.getElementById('chess-rows').innerHTML=PLAYERS.map((p,i)=>{
-    const dc=p.delta>=0?'du':'dd',ds=p.delta>0?'▲+'+p.delta:'▼'+p.delta;
-    return`<div class="t-row col-i">
-      <div class="rk" style="color:${i<3?p.c:'var(--text3)'}">${medal(i)}</div>
-      <div class="elo-p"><div class="elo-av" style="background:${p.bg};color:${p.c}">${ini(p.name)}</div><div class="elo-nm">${p.name}</div></div>
-      <div class="cp" style="color:${p.c}">${p.pts}</div>
-      <div class="cn" style="color:var(--accent)">${p.w}</div>
-      <div class="cn">${p.d}</div>
-      <div class="cn" style="color:var(--accent3)">${p.l}</div>
-      <div class="elo-d ${dc}">${ds}</div>
-    </div>`;
-  }).join('');
-}
-
-function renderMatches(){
-  document.getElementById('upcoming').innerHTML=UPCOMING.map(m=>`
-    <div class="upc-card">
-      <div class="upc-time">🕐 ${m.time} · ${m.date}</div>
-      <div class="upc-teams">
-        <div class="upc-team upc-h">${m.home}</div>
-        <div class="vs-b">vs</div>
-        <div class="upc-team upc-a">${m.away}</div>
-      </div>
-    </div>`).join('');
-  document.getElementById('recent').innerHTML=RECENT.map(m=>{
-    const hw=m.sh>m.sa,aw=m.sa>m.sh;
-    return`<div class="match-card">
-      <div class="m-date">${m.date}</div>
-      <div class="m-body">
-        <div class="m-team m-home ${hw?'mw':'ml'}">${m.home}</div>
-        <div class="m-score">${m.sh} : ${m.sa}</div>
-        <div class="m-team m-away ${aw?'mw':'ml'}">${m.away}</div>
-      </div>
-    </div>`;}).join('');
-}
-
-function renderStats(){
-  const mx=Math.max(...GOALS);
-  document.getElementById('gchart').innerHTML=GOALS.map((g,i)=>`
-    <div class="bc">
-      <div class="bar" style="height:${Math.round(g/mx*48)}px;background:${i===GOALS.length-1?'var(--accent)':'rgba(120,120,160,.35)'}"></div>
-      <div class="blbl">${i+1}</div>
-    </div>`).join('');
-
-  document.getElementById('scorers').innerHTML=SCORERS.map((s,i)=>`
-    <div class="sc-row">
-      <div class="sc-rk">${i+1}</div>
-      <div class="sc-av" style="background:${s.bg};color:${s.c}">${ini(s.name)}</div>
-      <div class="sc-inf"><div class="sc-nm">${s.name}</div><div class="sc-tm">${s.team}</div></div>
-      <div class="sc-g">${s.g}</div>
-    </div>`).join('');
-
-  const mxe=Math.max(...PLAYERS.map(p=>p.elo));
-  document.getElementById('elo-list').innerHTML=PLAYERS.map((p,i)=>{
-    const pct=Math.round(p.elo/mxe*100);
-    const dc=p.delta>=0?'du':'dd',ds=p.delta>0?'▲+'+p.delta:'▼'+p.delta;
-    return`<div class="elo-row">
-      <div class="rk" style="color:${i<3?p.c:'var(--text3)'}">${medal(i)}</div>
-      <div class="elo-p">
-        <div class="elo-av" style="background:${p.bg};color:${p.c}">${ini(p.name)}</div>
-        <div>
-          <div class="elo-nm">${p.name}</div>
-          <div style="height:3px;background:var(--border);border-radius:2px;margin-top:4px;width:80px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${p.c};border-radius:2px"></div></div>
-        </div>
-      </div>
-      <div style="font-family:'DM Mono',monospace;font-size:14px;text-align:right;color:var(--text2)">${p.elo}</div>
-      <div class="elo-d ${dc}">${ds}</div>
-    </div>`;}).join('');
 }
 
 loadData();
