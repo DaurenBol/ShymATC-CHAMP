@@ -19,7 +19,16 @@
         "Дас",
         "Дав"
       ],
-      "matches": [],
+      "matches": [
+        {
+          "home": "Дам",
+          "away": "Дин",
+          "score_home": 6,
+          "score_away": 8,
+          "played": true,
+          "date": "31.03.2026"
+        }
+      ],
       "created_at": "31.03.2026 12:05"
     }
   ],
