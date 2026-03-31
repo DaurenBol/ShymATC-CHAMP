@@ -28,6 +28,15 @@
       "active": true,
       "participants": [],
       "matches": []
+    },
+    {
+      "id": "event_003",
+      "name": "FIFA 2026",
+      "participant_type": "player",
+      "sport": "football",
+      "active": true,
+      "participants": [],
+      "matches": []
     }
   ],
   "admins": [
