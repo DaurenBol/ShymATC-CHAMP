@@ -128,8 +128,8 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     adm = is_admin(update.effective_user.id, data)
     name = update.effective_user.first_name or "друг"
     await update.message.reply_text(
-        f"👋 Привет, *{name}*!\n\n🏆 *ShymATC\\-CHAMP*",
-        parse_mode="MarkdownV2",
+        f"👋 Привет, *{name}*!\n\n🏆 *ShymATC-CHAMP*\nУниверсальная система событий",
+        parse_mode="Markdown",
         reply_markup=main_menu_kb(adm)
     )
 
