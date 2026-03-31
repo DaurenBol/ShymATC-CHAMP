@@ -1,24 +1,5 @@
 {
-  "events": [
-    {
-      "id": "event_003",
-      "name": "FIFA 2026",
-      "participant_type": "player",
-      "sport": "football",
-      "active": true,
-      "participants": [
-        "боба",
-        "мома",
-        "дода",
-        "лола",
-        "папа",
-        "мама",
-        "гана",
-        "5:7"
-      ],
-      "matches": []
-    }
-  ],
+  "events": [],
   "admins": [
     2070550
   ]
