@@ -1,54 +1,5 @@
 {
-  "events": [
-    {
-      "id": "ev_001",
-      "name": "Championship FC26",
-      "event_type": "league",
-      "category": "football",
-      "participation_format": "individual",
-      "venue_type": "playstation",
-      "date_start": "Максим",
-      "date_end": "Акмаль",
-      "rules": "Али",
-      "active": true,
-      "participants": [
-        "Есімхан",
-        "Абылай",
-        "Азиз",
-        "Мақсат С",
-        "Мақсат метео",
-        "Ибрагим",
-        "Бақберген",
-        "Максим",
-        "Жансерік",
-        "Қазбек",
-        "Алмат",
-        "Мейірлан",
-        "Ерлан",
-        "Акмаль",
-        "Али"
-      ],
-      "matches": [
-        {
-          "home": "Есімхан",
-          "away": "Акмаль",
-          "score_home": 4,
-          "score_away": 0,
-          "played": true,
-          "date": "31.03.2026"
-        },
-        {
-          "home": "Есімхан",
-          "away": "Акмаль",
-          "score_home": 4,
-          "score_away": 0,
-          "played": true,
-          "date": "31.03.2026"
-        }
-      ],
-      "created_at": "31.03.2026 12:32"
-    }
-  ],
+  "events": [],
   "admins": [
     2070550,
     552027474
