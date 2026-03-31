@@ -44,6 +44,14 @@
           "score_away": 1,
           "played": true,
           "date": "31.03.2026"
+        },
+        {
+          "home": "Есімхан",
+          "away": "Бақберген",
+          "score_home": 7,
+          "score_away": 3,
+          "played": true,
+          "date": "31.03.2026"
         }
       ],
       "created_at": "31.03.2026 12:44"
