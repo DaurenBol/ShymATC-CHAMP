@@ -1,45 +1,5 @@
 {
-  "events": [
-    {
-      "id": "ev_001",
-      "name": "ПС - чемп",
-      "event_type": "championship",
-      "category": "football",
-      "participation_format": "individual",
-      "venue_type": "playstation",
-      "date_start": "01.04.2026",
-      "date_end": "",
-      "rules": "побеза 3 очка - игра на ПС Футбол",
-      "active": true,
-      "participants": [
-        "Дам",
-        "Дин",
-        "Дол",
-        "Дак",
-        "Дас",
-        "Дав"
-      ],
-      "matches": [
-        {
-          "home": "Дам",
-          "away": "Дин",
-          "score_home": 6,
-          "score_away": 8,
-          "played": true,
-          "date": "31.03.2026"
-        },
-        {
-          "home": "Дав",
-          "away": "Дак",
-          "score_home": 3,
-          "score_away": 0,
-          "played": true,
-          "date": "31.03.2026"
-        }
-      ],
-      "created_at": "31.03.2026 12:05"
-    }
-  ],
+  "events": [],
   "admins": [
     2070550
   ]
