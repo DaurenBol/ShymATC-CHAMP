@@ -11,7 +11,9 @@
       "date_end": "",
       "rules": "побеза 3 очка - игра на ПС Футбол",
       "active": true,
-      "participants": [],
+      "participants": [
+        "Дам"
+      ],
       "matches": [],
       "created_at": "31.03.2026 12:05"
     }
