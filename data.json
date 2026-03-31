@@ -92,6 +92,14 @@
           "score_away": 2,
           "played": true,
           "date": "31.03.2026"
+        },
+        {
+          "home": "Максим",
+          "away": "Акмаль",
+          "score_home": 4,
+          "score_away": 2,
+          "played": true,
+          "date": "31.03.2026"
         }
       ],
       "created_at": "31.03.2026 12:44"
