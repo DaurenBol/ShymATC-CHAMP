@@ -1,26 +1,6 @@
 {
   "events": [
     {
-      "id": "event_001",
-      "name": "ПС ТУрнир",
-      "participant_type": "player",
-      "sport": "other",
-      "active": true,
-      "participants": [
-        "Ден",
-        "Бен",
-        "Ген",
-        "Лян",
-        "Паф",
-        "Дол",
-        "Бол",
-        "Юрп",
-        "Боб",
-        "/"
-      ],
-      "matches": []
-    },
-    {
       "id": "event_002",
       "name": "PS 2026",
       "participant_type": "player",
