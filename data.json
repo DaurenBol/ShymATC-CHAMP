@@ -35,7 +35,9 @@
       "participant_type": "player",
       "sport": "football",
       "active": true,
-      "participants": [],
+      "participants": [
+        "боба"
+      ],
       "matches": []
     }
   ],
