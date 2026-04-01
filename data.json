@@ -156,6 +156,14 @@
           "score_away": 3,
           "played": true,
           "date": "01.04.2026"
+        },
+        {
+          "home": "Максим",
+          "away": "Абылай",
+          "score_home": 8,
+          "score_away": 0,
+          "played": true,
+          "date": "01.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
