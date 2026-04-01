@@ -68,6 +68,14 @@
           "score_away": 3,
           "played": true,
           "date": "01.04.2026"
+        },
+        {
+          "home": "Акмаль",
+          "away": "Қазбек",
+          "score_home": 9,
+          "score_away": 2,
+          "played": true,
+          "date": "01.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
