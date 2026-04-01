@@ -156,7 +156,8 @@
       "rules": "",
       "active": true,
       "participants": [
-        "боб"
+        "боб",
+        "дон"
       ],
       "matches": [],
       "created_at": "01.04.2026 09:38"
