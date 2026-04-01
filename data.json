@@ -428,6 +428,14 @@
           "score_away": 4,
           "played": true,
           "date": "01.04.2026"
+        },
+        {
+          "home": "Мақсат метео",
+          "away": "Абылай",
+          "score_home": 0,
+          "score_away": 4,
+          "played": true,
+          "date": "01.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
