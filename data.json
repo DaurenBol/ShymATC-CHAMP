@@ -155,7 +155,9 @@
       "date_end": "ггг",
       "rules": "шшш",
       "active": true,
-      "participants": [],
+      "participants": [
+        "ууу"
+      ],
       "matches": [],
       "created_at": "01.04.2026 10:46"
     }
