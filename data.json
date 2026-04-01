@@ -155,7 +155,9 @@
       "date_end": "",
       "rules": "",
       "active": true,
-      "participants": [],
+      "participants": [
+        "Выв"
+      ],
       "matches": [],
       "created_at": "01.04.2026 13:10"
     }
