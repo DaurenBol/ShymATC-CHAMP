@@ -212,6 +212,14 @@
           "score_away": 2,
           "played": true,
           "date": "01.04.2026"
+        },
+        {
+          "home": "Ерлан",
+          "away": "Есімхан",
+          "score_home": 1,
+          "score_away": 4,
+          "played": true,
+          "date": "01.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
