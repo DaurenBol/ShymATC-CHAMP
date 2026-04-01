@@ -244,6 +244,14 @@
           "score_away": 4,
           "played": true,
           "date": "01.04.2026"
+        },
+        {
+          "home": "Азиз",
+          "away": "Мақсат С",
+          "score_home": 2,
+          "score_away": 5,
+          "played": true,
+          "date": "01.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
