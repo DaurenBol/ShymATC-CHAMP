@@ -12,6 +12,53 @@ GITHUB_REPO  = "DaurenBol/ShymATC-CHAMP"
 DATA_FILE    = "data.json"
 BRANCH       = "main"
 
+# ── CACHE ──
+_cache = None
+_cache_sha = None
+
+def load_data():
+    global _cache, _cache_sha
+    if _cache is not None:
+        data = json.loads(json.dumps(_cache))
+        data["_sha"] = _cache_sha
+        return data
+    return _load_from_github()
+
+def _load_from_github():
+    global _cache, _cache_sha
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{DATA_FILE}"
+    try:
+        r = requests.get(url, headers=gh(), timeout=10)
+        if r.status_code == 200:
+            c = r.json()
+            data = json.loads(base64.b64decode(c["content"]).decode())
+            _cache = json.loads(json.dumps(data))
+            _cache_sha = c["sha"]
+            data["_sha"] = c["sha"]
+            return data
+    except Exception as e:
+        print(f"load:{e}")
+    return {"events": [], "admins": [2070550], "_sha": None}
+
+def save_data(data):
+    global _cache, _cache_sha
+    sha = data.pop("_sha", None)
+    # Update cache immediately
+    _cache = json.loads(json.dumps(data))
+    enc = base64.b64encode(json.dumps(data, ensure_ascii=False, indent=2).encode()).decode()
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{DATA_FILE}"
+    payload = {"message": "update via bot", "content": enc, "branch": BRANCH}
+    if sha: payload["sha"] = sha
+    try:
+        r = requests.put(url, headers=gh(), json=payload, timeout=15)
+        if r.status_code in [200, 201]:
+            _cache_sha = r.json().get("content", {}).get("sha", sha)
+            return True
+        return False
+    except Exception as e:
+        print(f"save:{e}")
+        return False
+
 # ── LOCK ──
 _busy = set()
 async def lock_cb(q):
@@ -64,27 +111,6 @@ TYPE_LABELS = {
 }
 
 def gh(): return {"Authorization":f"token {GITHUB_TOKEN}","Accept":"application/vnd.github.v3+json"}
-
-def load_data():
-    url=f"https://api.github.com/repos/{GITHUB_REPO}/contents/{DATA_FILE}"
-    try:
-        r=requests.get(url,headers=gh(),timeout=10)
-        if r.status_code==200:
-            c=r.json(); data=json.loads(base64.b64decode(c["content"]).decode())
-            data["_sha"]=c["sha"]; return data
-    except Exception as e: print(f"load:{e}")
-    return {"events":[],"admins":[2070550],"_sha":None}
-
-def save_data(data):
-    sha=data.pop("_sha",None)
-    enc=base64.b64encode(json.dumps(data,ensure_ascii=False,indent=2).encode()).decode()
-    url=f"https://api.github.com/repos/{GITHUB_REPO}/contents/{DATA_FILE}"
-    payload={"message":"update via bot","content":enc,"branch":BRANCH}
-    if sha: payload["sha"]=sha
-    try:
-        r=requests.put(url,headers=gh(),json=payload,timeout=15)
-        return r.status_code in[200,201]
-    except Exception as e: print(f"save:{e}"); return False
 
 def is_admin(uid,data): return uid in data.get("admins",[2070550])
 def get_event(data,eid): return next((e for e in data["events"] if e["id"]==eid),None)
@@ -352,18 +378,29 @@ async def ev_venue_custom(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
 async def ev_date_start(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     text=update.message.text.strip()
     ctx.user_data["ev"]["date_start"]="" if text.startswith("/") else text
-    await update.message.reply_text("📅 Дата окончания\nИли /skip:")
+    kb=InlineKeyboardMarkup([[InlineKeyboardButton("⏭ Пропустить",callback_data="skip_date_end")]])
+    await update.message.reply_text("📅 Дата окончания\nИли пропусти:",reply_markup=kb)
     return EV_DATE_END
 
 async def ev_date_end(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     text=update.message.text.strip()
     ctx.user_data["ev"]["date_end"]="" if text.startswith("/") else text
-    await update.message.reply_text("📋 Правила события\nИли /skip:")
+    kb=InlineKeyboardMarkup([[InlineKeyboardButton("⏭ Пропустить",callback_data="skip_rules")]])
+    await update.message.reply_text("📋 Правила события\nИли пропусти:",reply_markup=kb)
     return EV_RULES
 
-async def ev_rules(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
-    text=update.message.text.strip()
-    ctx.user_data["ev"]["rules"]="" if text.startswith("/") else text
+async def ev_skip_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
+    q=update.callback_query; await q.answer()
+    if q.data=="skip_date_end":
+        ctx.user_data["ev"]["date_end"]=""
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("⏭ Пропустить",callback_data="skip_rules")]])
+        await q.edit_message_text("📋 Правила события\nИли пропусти:",reply_markup=kb)
+        return EV_RULES
+    elif q.data=="skip_rules":
+        ctx.user_data["ev"]["rules"]=""
+        return await _show_ev_confirm(q,ctx)
+
+async def _show_ev_confirm(target,ctx):
     ev=ctx.user_data["ev"]
     summary=(f"✅ *Подтверди:*\n\n📌 *{ev['name']}*\n"
              f"🏷 {label(EVENT_TYPES,ev.get('event_type',''))}\n"
@@ -373,8 +410,16 @@ async def ev_rules(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     if ev.get("date_start"): summary+=f"📅 {ev['date_start']}"
     if ev.get("date_end"): summary+=f" → {ev['date_end']}\n"
     kb=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Создать",callback_data="ev_create"),InlineKeyboardButton("❌ Отмена",callback_data="back_main")]])
-    await update.message.reply_text(summary,parse_mode="Markdown",reply_markup=kb)
+    if hasattr(target,'edit_message_text'):
+        await target.edit_message_text(summary,parse_mode="Markdown",reply_markup=kb)
+    else:
+        await target.message.reply_text(summary,parse_mode="Markdown",reply_markup=kb)
     return EV_CONFIRM
+
+async def ev_rules(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
+    text=update.message.text.strip()
+    ctx.user_data["ev"]["rules"]="" if text.startswith("/") else text
+    return await _show_ev_confirm(update,ctx)
 
 async def ev_confirm_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     q=update.callback_query
@@ -421,12 +466,16 @@ async def ap_name(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"*{name}* уже есть.",parse_mode="Markdown"); return ADD_PARTICIPANT
     event["participants"].append(name); ok=save_data(data)
     current=", ".join(event["participants"])
-    await update.message.reply_text(f"{'✅' if ok else '⚠️'} *{name}* добавлен\nСписок: {current}\n\nЕщё или /done",parse_mode="Markdown")
+    kb=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Готово",callback_data="ap_done")]])
+    await update.message.reply_text(
+        f"{'✅' if ok else '⚠️'} *{name}* добавлен\nСписок: {current}\n\nЕщё имя или нажми «Готово»:",
+        parse_mode="Markdown",reply_markup=kb)
     return ADD_PARTICIPANT
 
-async def done_cmd(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
-    data=load_data(); adm=is_admin(update.effective_user.id,data)
-    await update.message.reply_text("✅ Готово! Данные сохранены.",reply_markup=main_menu_kb(adm))
+async def ap_done_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
+    q=update.callback_query; await q.answer()
+    data=load_data(); adm=is_admin(q.from_user.id,data)
+    await q.edit_message_text("✅ Участники сохранены!",reply_markup=main_menu_kb(adm))
     return ConversationHandler.END
 
 # ADD MATCH
@@ -722,9 +771,9 @@ def main():
             EV_FORMAT:[CallbackQueryHandler(ev_format_cb,pattern="^fmt_")],
             EV_VENUE:[CallbackQueryHandler(ev_venue_cb,pattern="^ven_")],
             EV_VENUE_CUSTOM:[MessageHandler(filters.TEXT&~filters.COMMAND,ev_venue_custom)],
-            EV_DATE_START:[MessageHandler(filters.TEXT&~filters.COMMAND,ev_date_start),CommandHandler("skip",ev_date_start)],
-            EV_DATE_END:[MessageHandler(filters.TEXT&~filters.COMMAND,ev_date_end),CommandHandler("skip",ev_date_end)],
-            EV_RULES:[MessageHandler(filters.TEXT&~filters.COMMAND,ev_rules),CommandHandler("skip",ev_rules)],
+            EV_DATE_START:[MessageHandler(filters.TEXT&~filters.COMMAND,ev_date_start)],
+            EV_DATE_END:[MessageHandler(filters.TEXT&~filters.COMMAND,ev_date_end),CallbackQueryHandler(ev_skip_cb,pattern="^skip_date_end$")],
+            EV_RULES:[MessageHandler(filters.TEXT&~filters.COMMAND,ev_rules),CallbackQueryHandler(ev_skip_cb,pattern="^skip_rules$")],
             EV_CONFIRM:[CallbackQueryHandler(ev_confirm_cb,pattern="^(ev_create|back_main)$")],
         },
         fallbacks=[CommandHandler("cancel",cancel),CallbackQueryHandler(back_main,pattern="^back_main$")]
@@ -732,7 +781,11 @@ def main():
     app.add_handler(ConversationHandler(
         entry_points=[CallbackQueryHandler(menu_handler,pattern="^menu_participants$")],
         states={
-            ADD_PARTICIPANT:[CallbackQueryHandler(ap_event_cb,pattern="^ap_"),MessageHandler(filters.TEXT&~filters.COMMAND,ap_name),CommandHandler("done",done_cmd)],
+            ADD_PARTICIPANT:[
+                CallbackQueryHandler(ap_event_cb,pattern="^ap_"),
+                CallbackQueryHandler(ap_done_cb,pattern="^ap_done$"),
+                MessageHandler(filters.TEXT&~filters.COMMAND,ap_name),
+            ],
         },
         fallbacks=[CommandHandler("cancel",cancel),CallbackQueryHandler(back_main,pattern="^back_main$")]
     ))
@@ -788,7 +841,7 @@ def main():
     app.add_handler(CallbackQueryHandler(standings_cb,pattern="^st_"))
     app.add_handler(CallbackQueryHandler(back_main,pattern="^back_main$"))
 
-    print("✅ ShymATC-CHAMP bot v4 started")
+    print("✅ ShymATC-CHAMP bot v5 started")
     app.run_polling(drop_pending_updates=True)
 
 if __name__=="__main__":
