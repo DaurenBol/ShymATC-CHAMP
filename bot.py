@@ -151,12 +151,12 @@ async def show_main_menu(q, ctx):
     await q.edit_message_text("🏆 *ShymATC-CHAMP*", parse_mode="Markdown", reply_markup=main_menu_kb(adm))
 
 async def back_main(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     await show_main_menu(q, ctx)
     return ConversationHandler.END
 
 async def menu_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     action = q.data.replace("menu_","")
     data = load_data()
 
@@ -286,7 +286,7 @@ async def do_standings(q, event):
     await q.edit_message_text(text, parse_mode="Markdown", reply_markup=back_kb())
 
 async def standings_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     data = load_data()
     event = get_event(data, q.data.replace("st_",""))
     if event: await do_standings(q, event)
@@ -298,13 +298,13 @@ async def ev_name(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return EV_TYPE
 
 async def ev_type_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     ctx.user_data["ev"]["event_type"] = q.data.replace("evt_","")
     await q.edit_message_text("🎯 *Категория:*", parse_mode="Markdown", reply_markup=options_kb(CATEGORIES, "cat_"))
     return EV_CATEGORY
 
 async def ev_category_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     val = q.data.replace("cat_","")
     if val == "other_cat":
         await q.edit_message_text("✏️ Введи категорию:"); return EV_CATEGORY_CUSTOM
@@ -318,13 +318,13 @@ async def ev_category_custom(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return EV_FORMAT
 
 async def ev_format_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     ctx.user_data["ev"]["participation_format"] = q.data.replace("fmt_","")
     await q.edit_message_text("📍 *Площадка:*", parse_mode="Markdown", reply_markup=options_kb(VENUES, "ven_"))
     return EV_VENUE
 
 async def ev_venue_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     val = q.data.replace("ven_","")
     if val == "other_venue":
         await q.edit_message_text("✏️ Введи площадку:"); return EV_VENUE_CUSTOM
@@ -365,7 +365,7 @@ async def ev_rules(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return EV_CONFIRM
 
 async def ev_confirm_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     if q.data == "back_main":
         await show_main_menu(q, ctx); return ConversationHandler.END
     data = load_data()
@@ -388,7 +388,7 @@ async def ev_confirm_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 # ── PARTICIPANTS ──
 async def ap_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     ctx.user_data["ap_event_id"] = q.data.replace("ap_","")
     data = load_data()
     event = get_event(data, ctx.user_data["ap_event_id"])
@@ -419,7 +419,7 @@ async def done_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 # ── ADD MATCH ──
 async def match_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     ctx.user_data["match"] = {"event_id": q.data.replace("me_","")}
     data = load_data()
     event = get_event(data, ctx.user_data["match"]["event_id"])
@@ -428,7 +428,7 @@ async def match_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return MATCH_HOME
 
 async def match_home_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     ctx.user_data["match"]["home"] = q.data.replace("mh_","")
     data = load_data()
     event = get_event(data, ctx.user_data["match"]["event_id"])
@@ -438,7 +438,7 @@ async def match_home_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return MATCH_AWAY
 
 async def match_away_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     ctx.user_data["match"]["away"] = q.data.replace("ma_","")
     today = datetime.now().strftime("%d.%m.%Y")
     kb = InlineKeyboardMarkup([[InlineKeyboardButton(f"📅 Сегодня ({today})", callback_data=f"md_{today}")],
@@ -448,7 +448,7 @@ async def match_away_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return MATCH_DATE
 
 async def match_date_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     if q.data == "md_custom":
         await q.edit_message_text("📅 Введи дату (например: 01.04.2026):")
         return MATCH_DATE
@@ -491,7 +491,7 @@ async def match_score_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 # ── EDIT ──
 async def edit_select_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     data = load_data()
 
     if q.data == "edit_ev_name":
@@ -528,7 +528,7 @@ async def edit_select_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return REMOVE_PARTICIPANT_SELECT
 
 async def edit_event_name_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     eid = q.data.replace("een_","")
     ctx.user_data["edit_eid"] = eid
     data = load_data()
@@ -552,7 +552,7 @@ async def edit_event_name_value(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 async def edit_match_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     eid = q.data.replace("ems_","")
     ctx.user_data["edit_eid"] = eid
     data = load_data()
@@ -569,7 +569,7 @@ async def edit_match_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return EDIT_MATCH_FIELD
 
 async def edit_match_select_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     idx = int(q.data.replace("emm_",""))
     ctx.user_data["edit_match_idx"] = idx
     data = load_data()
@@ -604,7 +604,7 @@ async def edit_match_score_value(update: Update, ctx: ContextTypes.DEFAULT_TYPE)
     return ConversationHandler.END
 
 async def edit_participant_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     eid = q.data.replace("ep_","")
     ctx.user_data["edit_eid"] = eid
     data = load_data()
@@ -615,7 +615,7 @@ async def edit_participant_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TY
     return EDIT_PARTICIPANT_NEW
 
 async def edit_participant_select_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     ctx.user_data["edit_participant_old"] = q.data.replace("epp_","")
     await q.edit_message_text(f"Текущее имя: *{ctx.user_data['edit_participant_old']}*\n\nВведи новое имя:", parse_mode="Markdown")
     return EDIT_PARTICIPANT_NEW
@@ -643,7 +643,7 @@ async def edit_participant_new_value(update: Update, ctx: ContextTypes.DEFAULT_T
     return ConversationHandler.END
 
 async def remove_participant_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     eid = q.data.replace("erp_","")
     ctx.user_data["edit_eid"] = eid
     data = load_data()
@@ -654,7 +654,7 @@ async def remove_participant_event_cb(update: Update, ctx: ContextTypes.DEFAULT_
     return REMOVE_PARTICIPANT_SELECT
 
 async def remove_participant_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     name = q.data.replace("rpp_","")
     data = load_data()
     event = get_event(data, ctx.user_data["edit_eid"])
@@ -667,7 +667,7 @@ async def remove_participant_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 # ── FINISH ──
 async def finish_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     data = load_data()
     event = get_event(data, q.data.replace("fin_",""))
     if event:
@@ -679,7 +679,7 @@ async def finish_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 # ── DELETE ──
 async def delete_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     data = load_data()
     event = get_event(data, q.data.replace("del_",""))
     if event:
@@ -707,7 +707,7 @@ async def add_admin_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 # ── RESET ──
 async def reset_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    q = update.callback_query; await q.answer()
+    q = update.callback_query; await q.answer("⏳ Загрузка...")
     if q.data == "reset_yes":
         data = load_data()
         new_data = {"events": [], "admins": data.get("admins",[2070550]), "_sha": data.get("_sha")}
