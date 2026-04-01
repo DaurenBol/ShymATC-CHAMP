@@ -16,6 +16,21 @@
       ],
       "matches": [],
       "created_at": "01.04.2026 15:56"
+    },
+    {
+      "id": "ev_002",
+      "name": "CHAMP FC26",
+      "event_type": "league",
+      "category": "football",
+      "participation_format": "individual",
+      "venue_type": "playstation",
+      "date_start": "01.04.26",
+      "date_end": "01.06.26",
+      "rules": "",
+      "active": true,
+      "participants": [],
+      "matches": [],
+      "created_at": "01.04.2026 16:00"
     }
   ],
   "admins": [
