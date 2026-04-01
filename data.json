@@ -11,7 +11,9 @@
       "date_end": "",
       "rules": "",
       "active": true,
-      "participants": [],
+      "participants": [
+        "Мақсат метео"
+      ],
       "matches": [],
       "created_at": "01.04.2026 15:56"
     }
