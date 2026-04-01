@@ -284,6 +284,14 @@
           "score_away": 6,
           "played": true,
           "date": "01.04.2026"
+        },
+        {
+          "home": "Максим",
+          "away": "Алмат",
+          "score_home": 8,
+          "score_away": 2,
+          "played": true,
+          "date": "01.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
