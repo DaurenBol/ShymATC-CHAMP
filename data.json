@@ -116,6 +116,14 @@
           "score_away": 3,
           "played": true,
           "date": "01.04.2026"
+        },
+        {
+          "home": "Мейірлан",
+          "away": "Есімхан",
+          "score_home": 2,
+          "score_away": 7,
+          "played": true,
+          "date": "01.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
