@@ -1,5 +1,21 @@
 {
-  "events": [],
+  "events": [
+    {
+      "id": "ev_001",
+      "name": "FC26 CHAMP",
+      "event_type": "league",
+      "category": "football",
+      "participation_format": "individual",
+      "venue_type": "playstation",
+      "date_start": "01.04.26",
+      "date_end": "",
+      "rules": "",
+      "active": true,
+      "participants": [],
+      "matches": [],
+      "created_at": "01.04.2026 15:56"
+    }
+  ],
   "admins": [
     2070550,
     552027474
