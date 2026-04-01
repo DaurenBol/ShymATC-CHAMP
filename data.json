@@ -108,6 +108,14 @@
           "score_away": 4,
           "played": true,
           "date": "01.04.2026"
+        },
+        {
+          "home": "Ерлан",
+          "away": "Азиз",
+          "score_home": 4,
+          "score_away": 3,
+          "played": true,
+          "date": "01.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
