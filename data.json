@@ -143,6 +143,21 @@
         }
       ],
       "created_at": "31.03.2026 12:44"
+    },
+    {
+      "id": "ev_002",
+      "name": "тест5",
+      "event_type": "tournament",
+      "category": "football",
+      "participation_format": "individual",
+      "venue_type": "playstation",
+      "date_start": "01.04.2026",
+      "date_end": "",
+      "rules": "",
+      "active": true,
+      "participants": [],
+      "matches": [],
+      "created_at": "01.04.2026 10:24"
     }
   ],
   "admins": [
