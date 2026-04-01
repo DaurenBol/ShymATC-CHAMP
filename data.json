@@ -143,28 +143,6 @@
         }
       ],
       "created_at": "31.03.2026 12:44"
-    },
-    {
-      "id": "ev_002",
-      "name": "Тест7",
-      "event_type": "tournament",
-      "category": "football",
-      "participation_format": "individual",
-      "venue_type": "playstation",
-      "date_start": "5.04.26",
-      "date_end": "",
-      "rules": "",
-      "active": true,
-      "participants": [
-        "Выв",
-        "Еке",
-        "Нен",
-        "Шгш",
-        "Gfg",
-        "Pop"
-      ],
-      "matches": [],
-      "created_at": "01.04.2026 13:10"
     }
   ],
   "admins": [
