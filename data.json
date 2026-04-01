@@ -132,6 +132,14 @@
           "score_away": 1,
           "played": true,
           "date": "01.04.2026"
+        },
+        {
+          "home": "Азиз",
+          "away": "Есімхан",
+          "score_home": 1,
+          "score_away": 5,
+          "played": true,
+          "date": "01.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
