@@ -124,6 +124,14 @@
           "score_away": 7,
           "played": true,
           "date": "01.04.2026"
+        },
+        {
+          "home": "Максим",
+          "away": "Мейірлан",
+          "score_home": 5,
+          "score_away": 1,
+          "played": true,
+          "date": "01.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
