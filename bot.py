@@ -1,4 +1,4 @@
-import os, json, base64, requests
+import os, json, base64, requests, asyncio, threading
 from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -43,21 +43,27 @@ def _load_from_github():
 def save_data(data):
     global _cache, _cache_sha
     sha = data.pop("_sha", None)
-    # Update cache immediately
+    # Update cache immediately — bot responds instantly
     _cache = json.loads(json.dumps(data))
-    enc = base64.b64encode(json.dumps(data, ensure_ascii=False, indent=2).encode()).decode()
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{DATA_FILE}"
-    payload = {"message": "update via bot", "content": enc, "branch": BRANCH}
-    if sha: payload["sha"] = sha
-    try:
-        r = requests.put(url, headers=gh(), json=payload, timeout=15)
-        if r.status_code in [200, 201]:
-            _cache_sha = r.json().get("content", {}).get("sha", sha)
-            return True
-        return False
-    except Exception as e:
-        print(f"save:{e}")
-        return False
+    # Save to GitHub in background thread — doesn't block bot
+    def _push():
+        global _cache_sha
+        enc = base64.b64encode(json.dumps(data, ensure_ascii=False, indent=2).encode()).decode()
+        url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{DATA_FILE}"
+        payload = {"message": "update via bot", "content": enc, "branch": BRANCH}
+        if sha: payload["sha"] = sha
+        elif _cache_sha: payload["sha"] = _cache_sha
+        try:
+            r = requests.put(url, headers=gh(), json=payload, timeout=15)
+            if r.status_code in [200, 201]:
+                _cache_sha = r.json().get("content", {}).get("sha")
+                print("✅ Saved to GitHub")
+            else:
+                print(f"⚠️ Save failed: {r.status_code}")
+        except Exception as e:
+            print(f"save error: {e}")
+    threading.Thread(target=_push, daemon=True).start()
+    return True  # Always return True immediately
 
 # ── LOCK ──
 _busy = set()
@@ -842,6 +848,10 @@ def main():
     app.add_handler(CallbackQueryHandler(back_main,pattern="^back_main$"))
 
     print("✅ ShymATC-CHAMP bot v5 started")
+    # Preload cache on startup
+    print("📦 Preloading data from GitHub...")
+    _load_from_github()
+    print(f"📦 Cache loaded: {len(_cache.get('events', []))} events")
     app.run_polling(drop_pending_updates=True)
 
 if __name__=="__main__":
