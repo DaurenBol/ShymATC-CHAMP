@@ -487,6 +487,21 @@
         }
       ],
       "created_at": "01.04.2026 15:56"
+    },
+    {
+      "id": "ev_002",
+      "name": "Тест 8",
+      "event_type": "registration",
+      "category": "chess",
+      "participation_format": "individual",
+      "venue_type": "offline",
+      "date_start": "15.04.2026",
+      "date_end": "",
+      "rules": "Регенерация",
+      "active": true,
+      "participants": [],
+      "matches": [],
+      "created_at": "02.04.2026 05:11"
     }
   ],
   "admins": [
