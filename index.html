@@ -133,8 +133,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 .table-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:background .3s,border-color .3s;}
 .t-head{display:grid;padding:10px 12px;border-bottom:1px solid var(--border);transition:border-color .3s;}
-.col-t{grid-template-columns:28px 1fr 26px 26px 26px 28px 36px;}
-.col-i{grid-template-columns:24px 1fr 30px 22px 22px 22px 46px;}
+.col-t{grid-template-columns:28px 1fr 26px 26px 26px 26px 32px 32px 32px 38px;}
+.col-i{grid-template-columns:24px 1fr 26px 26px 26px 26px 32px 32px 32px 38px;}
 .th{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);text-align:center;transition:color .3s;}
 .th.left{text-align:left;}
 
@@ -187,7 +187,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .stats-wrap{padding:16px;}
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;transition:background .3s,border-color .3s;}
 .chart-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;transition:color .3s;}
-.mini-chart{display:flex;align-items:flex-end;gap:4px;height:56px;}
+.chart-scroll-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;padding:10px 10px 6px;background:var(--surface2);-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+.chart-scroll-wrap::-webkit-scrollbar{height:4px;}
+.chart-scroll-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.mini-chart{display:flex;align-items:flex-end;gap:4px;height:56px;flex-direction:row-reverse;}
 .bc{display:flex;flex-direction:column;align-items:center;flex:1;gap:3px;}
 .bar{width:100%;border-radius:3px 3px 0 0;min-height:4px;transition:background .3s;}
 .blbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);text-align:center;transition:color .3s;}
@@ -395,13 +398,29 @@ function renderHome() {
   const statsEl = document.getElementById('home-stats');
   const totalMatches = events.reduce((s,e)=>s+(e.matches||[]).filter(m=>m.played).length,0);
   const totalParticipants = [...new Set(events.flatMap(e=>e.participants||[]))].length;
-  const leader = first && first.participants.length > 0 ? (() => {
-    const rows = calcStandings(first);
-    return rows[0] ? rows[0].name.split(' ')[0] : '—';
-  })() : '—';
+
+  // Найти последний сыгранный матч среди всех событий
+  let lastMatch = null, lastMatchEvent = null;
+  events.forEach(ev => {
+    (ev.matches||[]).filter(m=>m.played).forEach(m => {
+      if(!lastMatch || (m.date||'') >= (lastMatch.date||'')) { lastMatch=m; lastMatchEvent=ev; }
+    });
+  });
+
+  let lastMatchHtml = '';
+  if(lastMatch) {
+    const hw=lastMatch.score_home>lastMatch.score_away, aw=lastMatch.score_away>lastMatch.score_home;
+    lastMatchHtml = `
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;transition:color .3s">${lastMatch.date||'—'}</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--accent);line-height:1;margin-bottom:4px;">${lastMatch.score_home} : ${lastMatch.score_away}</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text2);transition:color .3s;">${lastMatch.home} vs ${lastMatch.away}</div>`;
+  } else {
+    lastMatchHtml = `<div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace">Матчей нет</div>`;
+  }
+
   statsEl.innerHTML = `
     <div class="stat-card"><div class="stat-lbl">Событий</div><div class="stat-val">${events.length}</div><div class="stat-sub">всего</div></div>
-    <div class="stat-card"><div class="stat-lbl">Лидер</div><div class="stat-val" style="font-size:22px;padding-top:4px">${leader}</div><div class="stat-sub">текущий</div></div>
+    <div class="stat-card" style="grid-column:span 1"><div class="stat-lbl">Последний матч</div>${lastMatchHtml}</div>
     <div class="stat-card"><div class="stat-lbl">Матчей</div><div class="stat-val">${totalMatches}</div><div class="stat-sub">сыграно</div></div>
     <div class="stat-card"><div class="stat-lbl">Участников</div><div class="stat-val">${totalParticipants}</div><div class="stat-sub">уникальных</div></div>`;
 
@@ -486,9 +505,12 @@ function renderEventTable(ev, container) {
       <div class="zone-line" style="background:${zc}"></div>
       <div class="rk" style="color:${i<3?c:'var(--text3)'}">${medal(i)}</div>
       <div class="team-c"><div class="t-ava" style="background:${bg};color:${c}">${abbr}</div><div class="t-nm">${r.name}</div></div>
+      <div class="cn">${r.p}</div>
       <div class="cn" style="color:var(--accent)">${r.w}</div>
       <div class="cn">${r.d}</div>
       <div class="cn" style="color:var(--accent3)">${r.l}</div>
+      <div class="cn" style="color:var(--accent2)">${r.gf}</div>
+      <div class="cn" style="color:var(--accent3);opacity:.7">${r.ga}</div>
       <div class="cn ${gdCls}">${gd>=0?'+'+gd:gd}</div>
       <div class="cp">${pts}</div>
     </div>`;
@@ -497,8 +519,9 @@ function renderEventTable(ev, container) {
     <div class="table-card">
       <div class="t-head col-t">
         <div class="th">#</div><div class="th left">Участник</div>
-        <div class="th">В</div><div class="th">Н</div><div class="th">П</div>
-        <div class="th">±</div><div class="th">Оч</div>
+        <div class="th">И</div><div class="th">В</div><div class="th">Н</div><div class="th">П</div>
+        <div class="th">З</div><div class="th">П</div>
+        <div class="th">±</div><div class="th">О</div>
       </div>
       ${rowsHtml}
     </div>
@@ -520,8 +543,8 @@ function renderMatches() {
     content.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">Матчей пока нет</div>`;
     return;
   }
-  content.innerHTML = `<div class="ms-lbl">🏁 Последние результаты</div>` +
-    allMatches.slice(0,10).map(m => {
+  content.innerHTML = `<div class="ms-lbl">🏁 Все результаты</div>` +
+    allMatches.map(m => {
       const hw=m.score_home>m.score_away, aw=m.score_away>m.score_home;
       return `<div class="match-card">
         <div class="m-date">${m.date||''} · ${m.eventName}</div>
@@ -549,19 +572,41 @@ function renderStats() {
     if(!rows.length) return;
     const goals = (ev.matches||[]).filter(m=>m.played).map(m=>m.score_home+m.score_away);
     const icon = SPORT_ICONS[ev.category]||'🏆';
-    // Goals chart
+    // Goals chart — scrollable, latest on left
     if(goals.length > 0) {
       const mx = Math.max(...goals, 1);
+      const minW = goals.length * 28; // минимальная ширина чтобы прокрутка появилась
       html += `<div class="chart-card">
         <div class="chart-title">${icon} ${ev.name} — голы по матчам</div>
-        <div class="mini-chart">${goals.map((g,i)=>`
-          <div class="bc">
-            <div class="bar" style="height:${Math.round(g/mx*48)}px;background:${i===goals.length-1?'var(--accent)':'rgba(120,120,160,.35)'}"></div>
-            <div class="blbl">${i+1}</div>
-          </div>`).join('')}
+        <div class="chart-scroll-wrap">
+          <div class="mini-chart" style="min-width:${minW}px">${goals.map((g,i)=>`
+            <div class="bc">
+              <div class="bar" style="height:${Math.round(g/mx*48)}px;background:${i===0?'var(--accent)':'rgba(120,120,160,.35)'}"></div>
+              <div class="blbl">${goals.length-i}</div>
+            </div>`).join('')}
+          </div>
         </div>
       </div>`;
     }
+
+    // Осталось игр
+    const totalPossible = ev.participants.length * (ev.participants.length - 1);
+    const played = (ev.matches||[]).filter(m=>m.played).length;
+    const remaining = Math.max(0, totalPossible - played);
+    html += `<div class="chart-card" style="display:flex;align-items:center;gap:16px;padding:14px 16px;">
+      <div style="font-size:28px">📅</div>
+      <div>
+        <div class="chart-title" style="margin-bottom:4px">${icon} ${ev.name} — прогресс турнира</div>
+        <div style="display:flex;gap:18px;align-items:baseline;">
+          <div><span style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent)">${played}</span> <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">сыграно</span></div>
+          <div><span style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent2)">${remaining}</span> <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">осталось</span></div>
+          <div><span style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--text2)">${totalPossible}</span> <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">всего</span></div>
+        </div>
+        <div style="margin-top:8px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;width:${totalPossible>0?Math.round(played/totalPossible*100):0}%;background:var(--accent);border-radius:2px;transition:width 1s ease;"></div>
+        </div>
+      </div>
+    </div>`;
     // Top scorers (by wins)
     html += `<div class="card-sec">
       <div class="cs-title">${icon} ${ev.name} — таблица</div>
