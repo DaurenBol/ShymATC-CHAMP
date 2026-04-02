@@ -484,6 +484,14 @@
           "score_away": 4,
           "played": true,
           "date": "02.04.2026"
+        },
+        {
+          "home": "Қазбек",
+          "away": "Мақсат С",
+          "score_home": 2,
+          "score_away": 13,
+          "played": true,
+          "date": "02.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
