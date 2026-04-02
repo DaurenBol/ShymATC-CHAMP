@@ -500,6 +500,14 @@
           "score_away": 6,
           "played": true,
           "date": "02.04.2026"
+        },
+        {
+          "home": "Мейірлан",
+          "away": "Қазбек",
+          "score_home": 3,
+          "score_away": 2,
+          "played": true,
+          "date": "02.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
