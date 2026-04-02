@@ -504,7 +504,16 @@
         "Кырым",
         "Данила"
       ],
-      "matches": [],
+      "matches": [
+        {
+          "home": "Ибрагим",
+          "away": "Кырым",
+          "score_home": 1,
+          "score_away": 1,
+          "played": true,
+          "date": "02.04.2026"
+        }
+      ],
       "created_at": "02.04.2026 05:11"
     }
   ],
