@@ -540,6 +540,14 @@
           "score_away": 3,
           "played": true,
           "date": "03.04.2026"
+        },
+        {
+          "home": "Қазбек",
+          "away": "Алмат",
+          "score_home": 2,
+          "score_away": 2,
+          "played": true,
+          "date": "03.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
