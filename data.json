@@ -556,6 +556,14 @@
           "score_away": 2,
           "played": true,
           "date": "03.04.2026"
+        },
+        {
+          "home": "Мақсат метео",
+          "away": "Жансерік",
+          "score_home": 6,
+          "score_away": 2,
+          "played": true,
+          "date": "03.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
