@@ -548,6 +548,14 @@
           "score_away": 2,
           "played": true,
           "date": "03.04.2026"
+        },
+        {
+          "home": "Максим",
+          "away": "Жансерік",
+          "score_home": 7,
+          "score_away": 2,
+          "played": true,
+          "date": "03.04.2026"
         }
       ],
       "created_at": "01.04.2026 15:56"
