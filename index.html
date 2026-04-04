@@ -133,7 +133,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 .table-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:background .3s,border-color .3s;}
 .t-head{display:grid;padding:10px 12px;border-bottom:1px solid var(--border);transition:border-color .3s;}
-.col-t{grid-template-columns:28px 1fr 26px 26px 26px 28px 36px;}
+.col-t{grid-template-columns:28px 1fr 26px 26px 26px 26px 30px 30px 28px 36px;}
 .col-i{grid-template-columns:24px 1fr 30px 22px 22px 22px 46px;}
 .th{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);text-align:center;transition:color .3s;}
 .th.left{text-align:left;}
@@ -422,7 +422,8 @@ function renderHome() {
   }
   listEl.innerHTML = events.map((e,i) => {
     const icon = SPORT_ICONS[e.category] || '🏆';
-    const mp = (e.matches||[]).filter(m=>m.played).length;
+    const ps = new Set(e.participants||[]);
+    const mp = (e.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).length;
     const badge = e.active
       ? `<div class="badge badge-live">Live</div>`
       : `<div class="badge badge-done">Done</div>`;
@@ -495,9 +496,12 @@ function renderEventTable(ev, container) {
       <div class="zone-line" style="background:${zc}"></div>
       <div class="rk" style="color:${i<3?c:'var(--text3)'}">${medal(i)}</div>
       <div class="team-c"><div class="t-ava" style="background:${bg};color:${c}">${abbr}</div><div class="t-nm">${r.name}</div></div>
+      <div class="cn">${r.p}</div>
       <div class="cn" style="color:var(--accent)">${r.w}</div>
       <div class="cn">${r.d}</div>
       <div class="cn" style="color:var(--accent3)">${r.l}</div>
+      <div class="cn" style="color:var(--accent2)">${r.gf}</div>
+      <div class="cn" style="color:var(--accent3)">${r.ga}</div>
       <div class="cn ${gdCls}">${gd>=0?'+'+gd:gd}</div>
       <div class="cp">${pts}</div>
     </div>`;
@@ -506,8 +510,8 @@ function renderEventTable(ev, container) {
     <div class="table-card">
       <div class="t-head col-t">
         <div class="th">#</div><div class="th left">Участник</div>
-        <div class="th">В</div><div class="th">Н</div><div class="th">П</div>
-        <div class="th">±</div><div class="th">Оч</div>
+        <div class="th">И</div><div class="th">В</div><div class="th">Н</div><div class="th">П</div>
+        <div class="th">ГЗ</div><div class="th">ГП</div><div class="th">±</div><div class="th">Оч</div>
       </div>
       ${rowsHtml}
     </div>
