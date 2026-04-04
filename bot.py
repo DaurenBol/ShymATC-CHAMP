@@ -714,8 +714,13 @@ async def remove_participant_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
         name=q.data.replace("rpp_",""); data=load_data()
         event=get_event(data,ctx.user_data["edit_eid"])
         event["participants"]=[p for p in event["participants"] if p!=name]
+        # Удаляем все матчи где участвовал этот игрок
+        before=len(event.get("matches",[]))
+        event["matches"]=[m for m in event.get("matches",[]) if m.get("home")!=name and m.get("away")!=name]
+        removed=before-len(event["matches"])
         ok=save_data(data); adm=is_admin(q.from_user.id,data)
-        await q.edit_message_text(f"{'✅ Участник удалён!' if ok else '⚠️ Ошибка'}\n\n*{name}* удалён.",parse_mode="Markdown",reply_markup=main_menu_kb(adm))
+        extra=f"\nТакже удалено матчей: {removed}" if removed>0 else ""
+        await q.edit_message_text(f"{'✅ Участник удалён!' if ok else '⚠️ Ошибка'}\n\n*{name}* удалён.{extra}",parse_mode="Markdown",reply_markup=main_menu_kb(adm))
     finally: unlock_cb(q)
     return ConversationHandler.END
 
