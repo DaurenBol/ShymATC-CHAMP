@@ -578,11 +578,13 @@ function renderStats() {
     const rows = calcStandings(ev);
     if(!rows.length) return;
     const ps = new Set(ev.participants||[]);
-    const goals = (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).map(m=>m.score_home+m.score_away);
+    const goalsRaw = (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).map(m=>m.score_home+m.score_away);
+    // Reverse: newest match first (leftmost)
+    const goals = goalsRaw.slice().reverse();
     const icon = SPORT_ICONS[ev.category]||'🏆';
     const chartId = 'chart-' + ev.id;
 
-    // Goals chart — scrollable
+    // Goals chart — scrollable, newest left
     if(goals.length > 0) {
       const mx = Math.max(...goals, 1);
       html += `<div class="chart-card">
@@ -590,8 +592,8 @@ function renderStats() {
         <div class="mini-chart-wrap" id="${chartId}">
           <div class="mini-chart">${goals.map((g,i)=>`
             <div class="bc">
-              <div class="bar" style="height:${Math.round(g/mx*48)}px;background:${i===goals.length-1?'var(--accent)':'rgba(120,120,160,.35)'}"></div>
-              <div class="blbl">${i+1}</div>
+              <div class="bar" style="height:${Math.round(g/mx*48)}px;background:${i===0?'var(--accent)':'rgba(120,120,160,.35)'}"></div>
+              <div class="blbl">${goals.length-i}</div>
             </div>`).join('')}
           </div>
         </div>
@@ -616,11 +618,7 @@ function renderStats() {
 
   content.innerHTML = html || `<div style="padding:40px;text-align:center;color:var(--text3);">Нет данных</div>`;
 
-  // Auto-scroll each chart to the right (latest match visible)
-  active.forEach(ev => {
-    const wrap = document.getElementById('chart-' + ev.id);
-    if(wrap) wrap.scrollLeft = wrap.scrollWidth;
-  });
+  // No auto-scroll needed — newest match is already on the left
 }
 
 // ── NAVIGATION ──
