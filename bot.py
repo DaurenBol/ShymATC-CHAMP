@@ -88,8 +88,9 @@ def unlock_cb(q): _busy.discard(q.from_user.id)
     EDIT_SELECT, EDIT_EVENT_FIELD, EDIT_EVENT_VALUE,
     EDIT_MATCH_SELECT, EDIT_MATCH_FIELD, EDIT_MATCH_VALUE,
     EDIT_PARTICIPANT_OLD, EDIT_PARTICIPANT_NEW,
-    REMOVE_PARTICIPANT_SELECT
-) = range(30)
+    REMOVE_PARTICIPANT_SELECT,
+    DELETE_MATCH_SELECT, DELETE_MATCH_CONFIRM
+) = range(32)
 
 EVENT_TYPES = [
     ("🏆 Турнир","tournament"),("🏅 Лига","league"),("🥇 Чемпионат","championship"),
@@ -265,6 +266,7 @@ async def menu_handler(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
                 await q.edit_message_text("Событий нет.",reply_markup=back_kb()); return
             kb=[[InlineKeyboardButton("📌 Переименовать событие",callback_data="edit_ev_name")],
                 [InlineKeyboardButton("⚽ Изменить счёт матча",callback_data="edit_match_score")],
+                [InlineKeyboardButton("🗑 Удалить матч",callback_data="edit_delete_match")],
                 [InlineKeyboardButton("👤 Переименовать участника",callback_data="edit_participant")],
                 [InlineKeyboardButton("🗑 Удалить участника",callback_data="edit_remove_participant")],
                 [InlineKeyboardButton("◀️ Назад",callback_data="back_main")]]
@@ -592,6 +594,14 @@ async def edit_select_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
             kb.append([InlineKeyboardButton("◀️ Назад",callback_data="back_main")])
             await q.edit_message_text("🗑 Выбери событие:",reply_markup=InlineKeyboardMarkup(kb))
             return REMOVE_PARTICIPANT_SELECT
+        elif q.data=="edit_delete_match":
+            active=[e for e in data["events"] if e.get("active") and any(m.get("played") for m in e.get("matches",[]))]
+            if not active:
+                await q.edit_message_text("Нет событий с матчами.",reply_markup=back_kb()); return ConversationHandler.END
+            kb=[[InlineKeyboardButton(e["name"],callback_data=f"edm_{e['id']}")] for e in active]
+            kb.append([InlineKeyboardButton("◀️ Назад",callback_data="back_main")])
+            await q.edit_message_text("🗑 Выбери событие:",reply_markup=InlineKeyboardMarkup(kb))
+            return DELETE_MATCH_SELECT
     finally: unlock_cb(q)
 
 async def edit_event_name_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
@@ -709,6 +719,42 @@ async def remove_participant_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     finally: unlock_cb(q)
     return ConversationHandler.END
 
+async def delete_match_event_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
+    q=update.callback_query
+    if not await lock_cb(q): return DELETE_MATCH_SELECT
+    try:
+        eid=q.data.replace("edm_","")
+        ctx.user_data["edit_eid"]=eid
+        data=load_data(); event=get_event(data,eid)
+        played=[m for i,m in enumerate(event.get("matches",[])) if m.get("played")]
+        if not played:
+            await q.edit_message_text("Нет сыгранных матчей.",reply_markup=back_kb()); return ConversationHandler.END
+        kb=[[InlineKeyboardButton(
+            f"{m['home']} {m['score_home']}:{m['score_away']} {m['away']} ({m.get('date','')})",
+            callback_data=f"dmc_{i}"
+        )] for i,m in enumerate(event["matches"]) if m.get("played")]
+        kb.append([InlineKeyboardButton("◀️ Назад",callback_data="back_main")])
+        await q.edit_message_text("🗑 Выбери матч для удаления:",reply_markup=InlineKeyboardMarkup(kb))
+    finally: unlock_cb(q)
+    return DELETE_MATCH_CONFIRM
+
+async def delete_match_confirm_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
+    q=update.callback_query
+    if not await lock_cb(q): return DELETE_MATCH_CONFIRM
+    try:
+        idx=int(q.data.replace("dmc_",""))
+        data=load_data(); event=get_event(data,ctx.user_data["edit_eid"])
+        m=event["matches"][idx]
+        match_label=f"*{m['home']}* {m['score_home']}:{m['score_away']} *{m['away']}* ({m.get('date','')})"
+        event["matches"].pop(idx)
+        ok=save_data(data)
+        adm=is_admin(q.from_user.id,data)
+        await q.edit_message_text(
+            f"{'✅ Матч удалён!' if ok else '⚠️ Ошибка'}\n\n{match_label}",
+            parse_mode="Markdown",reply_markup=main_menu_kb(adm))
+    finally: unlock_cb(q)
+    return ConversationHandler.END
+
 async def finish_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     q=update.callback_query
     if not await lock_cb(q): return FINISH_CONFIRM
@@ -818,6 +864,8 @@ def main():
             EDIT_PARTICIPANT_OLD:[CallbackQueryHandler(edit_participant_event_cb,pattern="^ep_")],
             EDIT_PARTICIPANT_NEW:[CallbackQueryHandler(edit_participant_select_cb,pattern="^epp_"),MessageHandler(filters.TEXT&~filters.COMMAND,edit_participant_new_value)],
             REMOVE_PARTICIPANT_SELECT:[CallbackQueryHandler(remove_participant_event_cb,pattern="^erp_"),CallbackQueryHandler(remove_participant_cb,pattern="^rpp_")],
+            DELETE_MATCH_SELECT:[CallbackQueryHandler(delete_match_event_cb,pattern="^edm_")],
+            DELETE_MATCH_CONFIRM:[CallbackQueryHandler(delete_match_confirm_cb,pattern="^dmc_")],
         },
         fallbacks=[CommandHandler("cancel",cancel),CallbackQueryHandler(back_main,pattern="^back_main$")]
     ))
