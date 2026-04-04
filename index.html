@@ -421,9 +421,16 @@ function renderHome() {
     return played.length ? played[played.length-1] : null;
   })();
   const totalParticipants = [...new Set(events.flatMap(e=>e.participants||[]))].length;
-  const lastMatchHtml = lastMatch
-    ? `<div class="stat-val" style="font-size:20px;padding-top:2px">${lastMatch.score_home}:${lastMatch.score_away}</div><div class="stat-sub">${lastMatch.home} vs ${lastMatch.away}</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px">${lastMatch.date||''}</div>`
-    : `<div class="stat-val">—</div><div class="stat-sub">нет матчей</div>`;
+  // Best defense — least goals conceded, min 1 game played
+  const bestDefense = (() => {
+    if(!first) return null;
+    const rows = calcStandings(first).filter(r=>r.p>0);
+    if(!rows.length) return null;
+    return rows.reduce((best,r)=>r.ga<best.ga?r:best);
+  })();
+  const bestDefenseHtml = bestDefense
+    ? `<div class="stat-val" style="font-size:28px;padding-top:2px">${bestDefense.ga}</div><div class="stat-sub">${bestDefense.name}</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px">голов пропущено</div>`
+    : `<div class="stat-val">—</div><div class="stat-sub">нет данных</div>`;
 
   // Top match — max total goals
   const topMatch = (() => {
@@ -451,11 +458,11 @@ function renderHome() {
   // Dirty player
   const dirtyPlayer = first ? (first.dirty_player || null) : null;
   const dirtyHtml = dirtyPlayer
-    ? `<div class="stat-val" style="font-size:16px;padding-top:6px;line-height:1.2">${dirtyPlayer}</div><div class="stat-sub" style="margin-top:6px">назначен админом</div>`
+    ? `<div class="stat-val" style="font-size:16px;padding-top:6px;line-height:1.2">${dirtyPlayer}</div><div class="stat-sub" style="margin-top:6px">по мнению участников</div>`
     : `<div class="stat-val" style="font-size:28px;padding-top:2px">—</div><div class="stat-sub">не назначен</div>`;
 
   statsEl.innerHTML = `
-    <div class="stat-card"><div class="stat-lbl">Последний матч</div>${lastMatchHtml}</div>
+    <div class="stat-card"><div class="stat-lbl">Лучшая защита 🛡</div>${bestDefenseHtml}</div>
     <div class="stat-card"><div class="stat-lbl">Топ матч ⚽</div>${topMatchHtml}</div>
     <div class="stat-card"><div class="stat-lbl">Бомбардир 🎯</div>${topScorerHtml}</div>
     <div class="stat-card"><div class="stat-lbl">Грязный игрок 😈</div>${dirtyHtml}</div>`;
