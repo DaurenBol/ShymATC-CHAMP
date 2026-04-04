@@ -416,6 +416,8 @@ function getTickerText() {
   const events = RAW_DATA?.events || [];
   const active = events.filter(e=>e.active);
   const ev = active[0];
+  // Обратная совместимость: старый формат без ticker_mode
+  if(!mode && RAW_DATA?.ticker) return RAW_DATA.ticker;
   if(mode === 'custom') return RAW_DATA?.ticker || '';
   if(!ev) return '';
   const ps = new Set(ev.participants||[]);
