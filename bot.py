@@ -88,8 +88,9 @@ def unlock_cb(q): _busy.discard(q.from_user.id)
     EDIT_PARTICIPANT_OLD, EDIT_PARTICIPANT_NEW,
     REMOVE_PARTICIPANT_SELECT,
     DELETE_MATCH_SELECT, DELETE_MATCH_CONFIRM,
-    DIRTY_EVENT, DIRTY_PLAYER
-) = range(34)
+    DIRTY_EVENT, DIRTY_PLAYER,
+    TICKER_INPUT
+) = range(35)
 
 EVENT_TYPES = [
     ("🏆 Турнир","tournament"),("🏅 Лига","league"),("🥇 Чемпионат","championship"),
@@ -159,7 +160,8 @@ def main_menu_kb(is_adm):
              [InlineKeyboardButton("✏️ Редактировать",callback_data="menu_edit")],
              [InlineKeyboardButton("🏁 Завершить",callback_data="menu_finish"),
               InlineKeyboardButton("🗑 Удалить",callback_data="menu_delete")],
-             [InlineKeyboardButton("😈 Грязный игрок",callback_data="menu_dirty_player")],
+             [InlineKeyboardButton("😈 Грязный игрок",callback_data="menu_dirty_player"),
+              InlineKeyboardButton("📢 Бегущая строка",callback_data="menu_ticker")],
              [InlineKeyboardButton("👑 Добавить админа",callback_data="menu_add_admin"),
               InlineKeyboardButton("🔄 Сброс",callback_data="menu_reset")]]
     return InlineKeyboardMarkup(kb)
@@ -302,6 +304,11 @@ async def menu_handler(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
             await q.edit_message_text("😈 *Грязный игрок*\nВыбери событие:",parse_mode="Markdown",reply_markup=InlineKeyboardMarkup(kb))
             return DIRTY_EVENT
 
+        elif action=="ticker":
+            if not is_admin(q.from_user.id,data): await q.edit_message_text("⛔ Нет доступа."); return
+            await show_ticker_menu(q, data)
+            return TICKER_INPUT
+
         elif action=="add_admin":
             if not is_admin(q.from_user.id,data): await q.edit_message_text("⛔ Нет доступа."); return
             await q.edit_message_text("👑 Введи Telegram user_id нового админа:")
@@ -375,6 +382,108 @@ async def dirty_player_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
                 f"{'✅ Сохранено!' if ok else '⚠️ Ошибка'}\n\n😈 Грязный игрок *{event['name']}*:\n*{name}*",
                 parse_mode="Markdown",reply_markup=main_menu_kb(adm))
     finally: unlock_cb(q)
+    return ConversationHandler.END
+
+
+# ── TICKER ──
+def build_templates(data):
+    """Генерирует шаблоны бегущей строки из реальных данных"""
+    templates = []
+    active = [e for e in data.get('events',[]) if e.get('active')]
+    ev = active[0] if active else None
+    if ev:
+        ps = set(ev.get('participants',[]))
+        played = [m for m in ev.get('matches',[]) if m.get('played') and m.get('home') in ps and m.get('away') in ps]
+        # Лидер турнира
+        rows = calc_standings(ev)
+        if rows:
+            leader = rows[0]
+            pts = leader['w']*3 + leader['d']
+            templates.append(f"🏆 ЛИДЕР ТУРНИРА {ev['name'].upper()}: {leader['name'].upper()} — {pts} ОЧКОВ!")
+        # Последний матч
+        if played:
+            last = played[-1]
+            res = f"{last['home'].upper()} ПОБЕДИЛ" if last['score_home'] > last['score_away'] else (f"{last['away'].upper()} ПОБЕДИЛ" if last['score_away'] > last['score_home'] else "НИЧЬЯ")
+            templates.append(f"⚽ ПОСЛЕДНИЙ МАТЧ: {last['home'].upper()} {last['score_home']}:{last['score_away']} {last['away'].upper()} — {res}")
+        # Бомбардир
+        if rows:
+            top = max(rows, key=lambda r: r['gf'])
+            if top['gf'] > 0:
+                templates.append(f"🎯 ЛУЧШИЙ БОМБАРДИР: {top['name'].upper()} — {top['gf']} ГОЛОВ В {ev['name'].upper()}")
+        # Топ матч
+        if played:
+            top_m = max(played, key=lambda m: m['score_home']+m['score_away'])
+            templates.append(f"🔥 САМЫЙ РЕЗУЛЬТАТИВНЫЙ МАТЧ: {top_m['home'].upper()} {top_m['score_home']}:{top_m['score_away']} {top_m['away'].upper()} — {top_m['score_home']+top_m['score_away']} ГОЛОВ!")
+        # Грязный игрок
+        dirty = ev.get('dirty_player')
+        if dirty:
+            templates.append(f"😈 САМЫЙ ГРЯЗНЫЙ ИГРОК ПО МНЕНИЮ УЧАСТНИКОВ: {dirty.upper()}")
+    # Если нет данных — базовые шаблоны
+    if not templates:
+        templates = [
+            "🏆 ДОБРО ПОЖАЛОВАТЬ В SHYMATC-CHAMP!",
+            "⚽ СЛЕДИТЕ ЗА РЕЗУЛЬТАТАМИ НА САЙТЕ!",
+            "📢 ТУРНИР В САМОМ РАЗГАРЕ — НЕ ПРОПУСТИ!",
+        ]
+    return templates
+
+async def show_ticker_menu(q, data):
+    current = data.get('ticker','')
+    current_txt = (f"\nСейчас: _{current}_" if current else "\nСейчас: не установлена")
+    templates = build_templates(data)
+    kb = []
+    for i, t in enumerate(templates):
+        short = t[:40] + '...' if len(t) > 40 else t
+        kb.append([InlineKeyboardButton(short, callback_data=f"tkr_{i}")])
+    kb.append([InlineKeyboardButton("✏️ Свой текст", callback_data="tkr_custom")])
+    if current:
+        kb.append([InlineKeyboardButton("🗑 Убрать строку", callback_data="tkr_clear")])
+    kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
+    await q.edit_message_text(
+        f"📢 *Бегущая строка*{current_txt}\n\nВыбери шаблон или введи свой текст:",
+        parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
+
+async def ticker_cb(update:Update, ctx:ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return TICKER_INPUT
+    try:
+        data = load_data()
+        if q.data == "tkr_clear":
+            data.pop('ticker', None)
+            ok = save_data(data)
+            adm = is_admin(q.from_user.id, data)
+            await q.edit_message_text(
+                f"{'✅ Бегущая строка убрана!' if ok else '⚠️ Ошибка'}",
+                reply_markup=main_menu_kb(adm))
+            return ConversationHandler.END
+        elif q.data == "tkr_custom":
+            ctx.user_data['ticker_waiting'] = True
+            await q.edit_message_text("✏️ Введи текст бегущей строки:\n\n_Пример: СЛЕДУЮЩИЙ ТУР 10.04.2026 — НЕ ПРОПУСТИ!_", parse_mode="Markdown")
+            return TICKER_INPUT
+        elif q.data.startswith("tkr_"):
+            idx = int(q.data.replace("tkr_", ""))
+            templates = build_templates(data)
+            if idx < len(templates):
+                data['ticker'] = templates[idx]
+                ok = save_data(data)
+                adm = is_admin(q.from_user.id, data)
+                await q.edit_message_text(
+                    f"{'✅ Бегущая строка установлена!' if ok else '⚠️ Ошибка'}\n\n📢 _{templates[idx]}_",
+                    parse_mode="Markdown", reply_markup=main_menu_kb(adm))
+                return ConversationHandler.END
+    finally:
+        unlock_cb(q)
+    return TICKER_INPUT
+
+async def ticker_text_msg(update:Update, ctx:ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.strip().upper()
+    data = load_data()
+    data['ticker'] = text
+    ok = save_data(data)
+    adm = is_admin(update.effective_user.id, data)
+    await update.message.reply_text(
+        f"{'✅ Бегущая строка установлена!' if ok else '⚠️ Ошибка'}\n\n📢 _{text}_",
+        parse_mode="Markdown", reply_markup=main_menu_kb(adm))
     return ConversationHandler.END
 
 # CREATE EVENT
@@ -952,6 +1061,17 @@ def main():
         states={
             DIRTY_EVENT:[CallbackQueryHandler(dirty_event_cb,pattern="^dp_ev_")],
             DIRTY_PLAYER:[CallbackQueryHandler(dirty_player_cb,pattern="^dp_pl_")],
+        },
+        fallbacks=[CommandHandler("cancel",cancel),CallbackQueryHandler(back_main,pattern="^back_main$")]
+    ))
+
+    app.add_handler(ConversationHandler(
+        entry_points=[CallbackQueryHandler(menu_handler,pattern="^menu_ticker$")],
+        states={
+            TICKER_INPUT:[
+                CallbackQueryHandler(ticker_cb,pattern="^tkr_"),
+                MessageHandler(filters.TEXT&~filters.COMMAND,ticker_text_msg),
+            ],
         },
         fallbacks=[CommandHandler("cancel",cancel),CallbackQueryHandler(back_main,pattern="^back_main$")]
     ))
