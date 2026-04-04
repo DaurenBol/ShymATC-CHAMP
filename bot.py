@@ -679,11 +679,12 @@ async def edit_match_event_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     try:
         ctx.user_data["edit_eid"]=q.data.replace("ems_","")
         data=load_data(); event=get_event(data,ctx.user_data["edit_eid"])
-        played=[m for m in event.get("matches",[]) if m.get("played")]
-        if not played:
+        ps=set(event.get("participants",[]))
+        valid=[(i,m) for i,m in enumerate(event.get("matches",[])) if m.get("played") and m.get("home") in ps and m.get("away") in ps]
+        if not valid:
             await q.edit_message_text("Нет сыгранных матчей.",reply_markup=back_kb()); return ConversationHandler.END
         kb=[[InlineKeyboardButton(f"{m['home']} {m['score_home']}:{m['score_away']} {m['away']} ({m.get('date','')})",callback_data=f"emm_{i}")]
-            for i,m in enumerate(event["matches"]) if m.get("played")]
+            for i,m in valid]
         kb.append([InlineKeyboardButton("◀️ Назад",callback_data="back_main")])
         await q.edit_message_text("⚽ Выбери матч:",reply_markup=InlineKeyboardMarkup(kb))
     finally: unlock_cb(q)
@@ -781,13 +782,15 @@ async def delete_match_event_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
         eid=q.data.replace("edm_","")
         ctx.user_data["edit_eid"]=eid
         data=load_data(); event=get_event(data,eid)
-        played=[m for i,m in enumerate(event.get("matches",[])) if m.get("played")]
-        if not played:
+        ps=set(event.get("participants",[]))
+        # Только матчи где оба участника существуют в текущем списке
+        valid=[(i,m) for i,m in enumerate(event.get("matches",[])) if m.get("played") and m.get("home") in ps and m.get("away") in ps]
+        if not valid:
             await q.edit_message_text("Нет сыгранных матчей.",reply_markup=back_kb()); return ConversationHandler.END
         kb=[[InlineKeyboardButton(
             f"{m['home']} {m['score_home']}:{m['score_away']} {m['away']} ({m.get('date','')})",
             callback_data=f"dmc_{i}"
-        )] for i,m in enumerate(event["matches"]) if m.get("played")]
+        )] for i,m in valid]
         kb.append([InlineKeyboardButton("◀️ Назад",callback_data="back_main")])
         await q.edit_message_text("🗑 Выбери матч для удаления:",reply_markup=InlineKeyboardMarkup(kb))
     finally: unlock_cb(q)
