@@ -424,11 +424,41 @@ function renderHome() {
   const lastMatchHtml = lastMatch
     ? `<div class="stat-val" style="font-size:20px;padding-top:2px">${lastMatch.score_home}:${lastMatch.score_away}</div><div class="stat-sub">${lastMatch.home} vs ${lastMatch.away}</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px">${lastMatch.date||''}</div>`
     : `<div class="stat-val">—</div><div class="stat-sub">нет матчей</div>`;
+
+  // Top match — max total goals
+  const topMatch = (() => {
+    if(!first) return null;
+    const ps = new Set(first.participants||[]);
+    const played = (first.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away));
+    if(!played.length) return null;
+    return played.reduce((best,m)=>(m.score_home+m.score_away)>(best.score_home+best.score_away)?m:best);
+  })();
+  const topMatchHtml = topMatch
+    ? `<div class="stat-val" style="font-size:20px;padding-top:2px">${topMatch.score_home}:${topMatch.score_away}</div><div class="stat-sub">${topMatch.home} vs ${topMatch.away}</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px">${topMatch.score_home+topMatch.score_away} голов · ${topMatch.date||''}</div>`
+    : `<div class="stat-val">—</div><div class="stat-sub">нет матчей</div>`;
+
+  // Top scorer — most goals scored (gf)
+  const topScorer = (() => {
+    if(!first) return null;
+    const rows = calcStandings(first);
+    if(!rows.length) return null;
+    return rows.reduce((best,r)=>r.gf>best.gf?r:best);
+  })();
+  const topScorerHtml = topScorer && topScorer.gf > 0
+    ? `<div class="stat-val" style="font-size:28px;padding-top:2px">${topScorer.gf}</div><div class="stat-sub">${topScorer.name}</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px">голов забито</div>`
+    : `<div class="stat-val">—</div><div class="stat-sub">нет данных</div>`;
+
+  // Dirty player
+  const dirtyPlayer = first ? (first.dirty_player || null) : null;
+  const dirtyHtml = dirtyPlayer
+    ? `<div class="stat-val" style="font-size:16px;padding-top:6px;line-height:1.2">${dirtyPlayer}</div><div class="stat-sub" style="margin-top:6px">назначен админом</div>`
+    : `<div class="stat-val" style="font-size:28px;padding-top:2px">—</div><div class="stat-sub">не назначен</div>`;
+
   statsEl.innerHTML = `
-    <div class="stat-card"><div class="stat-lbl">Событий</div><div class="stat-val">${events.length}</div><div class="stat-sub">всего</div></div>
     <div class="stat-card"><div class="stat-lbl">Последний матч</div>${lastMatchHtml}</div>
-    <div class="stat-card"><div class="stat-lbl">Матчей</div><div class="stat-val">${totalMatches}</div><div class="stat-sub">сыграно</div></div>
-    <div class="stat-card"><div class="stat-lbl">Участников</div><div class="stat-val">${totalParticipants}</div><div class="stat-sub">уникальных</div></div>`;
+    <div class="stat-card"><div class="stat-lbl">Топ матч ⚽</div>${topMatchHtml}</div>
+    <div class="stat-card"><div class="stat-lbl">Бомбардир 🎯</div>${topScorerHtml}</div>
+    <div class="stat-card"><div class="stat-lbl">Грязный игрок 😈</div>${dirtyHtml}</div>`;
 
   // Events list
   const listEl = document.getElementById('events-list');

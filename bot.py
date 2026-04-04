@@ -43,9 +43,7 @@ def _load_from_github():
 def save_data(data):
     global _cache, _cache_sha
     sha = data.pop("_sha", None)
-    # Update cache immediately — bot responds instantly
     _cache = json.loads(json.dumps(data))
-    # Save to GitHub in background thread — doesn't block bot
     def _push():
         global _cache_sha
         enc = base64.b64encode(json.dumps(data, ensure_ascii=False, indent=2).encode()).decode()
@@ -63,7 +61,7 @@ def save_data(data):
         except Exception as e:
             print(f"save error: {e}")
     threading.Thread(target=_push, daemon=True).start()
-    return True  # Always return True immediately
+    return True
 
 # ── LOCK ──
 _busy = set()
@@ -89,8 +87,9 @@ def unlock_cb(q): _busy.discard(q.from_user.id)
     EDIT_MATCH_SELECT, EDIT_MATCH_FIELD, EDIT_MATCH_VALUE,
     EDIT_PARTICIPANT_OLD, EDIT_PARTICIPANT_NEW,
     REMOVE_PARTICIPANT_SELECT,
-    DELETE_MATCH_SELECT, DELETE_MATCH_CONFIRM
-) = range(32)
+    DELETE_MATCH_SELECT, DELETE_MATCH_CONFIRM,
+    DIRTY_EVENT, DIRTY_PLAYER
+) = range(34)
 
 EVENT_TYPES = [
     ("🏆 Турнир","tournament"),("🏅 Лига","league"),("🥇 Чемпионат","championship"),
@@ -160,6 +159,7 @@ def main_menu_kb(is_adm):
              [InlineKeyboardButton("✏️ Редактировать",callback_data="menu_edit")],
              [InlineKeyboardButton("🏁 Завершить",callback_data="menu_finish"),
               InlineKeyboardButton("🗑 Удалить",callback_data="menu_delete")],
+             [InlineKeyboardButton("😈 Грязный игрок",callback_data="menu_dirty_player")],
              [InlineKeyboardButton("👑 Добавить админа",callback_data="menu_add_admin"),
               InlineKeyboardButton("🔄 Сброс",callback_data="menu_reset")]]
     return InlineKeyboardMarkup(kb)
@@ -292,6 +292,16 @@ async def menu_handler(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
             await q.edit_message_text("🗑 Какое удалить?",reply_markup=InlineKeyboardMarkup(kb))
             return DELETE_CONFIRM
 
+        elif action=="dirty_player":
+            if not is_admin(q.from_user.id,data): await q.edit_message_text("⛔ Нет доступа."); return
+            events_with_p=[e for e in data["events"] if e.get("participants")]
+            if not events_with_p:
+                await q.edit_message_text("Нет событий с участниками.",reply_markup=back_kb()); return
+            kb=[[InlineKeyboardButton(e["name"],callback_data=f"dp_ev_{e['id']}")] for e in events_with_p]
+            kb.append([InlineKeyboardButton("◀️ Назад",callback_data="back_main")])
+            await q.edit_message_text("😈 *Грязный игрок*\nВыбери событие:",parse_mode="Markdown",reply_markup=InlineKeyboardMarkup(kb))
+            return DIRTY_EVENT
+
         elif action=="add_admin":
             if not is_admin(q.from_user.id,data): await q.edit_message_text("⛔ Нет доступа."); return
             await q.edit_message_text("👑 Введи Telegram user_id нового админа:")
@@ -324,6 +334,48 @@ async def standings_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
         data=load_data(); event=get_event(data,q.data.replace("st_",""))
         if event: await do_standings(q,event)
     finally: unlock_cb(q)
+
+# ── DIRTY PLAYER ──
+async def dirty_event_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
+    q=update.callback_query
+    if not await lock_cb(q): return DIRTY_EVENT
+    try:
+        eid=q.data.replace("dp_ev_","")
+        ctx.user_data["dirty_eid"]=eid
+        data=load_data(); event=get_event(data,eid)
+        current=event.get("dirty_player","")
+        current_txt=f"\nСейчас: 😈 *{current}*" if current else "\nСейчас: не установлен"
+        kb=[[InlineKeyboardButton(f"👤 {p}",callback_data=f"dp_pl_{p}")] for p in event["participants"]]
+        if current:
+            kb.append([InlineKeyboardButton("🗑 Убрать грязного игрока",callback_data="dp_pl_CLEAR")])
+        kb.append([InlineKeyboardButton("◀️ Назад",callback_data="back_main")])
+        await q.edit_message_text(
+            f"😈 *Грязный игрок — {event['name']}*{current_txt}\n\nВыбери игрока:",
+            parse_mode="Markdown",reply_markup=InlineKeyboardMarkup(kb))
+    finally: unlock_cb(q)
+    return DIRTY_PLAYER
+
+async def dirty_player_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
+    q=update.callback_query
+    if not await lock_cb(q): return DIRTY_PLAYER
+    try:
+        name=q.data.replace("dp_pl_","")
+        data=load_data(); event=get_event(data,ctx.user_data["dirty_eid"])
+        adm=is_admin(q.from_user.id,data)
+        if name=="CLEAR":
+            event.pop("dirty_player",None)
+            ok=save_data(data)
+            await q.edit_message_text(
+                f"{'✅ Грязный игрок убран!' if ok else '⚠️ Ошибка'}\n\n*{event['name']}*: грязный игрок не установлен.",
+                parse_mode="Markdown",reply_markup=main_menu_kb(adm))
+        else:
+            event["dirty_player"]=name
+            ok=save_data(data)
+            await q.edit_message_text(
+                f"{'✅ Сохранено!' if ok else '⚠️ Ошибка'}\n\n😈 Грязный игрок *{event['name']}*:\n*{name}*",
+                parse_mode="Markdown",reply_markup=main_menu_kb(adm))
+    finally: unlock_cb(q)
+    return ConversationHandler.END
 
 # CREATE EVENT
 async def ev_name(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
@@ -444,7 +496,6 @@ async def ev_confirm_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
         data["events"].append(event)
         ok=save_data(data)
         status="✅ Данные сохранены!" if ok else "⚠️ Ошибка сохранения"
-        adm=is_admin(q.from_user.id,data)
         kb=InlineKeyboardMarkup([
             [InlineKeyboardButton("👤 Добавить участников",callback_data="menu_participants")],
             [InlineKeyboardButton("🏠 Главное меню",callback_data="back_main")],
@@ -714,7 +765,6 @@ async def remove_participant_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
         name=q.data.replace("rpp_",""); data=load_data()
         event=get_event(data,ctx.user_data["edit_eid"])
         event["participants"]=[p for p in event["participants"] if p!=name]
-        # Удаляем все матчи где участвовал этот игрок
         before=len(event.get("matches",[]))
         event["matches"]=[m for m in event.get("matches",[]) if m.get("home")!=name and m.get("away")!=name]
         removed=before-len(event["matches"])
@@ -894,14 +944,21 @@ def main():
         states={RESET_CONFIRM:[CallbackQueryHandler(reset_cb,pattern="^reset_yes$")]},
         fallbacks=[CommandHandler("cancel",cancel),CallbackQueryHandler(back_main,pattern="^back_main$")]
     ))
+    app.add_handler(ConversationHandler(
+        entry_points=[CallbackQueryHandler(menu_handler,pattern="^menu_dirty_player$")],
+        states={
+            DIRTY_EVENT:[CallbackQueryHandler(dirty_event_cb,pattern="^dp_ev_")],
+            DIRTY_PLAYER:[CallbackQueryHandler(dirty_player_cb,pattern="^dp_pl_")],
+        },
+        fallbacks=[CommandHandler("cancel",cancel),CallbackQueryHandler(back_main,pattern="^back_main$")]
+    ))
 
     app.add_handler(CommandHandler("start",start))
     app.add_handler(CallbackQueryHandler(menu_handler,pattern="^menu_"))
     app.add_handler(CallbackQueryHandler(standings_cb,pattern="^st_"))
     app.add_handler(CallbackQueryHandler(back_main,pattern="^back_main$"))
 
-    print("✅ ShymATC-CHAMP bot v5 started")
-    # Preload cache on startup
+    print("✅ ShymATC-CHAMP bot v5.1 started")
     print("📦 Preloading data from GitHub...")
     _load_from_github()
     print(f"📦 Cache loaded: {len(_cache.get('events', []))} events")
