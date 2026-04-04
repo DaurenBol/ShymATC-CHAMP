@@ -218,6 +218,26 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bar{width:18px;border-radius:3px 3px 0 0;min-height:4px;transition:background .3s;}
 .blbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);text-align:center;width:18px;transition:color .3s;}
 
+.prog-block{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;transition:background .3s,border-color .3s;}
+.pb-nums{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:14px 14px 10px;}
+.pb-n{text-align:center;}
+.pb-val{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1;}
+.pb-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-top:2px;}
+.pb-bar-outer{height:6px;background:var(--border);margin:0 14px 8px;border-radius:4px;overflow:hidden;}
+.pb-bar-inner{height:100%;border-radius:4px;background:var(--accent2);transition:width .8s ease;}
+.pb-footer{display:flex;justify-content:space-between;padding:0 14px 12px;}
+.pb-pct{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2);font-weight:700;}
+.pb-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);}
+.pb-toggle{width:100%;background:none;border:none;border-top:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;color:var(--text3);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;transition:background .15s;}
+.pb-toggle:active{background:var(--surface2);}
+.pb-toggle-arr{color:var(--accent);font-size:10px;transition:transform .2s;}
+.pb-toggle-arr.open{transform:rotate(180deg);}
+.pb-pairs{border-top:1px solid var(--border);}
+.pb-pair{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border2);}
+.pb-pair:last-child{border-bottom:none;}
+.pb-pair-names{font-size:12px;font-weight:600;color:var(--text);}
+.pb-pair-sep{color:var(--border2);margin:0 6px;}
+.pb-pair-badge{font-family:'DM Mono',monospace;font-size:9px;padding:2px 6px;border-radius:3px;background:rgba(255,107,71,.12);color:var(--accent3);border:1px solid rgba(255,107,71,.2);}
 .card-sec{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;transition:background .3s,border-color .3s;}
 .cs-title{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:12px 14px;border-bottom:1px solid var(--border);transition:color .3s,border-color .3s;}
 
@@ -371,6 +391,15 @@ function calcStandings(event) {
     else{if(st[h])st[h].d++;if(st[a])st[a].d++;}
   });
   return Object.values(st).sort((a,b)=>(b.w*3+b.d)-(a.w*3+a.d)||(b.gf-b.ga)-(a.gf-a.ga));
+}
+
+function togglePairs(listId, arrId) {
+  const list = document.getElementById(listId);
+  const arr = document.getElementById(arrId);
+  if(!list) return;
+  const open = list.style.display === 'block';
+  list.style.display = open ? 'none' : 'block';
+  if(arr) arr.classList.toggle('open', !open);
 }
 
 function renderAll() {
@@ -666,16 +695,74 @@ function renderStats() {
       </div>`;
     }
 
-    // Top 5 table
+    // Progress block
+    const n = ev.participants.length;
+    const totalPairs = Math.round(n*(n-1)/2);
+    const playedMatches = (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away));
+    // Unique pairs that played
+    const playedPairsSet = new Set();
+    playedMatches.forEach(m=>{
+      const key = [m.home,m.away].sort().join('|||');
+      playedPairsSet.add(key);
+    });
+    const playedPairs = playedPairsSet.size;
+    const remainingPairs = totalPairs - playedPairs;
+    const pct = Math.round(playedPairs/totalPairs*100);
+    // Find unplayed pairs
+    const unplayed = [];
+    const participants = ev.participants;
+    for(let i=0;i<participants.length;i++){
+      for(let j=i+1;j<participants.length;j++){
+        const key = [participants[i],participants[j]].sort().join('|||');
+        if(!playedPairsSet.has(key)) unplayed.push([participants[i],participants[j]]);
+      }
+    }
+    // Find players who played everyone
+    const completedPlayers = participants.filter(p=>{
+      return participants.filter(o=>o!==p).every(o=>{
+        const key=[p,o].sort().join('|||');
+        return playedPairsSet.has(key);
+      });
+    });
+    const pairsToggleId = 'pairs-toggle-'+ev.id;
+    const pairsListId = 'pairs-list-'+ev.id;
+    const pairsArrId = 'pairs-arr-'+ev.id;
+    const unplayedHtml = unplayed.map(([a,b])=>`
+      <div class="pb-pair">
+        <span class="pb-pair-names">${a}<span class="pb-pair-sep">vs</span>${b}</span>
+        <span class="pb-pair-badge">не играли</span>
+      </div>`).join('');
+    html += `<div class="prog-block">
+      <div class="pb-nums">
+        <div class="pb-n"><div class="pb-val" style="color:var(--accent2)">${playedPairs}</div><div class="pb-lbl">сыграли</div></div>
+        <div class="pb-n"><div class="pb-val" style="color:var(--accent3)">${remainingPairs}</div><div class="pb-lbl">осталось</div></div>
+        <div class="pb-n"><div class="pb-val" style="color:var(--text3)">${totalPairs}</div><div class="pb-lbl">всего пар</div></div>
+      </div>
+      <div class="pb-bar-outer"><div class="pb-bar-inner" style="width:${pct}%"></div></div>
+      <div class="pb-footer">
+        <div class="pb-pct">${pct}% пар сыграли</div>
+        <div class="pb-sub">${n} участников</div>
+      </div>
+      ${remainingPairs>0?`
+      <button class="pb-toggle" onclick="togglePairs('${pairsListId}','${pairsArrId}')">
+        <span>${remainingPairs} ${remainingPairs===1?'пара':remainingPairs<5?'пары':'пар'} ещё не встречались</span>
+        <span class="pb-toggle-arr" id="${pairsArrId}">▼</span>
+      </button>
+      <div class="pb-pairs" id="${pairsListId}" style="display:none">${unplayedHtml}</div>`
+      :`<div style="padding:10px 14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent)">✅ Все пары сыграли!</div>`}
+    </div>`;
+
+    // Top 5 table — add ✅ for completed players
     html += `<div class="card-sec">
       <div class="cs-title">${icon} ${ev.name} — таблица</div>
       <div>${rows.slice(0,5).map((r,i)=>{
         const pts=r.w*3+r.d;
         const c=COLORS[i%COLORS.length], bg=BGS[i%BGS.length];
+        const done = completedPlayers.includes(r.name);
         return `<div class="sc-row">
           <div class="sc-rk">${medal(i)}</div>
           <div class="sc-av" style="background:${bg};color:${c}">${ini(r.name)}</div>
-          <div class="sc-inf"><div class="sc-nm">${r.name}</div><div class="sc-tm">${r.w}П · ${r.d}Н · ${r.l}Пр</div></div>
+          <div class="sc-inf"><div class="sc-nm">${r.name}${done?' <span style="font-size:10px" title="Сыграл со всеми">✅</span>':''}</div><div class="sc-tm">${r.w}П · ${r.d}Н · ${r.l}Пр</div></div>
           <div class="sc-g">${pts}</div>
         </div>`;}).join('')}
       </div>
