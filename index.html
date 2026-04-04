@@ -535,7 +535,7 @@ function renderMatches() {
     return;
   }
   content.innerHTML = `<div class="ms-lbl">🏁 Последние результаты</div>` +
-    allMatches.slice(0,10).map(m => {
+    allMatches.map(m => {
       const hw=m.score_home>m.score_away, aw=m.score_away>m.score_home;
       return `<div class="match-card">
         <div class="m-date">${m.date||''} · ${m.eventName}</div>
