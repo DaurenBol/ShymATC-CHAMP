@@ -187,10 +187,27 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .stats-wrap{padding:16px;}
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;transition:background .3s,border-color .3s;}
 .chart-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;transition:color .3s;}
-.mini-chart{display:flex;align-items:flex-end;gap:4px;height:56px;}
-.bc{display:flex;flex-direction:column;align-items:center;flex:1;gap:3px;}
-.bar{width:100%;border-radius:3px 3px 0 0;min-height:4px;transition:background .3s;}
-.blbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);text-align:center;transition:color .3s;}
+
+/* CHART: scrollable wrapper */
+.mini-chart-wrap{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  border-radius:6px;
+}
+.mini-chart-wrap::-webkit-scrollbar{display:none;}
+.mini-chart{
+  display:flex;
+  align-items:flex-end;
+  gap:4px;
+  height:68px;
+  min-width:max-content;
+  padding:4px 2px 0;
+}
+
+.bc{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.bar{width:18px;border-radius:3px 3px 0 0;min-height:4px;transition:background .3s;}
+.blbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);text-align:center;width:18px;transition:color .3s;}
 
 .card-sec{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;transition:background .3s,border-color .3s;}
 .cs-title{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:12px 14px;border-bottom:1px solid var(--border);transition:color .3s,border-color .3s;}
@@ -397,7 +414,6 @@ function renderHome() {
     const ps = new Set(e.participants||[]);
     return s+(e.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).length;
   },0);
-  // Последний валидный матч
   const lastMatch = (() => {
     if(!first) return null;
     const ps = new Set(first.participants||[]);
@@ -561,22 +577,28 @@ function renderStats() {
   active.forEach(ev => {
     const rows = calcStandings(ev);
     if(!rows.length) return;
-    const goals = (ev.matches||[]).filter(m=>m.played).map(m=>m.score_home+m.score_away);
+    const ps = new Set(ev.participants||[]);
+    const goals = (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).map(m=>m.score_home+m.score_away);
     const icon = SPORT_ICONS[ev.category]||'🏆';
-    // Goals chart
+    const chartId = 'chart-' + ev.id;
+
+    // Goals chart — scrollable
     if(goals.length > 0) {
       const mx = Math.max(...goals, 1);
       html += `<div class="chart-card">
-        <div class="chart-title">${icon} ${ev.name} — голы по матчам</div>
-        <div class="mini-chart">${goals.map((g,i)=>`
-          <div class="bc">
-            <div class="bar" style="height:${Math.round(g/mx*48)}px;background:${i===goals.length-1?'var(--accent)':'rgba(120,120,160,.35)'}"></div>
-            <div class="blbl">${i+1}</div>
-          </div>`).join('')}
+        <div class="chart-title">${icon} ${ev.name} — голы по матчам (${goals.length})</div>
+        <div class="mini-chart-wrap" id="${chartId}">
+          <div class="mini-chart">${goals.map((g,i)=>`
+            <div class="bc">
+              <div class="bar" style="height:${Math.round(g/mx*48)}px;background:${i===goals.length-1?'var(--accent)':'rgba(120,120,160,.35)'}"></div>
+              <div class="blbl">${i+1}</div>
+            </div>`).join('')}
+          </div>
         </div>
       </div>`;
     }
-    // Top scorers (by wins)
+
+    // Top 5 table
     html += `<div class="card-sec">
       <div class="cs-title">${icon} ${ev.name} — таблица</div>
       <div>${rows.slice(0,5).map((r,i)=>{
@@ -591,7 +613,14 @@ function renderStats() {
       </div>
     </div>`;
   });
+
   content.innerHTML = html || `<div style="padding:40px;text-align:center;color:var(--text3);">Нет данных</div>`;
+
+  // Auto-scroll each chart to the right (latest match visible)
+  active.forEach(ev => {
+    const wrap = document.getElementById('chart-' + ev.id);
+    if(wrap) wrap.scrollLeft = wrap.scrollWidth;
+  });
 }
 
 // ── NAVIGATION ──
