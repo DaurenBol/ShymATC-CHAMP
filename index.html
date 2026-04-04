@@ -393,20 +393,24 @@ function renderHome() {
 
   // Stats cards
   const statsEl = document.getElementById('home-stats');
-  // Считаем матчи только между реальными участниками
   const totalMatches = events.reduce((s,e)=>{
     const ps = new Set(e.participants||[]);
     return s+(e.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).length;
   },0);
-  // Считаем участников из списка participants, не из матчей
+  // Последний валидный матч
+  const lastMatch = (() => {
+    if(!first) return null;
+    const ps = new Set(first.participants||[]);
+    const played = (first.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away));
+    return played.length ? played[played.length-1] : null;
+  })();
   const totalParticipants = [...new Set(events.flatMap(e=>e.participants||[]))].length;
-  const leader = first && first.participants.length > 0 ? (() => {
-    const rows = calcStandings(first);
-    return rows[0] ? rows[0].name.split(' ')[0] : '—';
-  })() : '—';
+  const lastMatchHtml = lastMatch
+    ? `<div class="stat-val" style="font-size:20px;padding-top:2px">${lastMatch.score_home}:${lastMatch.score_away}</div><div class="stat-sub">${lastMatch.home} vs ${lastMatch.away}</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px">${lastMatch.date||''}</div>`
+    : `<div class="stat-val">—</div><div class="stat-sub">нет матчей</div>`;
   statsEl.innerHTML = `
     <div class="stat-card"><div class="stat-lbl">Событий</div><div class="stat-val">${events.length}</div><div class="stat-sub">всего</div></div>
-    <div class="stat-card"><div class="stat-lbl">Лидер</div><div class="stat-val" style="font-size:22px;padding-top:4px">${leader}</div><div class="stat-sub">текущий</div></div>
+    <div class="stat-card"><div class="stat-lbl">Последний матч</div>${lastMatchHtml}</div>
     <div class="stat-card"><div class="stat-lbl">Матчей</div><div class="stat-val">${totalMatches}</div><div class="stat-sub">сыграно</div></div>
     <div class="stat-card"><div class="stat-lbl">Участников</div><div class="stat-val">${totalParticipants}</div><div class="stat-sub">уникальных</div></div>`;
 
