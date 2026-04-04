@@ -411,13 +411,54 @@ function renderAll() {
   renderStats();
 }
 
+function getTickerText() {
+  const mode = RAW_DATA?.ticker_mode || '';
+  const events = RAW_DATA?.events || [];
+  const active = events.filter(e=>e.active);
+  const ev = active[0];
+  if(mode === 'custom') return RAW_DATA?.ticker || '';
+  if(!ev) return '';
+  const ps = new Set(ev.participants||[]);
+  const played = (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away));
+  if(mode === 'last_match') {
+    if(!played.length) return '';
+    const last = played[played.length-1];
+    const res = last.score_home > last.score_away ? `${last.home.toUpperCase()} ПОБЕДИЛ` : last.score_away > last.score_home ? `${last.away.toUpperCase()} ПОБЕДИЛ` : 'НИЧЬЯ';
+    return `⚽ ПОСЛЕДНИЙ МАТЧ: ${last.home.toUpperCase()} ${last.score_home}:${last.score_away} ${last.away.toUpperCase()} — ${res}`;
+  }
+  if(mode === 'leader') {
+    const rows = calcStandings(ev);
+    if(!rows.length) return '';
+    const leader = rows[0];
+    const pts = leader.w*3+leader.d;
+    return `🏆 ЛИДЕР ТУРНИРА ${ev.name.toUpperCase()}: ${leader.name.toUpperCase()} — ${pts} ОЧКОВ!`;
+  }
+  if(mode === 'top_scorer') {
+    const rows = calcStandings(ev);
+    if(!rows.length) return '';
+    const top = rows.reduce((b,r)=>r.gf>b.gf?r:b);
+    return `🎯 ЛУЧШИЙ БОМБАРДИР: ${top.name.toUpperCase()} — ${top.gf} ГОЛОВ В ${ev.name.toUpperCase()}`;
+  }
+  if(mode === 'top_match') {
+    if(!played.length) return '';
+    const top = played.reduce((b,m)=>(m.score_home+m.score_away)>(b.score_home+b.score_away)?m:b);
+    return `🔥 САМЫЙ РЕЗУЛЬТАТИВНЫЙ: ${top.home.toUpperCase()} ${top.score_home}:${top.score_away} ${top.away.toUpperCase()} — ${top.score_home+top.score_away} ГОЛОВ!`;
+  }
+  if(mode === 'dirty') {
+    const dirty = ev.dirty_player;
+    if(!dirty) return '';
+    return `😈 САМЫЙ ГРЯЗНЫЙ ИГРОК ПО МНЕНИЮ УЧАСТНИКОВ: ${dirty.toUpperCase()}`;
+  }
+  return '';
+}
+
 function renderTicker() {
   const bar = document.getElementById('ticker-bar');
   const inner = document.getElementById('ticker-inner');
-  const ticker = RAW_DATA?.ticker || '';
   const root = document.getElementById('scroll-root');
-  if(ticker && ticker.trim()) {
-    inner.innerHTML = `<span class="ticker-icon">📢</span><span class="ticker-text">${ticker}</span><span class="ticker-sep">◆</span><span class="ticker-text">${ticker}</span>`;
+  const text = getTickerText();
+  if(text && text.trim()) {
+    inner.innerHTML = `<span class="ticker-icon">📢</span><span class="ticker-text">${text}</span><span class="ticker-sep">◆</span><span class="ticker-text">${text}</span>`;
     bar.classList.add('visible');
     root.style.top = '95px';
   } else {

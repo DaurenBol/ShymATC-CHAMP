@@ -427,20 +427,34 @@ def build_templates(data):
         ]
     return templates
 
+TICKER_MODES = [
+    ("last_match",  "⚽ Последний матч"),
+    ("leader",      "🏆 Лидер турнира"),
+    ("top_scorer",  "🎯 Лучший бомбардир"),
+    ("top_match",   "🔥 Самый результативный матч"),
+    ("dirty",       "😈 Самый грязный игрок"),
+]
+
 async def show_ticker_menu(q, data):
-    current = data.get('ticker','')
-    current_txt = (f"\nСейчас: _{current}_" if current else "\nСейчас: не установлена")
-    templates = build_templates(data)
+    mode = data.get('ticker_mode','')
+    custom = data.get('ticker','')
+    if mode == 'custom' and custom:
+        current_txt = f"\nСейчас (свой текст): _{custom}_"
+    elif mode:
+        label = next((l for m,l in TICKER_MODES if m==mode), mode)
+        current_txt = f"\nСейчас (авто): {label}"
+    else:
+        current_txt = "\nСейчас: не установлена"
     kb = []
-    for i, t in enumerate(templates):
-        short = t[:40] + '...' if len(t) > 40 else t
-        kb.append([InlineKeyboardButton(short, callback_data=f"tkr_{i}")])
+    for m, l in TICKER_MODES:
+        active = "✅ " if m == mode else ""
+        kb.append([InlineKeyboardButton(f"{active}{l} (авто)", callback_data=f"tkr_{m}")])
     kb.append([InlineKeyboardButton("✏️ Свой текст", callback_data="tkr_custom")])
-    if current:
+    if mode:
         kb.append([InlineKeyboardButton("🗑 Убрать строку", callback_data="tkr_clear")])
     kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
     await q.edit_message_text(
-        f"📢 *Бегущая строка*{current_txt}\n\nВыбери шаблон или введи свой текст:",
+        f"📢 *Бегущая строка*{current_txt}\n\nАвто-режим обновляется сам при каждом матче:",
         parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
 
 async def ticker_cb(update:Update, ctx:ContextTypes.DEFAULT_TYPE):
@@ -450,6 +464,7 @@ async def ticker_cb(update:Update, ctx:ContextTypes.DEFAULT_TYPE):
         data = load_data()
         if q.data == "tkr_clear":
             data.pop('ticker', None)
+            data.pop('ticker_mode', None)
             ok = save_data(data)
             adm = is_admin(q.from_user.id, data)
             await q.edit_message_text(
@@ -457,18 +472,19 @@ async def ticker_cb(update:Update, ctx:ContextTypes.DEFAULT_TYPE):
                 reply_markup=main_menu_kb(adm))
             return ConversationHandler.END
         elif q.data == "tkr_custom":
-            ctx.user_data['ticker_waiting'] = True
             await q.edit_message_text("✏️ Введи текст бегущей строки:\n\n_Пример: СЛЕДУЮЩИЙ ТУР 10.04.2026 — НЕ ПРОПУСТИ!_", parse_mode="Markdown")
             return TICKER_INPUT
         elif q.data.startswith("tkr_"):
-            idx = int(q.data.replace("tkr_", ""))
-            templates = build_templates(data)
-            if idx < len(templates):
-                data['ticker'] = templates[idx]
+            mode = q.data.replace("tkr_", "")
+            valid_modes = [m for m,l in TICKER_MODES]
+            if mode in valid_modes:
+                data['ticker_mode'] = mode
+                data.pop('ticker', None)
                 ok = save_data(data)
                 adm = is_admin(q.from_user.id, data)
+                label = next((l for m,l in TICKER_MODES if m==mode), mode)
                 await q.edit_message_text(
-                    f"{'✅ Бегущая строка установлена!' if ok else '⚠️ Ошибка'}\n\n📢 _{templates[idx]}_",
+                    f"{'✅ Авто-режим установлен!' if ok else '⚠️ Ошибка'}\n\n📢 {label}\n_Строка будет обновляться автоматически_",
                     parse_mode="Markdown", reply_markup=main_menu_kb(adm))
                 return ConversationHandler.END
     finally:
@@ -479,6 +495,7 @@ async def ticker_text_msg(update:Update, ctx:ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip().upper()
     data = load_data()
     data['ticker'] = text
+    data['ticker_mode'] = 'custom'
     ok = save_data(data)
     adm = is_admin(update.effective_user.id, data)
     await update.message.reply_text(
