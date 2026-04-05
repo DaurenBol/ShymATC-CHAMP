@@ -878,12 +878,17 @@ async def edit_match_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         ctx.user_data["edit_eid"] = q.data.replace("ems_","")
         data = load_data(); event = get_event(data, ctx.user_data["edit_eid"])
         ps = set(event.get("participants",[]))
-        played = [(i,m) for i,m in enumerate(event.get("matches",[])) if m.get("played") and m.get("home") in ps and m.get("away") in ps]
+        # Собираем все матчи из всех раундов с индексами (round_idx, match_idx)
+        played = []
+        for ri, r in enumerate(event.get("rounds",[])):
+            for mi, m in enumerate(r.get("matches",[])):
+                if m.get("played") and m.get("home") in ps and m.get("away") in ps:
+                    played.append((ri, mi, r["name"], m))
         if not played:
             await q.edit_message_text("Нет сыгранных матчей.", reply_markup=back_kb()); return ConversationHandler.END
         kb = [[InlineKeyboardButton(
-            f"{m['home']} {m['score_home']}:{m['score_away']} {m['away']} ({m.get('date','')})",
-            callback_data=f"emm_{i}")] for i,m in played]
+            f"[{rname}] {m['home']} {m['score_home']}:{m['score_away']} {m['away']} ({m.get('date','')})",
+            callback_data=f"emm_{ri}_{mi}")] for ri,mi,rname,m in played]
         kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
         await q.edit_message_text("⚽ Выбери матч:", reply_markup=InlineKeyboardMarkup(kb))
     finally: unlock_cb(q)
@@ -893,10 +898,12 @@ async def edit_match_select_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not await lock_cb(q): return EDIT_MATCH_FIELD
     try:
-        idx = int(q.data.replace("emm_",""))
-        ctx.user_data["edit_match_idx"] = idx
+        parts = q.data.replace("emm_","").split("_")
+        ri, mi = int(parts[0]), int(parts[1])
+        ctx.user_data["edit_round_idx"] = ri
+        ctx.user_data["edit_match_idx"] = mi
         data = load_data(); event = get_event(data, ctx.user_data["edit_eid"])
-        m = event["matches"][idx]
+        m = event["rounds"][ri]["matches"][mi]
         await q.edit_message_text(
             f"Матч: *{m['home']}* {m['score_home']}:{m['score_away']} *{m['away']}*\n\nВведи новый счёт (формат: `2:1`):",
             parse_mode="Markdown")
@@ -911,7 +918,8 @@ async def edit_match_score_value(update: Update, ctx: ContextTypes.DEFAULT_TYPE)
     except:
         await update.message.reply_text("Формат: `2:1`", parse_mode="Markdown"); return EDIT_MATCH_VALUE
     data = load_data(); event = get_event(data, ctx.user_data["edit_eid"])
-    idx = ctx.user_data["edit_match_idx"]; m = event["matches"][idx]
+    ri = ctx.user_data["edit_round_idx"]; mi = ctx.user_data["edit_match_idx"]
+    m = event["rounds"][ri]["matches"][mi]
     old = f"{m['score_home']}:{m['score_away']}"; m["score_home"] = sh; m["score_away"] = sa
     ok = save_data(data); adm = is_admin(update.effective_user.id, data)
     await update.message.reply_text(
@@ -963,9 +971,10 @@ async def edit_participant_new_value(update: Update, ctx: ContextTypes.DEFAULT_T
         new_name = value
         if old_name in event["participants"]:
             event["participants"][event["participants"].index(old_name)] = new_name
-        for m in event.get("matches",[]):
-            if m.get("home") == old_name: m["home"] = new_name
-            if m.get("away") == old_name: m["away"] = new_name
+        for r in event.get("rounds",[]):
+            for m in r.get("matches",[]):
+                if m.get("home") == old_name: m["home"] = new_name
+                if m.get("away") == old_name: m["away"] = new_name
         teams = event.get("participant_teams", {})
         if old_name in teams:
             teams[new_name] = teams.pop(old_name)
@@ -1012,9 +1021,12 @@ async def remove_participant_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         event = get_event(data, ctx.user_data["edit_eid"])
         event["participants"] = [p for p in event["participants"] if p != name]
         event.get("participant_teams", {}).pop(name, None)
-        before = len(event.get("matches",[]))
-        event["matches"] = [m for m in event.get("matches",[]) if m.get("home") != name and m.get("away") != name]
-        removed = before - len(event["matches"])
+        # Удаляем матчи из всех раундов
+        removed = 0
+        for r in event.get("rounds", []):
+            before = len(r.get("matches", []))
+            r["matches"] = [m for m in r.get("matches", []) if m.get("home") != name and m.get("away") != name]
+            removed += before - len(r["matches"])
         ok = save_data(data); adm = is_admin(q.from_user.id, data)
         extra = f"\nУдалено матчей: {removed}" if removed > 0 else ""
         await q.edit_message_text(
@@ -1030,12 +1042,16 @@ async def delete_match_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         eid = q.data.replace("edm_",""); ctx.user_data["edit_eid"] = eid
         data = load_data(); event = get_event(data, eid)
         ps = set(event.get("participants",[]))
-        valid = [(i,m) for i,m in enumerate(event.get("matches",[])) if m.get("played") and m.get("home") in ps and m.get("away") in ps]
+        valid = []
+        for ri, r in enumerate(event.get("rounds",[])):
+            for mi, m in enumerate(r.get("matches",[])):
+                if m.get("played") and m.get("home") in ps and m.get("away") in ps:
+                    valid.append((ri, mi, r["name"], m))
         if not valid:
             await q.edit_message_text("Нет сыгранных матчей.", reply_markup=back_kb()); return ConversationHandler.END
         kb = [[InlineKeyboardButton(
-            f"{m['home']} {m['score_home']}:{m['score_away']} {m['away']} ({m.get('date','')})",
-            callback_data=f"dmc_{i}")] for i,m in valid]
+            f"[{rname}] {m['home']} {m['score_home']}:{m['score_away']} {m['away']} ({m.get('date','')})",
+            callback_data=f"dmc_{ri}_{mi}")] for ri,mi,rname,m in valid]
         kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
         await q.edit_message_text("🗑 Выбери матч для удаления:", reply_markup=InlineKeyboardMarkup(kb))
     finally: unlock_cb(q)
@@ -1045,11 +1061,12 @@ async def delete_match_confirm_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE
     q = update.callback_query
     if not await lock_cb(q): return DELETE_MATCH_CONFIRM
     try:
-        idx = int(q.data.replace("dmc_",""))
+        parts = q.data.replace("dmc_","").split("_")
+        ri, mi = int(parts[0]), int(parts[1])
         data = load_data(); event = get_event(data, ctx.user_data["edit_eid"])
-        m = event["matches"][idx]
+        m = event["rounds"][ri]["matches"][mi]
         label = f"*{m['home']}* {m['score_home']}:{m['score_away']} *{m['away']}* ({m.get('date','')})"
-        event["matches"].pop(idx)
+        event["rounds"][ri]["matches"].pop(mi)
         ok = save_data(data); adm = is_admin(q.from_user.id, data)
         await q.edit_message_text(
             f"{'✅ Матч удалён!' if ok else '⚠️ Ошибка'}\n\n{label}",
