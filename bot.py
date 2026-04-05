@@ -98,7 +98,8 @@ def unlock_cb(q): _busy.discard(q.from_user.id)
     GROUP_DELETE_SELECT,
     EDIT_GROUP_SELECT, EDIT_GROUP_NAME_VAL,
     EDIT_TEAM_ROUND,
-) = range(43)
+    DELETE_ROUND_SELECT, DELETE_ROUND_CONFIRM,
+) = range(45)
 
 # ── CONSTANTS ──
 EVENT_TYPES = [
@@ -332,6 +333,10 @@ async def menu_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("🎮 Команда участника", callback_data="edit_team")],
                 [InlineKeyboardButton("🗑 Удалить участника", callback_data="edit_remove_participant")],
             ]
+            # Показывать "Удалить круг" если есть события с > 1 раундом
+            has_multi_rounds = any(len(e.get("rounds",[])) > 1 for e in data["events"] if e.get("active"))
+            if has_multi_rounds:
+                kb.append([InlineKeyboardButton("🗑 Удалить круг", callback_data="edit_delete_round")])
             if groups:
                 kb += [
                     [InlineKeyboardButton("✏️ Переименовать группу", callback_data="edit_group_name")],
@@ -871,6 +876,14 @@ async def edit_select_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
             await q.edit_message_text("🔓 Выбери группу для разъединения:", reply_markup=InlineKeyboardMarkup(kb))
             return EDIT_GROUP_SELECT
+        elif q.data == "edit_delete_round":
+            active = [e for e in data["events"] if e.get("active") and len(e.get("rounds",[])) > 1]
+            if not active:
+                await q.edit_message_text("Нет событий с несколькими кругами.", reply_markup=back_kb()); return ConversationHandler.END
+            kb = [[InlineKeyboardButton(e["name"], callback_data=f"edr_ev_{e['id']}")] for e in active]
+            kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
+            await q.edit_message_text("🗑 Выбери событие:", reply_markup=InlineKeyboardMarkup(kb))
+            return DELETE_ROUND_SELECT
     finally: unlock_cb(q)
 
 async def edit_event_name_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -1404,6 +1417,47 @@ async def add_round_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown", reply_markup=main_menu_kb(adm))
     finally: unlock_cb(q)
 
+async def delete_round_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return DELETE_ROUND_SELECT
+    try:
+        eid = q.data.replace("edr_ev_",""); ctx.user_data["edit_eid"] = eid
+        data = load_data(); event = get_event(data, eid)
+        rounds = event.get("rounds", [])
+        if len(rounds) <= 1:
+            await q.edit_message_text("Нельзя удалить единственный круг.", reply_markup=back_kb()); return ConversationHandler.END
+        kb = [[InlineKeyboardButton(
+            f"🗑 {r['name']} ({len(r.get('matches',[]))} матчей)",
+            callback_data=f"edr_r_{r['id']}")] for r in rounds]
+        kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
+        await q.edit_message_text("🗑 Выбери круг для удаления:", reply_markup=InlineKeyboardMarkup(kb))
+    finally: unlock_cb(q)
+    return DELETE_ROUND_CONFIRM
+
+async def delete_round_confirm_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return DELETE_ROUND_CONFIRM
+    try:
+        rid = int(q.data.replace("edr_r_",""))
+        data = load_data(); event = get_event(data, ctx.user_data["edit_eid"])
+        rnd = get_round(event, rid)
+        if not rnd:
+            await q.edit_message_text("Круг не найден.", reply_markup=back_kb()); return ConversationHandler.END
+        if len(event.get("rounds",[])) <= 1:
+            await q.edit_message_text("Нельзя удалить единственный круг.", reply_markup=back_kb()); return ConversationHandler.END
+        rname = rnd["name"]
+        match_count = len(rnd.get("matches",[]))
+        event["rounds"] = [r for r in event["rounds"] if r["id"] != rid]
+        # Удалить команды этого круга
+        rid_str = str(rid)
+        event.get("round_teams", {}).pop(rid_str, None)
+        ok = save_data(data); adm = is_admin(q.from_user.id, data)
+        await q.edit_message_text(
+            f"{'✅ Круг удалён!' if ok else '⚠️ Ошибка'}\n\n*{rname}* удалён вместе с {match_count} матчами.",
+            parse_mode="Markdown", reply_markup=main_menu_kb(adm))
+    finally: unlock_cb(q)
+    return ConversationHandler.END
+
 # ── GROUP ──
 async def grp_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
@@ -1617,6 +1671,8 @@ def main():
             DELETE_MATCH_SELECT:     [CallbackQueryHandler(delete_match_event_cb,    pattern="^edm_")],
             DELETE_MATCH_CONFIRM:    [CallbackQueryHandler(delete_match_confirm_cb,  pattern="^dmc_")],
             EDIT_TEAM_ROUND:         [CallbackQueryHandler(edit_team_round_cb,   pattern="^etr_")],
+            DELETE_ROUND_SELECT:     [CallbackQueryHandler(delete_round_event_cb,  pattern="^edr_ev_")],
+            DELETE_ROUND_CONFIRM:    [CallbackQueryHandler(delete_round_confirm_cb, pattern="^edr_r_")],
             EDIT_GROUP_SELECT:       [CallbackQueryHandler(edit_group_name_cb,  pattern="^egn_"),
                                       CallbackQueryHandler(edit_ungroup_cb,     pattern="^eug_")],
             EDIT_GROUP_NAME_VAL:     [MessageHandler(filters.TEXT & ~filters.COMMAND, edit_group_name_value)],
