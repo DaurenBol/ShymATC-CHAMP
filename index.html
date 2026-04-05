@@ -1085,7 +1085,7 @@ function renderMatches() {
   }
 
   let html = '';
-  events.forEach(ev => {
+  events.slice().reverse().forEach(ev => {
     // Последний раунд сверху; внутри раунда — последний добавленный сверху
     const rounds = ev.rounds||[];
     const allM = allMatches(ev);
