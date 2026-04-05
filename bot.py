@@ -93,7 +93,8 @@ def unlock_cb(q): _busy.discard(q.from_user.id)
     TICKER_INPUT,
     GROUP_SELECT, GROUP_NAME,
     GROUP_DELETE_SELECT,
-) = range(39)
+    EDIT_GROUP_SELECT, EDIT_GROUP_NAME_VAL,
+) = range(41)
 
 # ── CONSTANTS ──
 EVENT_TYPES = [
@@ -285,6 +286,7 @@ async def menu_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             if not is_admin(q.from_user.id, data): await q.edit_message_text("⛔ Нет доступа."); return
             if not data["events"]:
                 await q.edit_message_text("Событий нет.", reply_markup=back_kb()); return
+            groups = data.get("groups", [])
             kb = [
                 [InlineKeyboardButton("📌 Переименовать событие", callback_data="edit_ev_name")],
                 [InlineKeyboardButton("⚽ Изменить счёт матча", callback_data="edit_match_score")],
@@ -292,8 +294,13 @@ async def menu_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("👤 Переименовать участника", callback_data="edit_participant")],
                 [InlineKeyboardButton("🎮 Команда участника", callback_data="edit_team")],
                 [InlineKeyboardButton("🗑 Удалить участника", callback_data="edit_remove_participant")],
-                [InlineKeyboardButton("◀️ Назад", callback_data="back_main")],
             ]
+            if groups:
+                kb += [
+                    [InlineKeyboardButton("✏️ Переименовать группу", callback_data="edit_group_name")],
+                    [InlineKeyboardButton("🔓 Разъединить события", callback_data="edit_ungroup")],
+                ]
+            kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
             await q.edit_message_text("✏️ *Что редактируем?*", parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
             return EDIT_SELECT
 
@@ -736,6 +743,22 @@ async def edit_select_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
             await q.edit_message_text("🗑 Выбери событие:", reply_markup=InlineKeyboardMarkup(kb))
             return DELETE_MATCH_SELECT
+        elif q.data == "edit_group_name":
+            groups = data.get("groups", [])
+            if not groups:
+                await q.edit_message_text("Групп нет.", reply_markup=back_kb()); return ConversationHandler.END
+            kb = [[InlineKeyboardButton(g["name"], callback_data=f"egn_{g['id']}")] for g in groups]
+            kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
+            await q.edit_message_text("✏️ Выбери группу для переименования:", reply_markup=InlineKeyboardMarkup(kb))
+            return EDIT_GROUP_SELECT
+        elif q.data == "edit_ungroup":
+            groups = data.get("groups", [])
+            if not groups:
+                await q.edit_message_text("Групп нет.", reply_markup=back_kb()); return ConversationHandler.END
+            kb = [[InlineKeyboardButton(f"🔓 {g['name']}", callback_data=f"eug_{g['id']}")] for g in groups]
+            kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
+            await q.edit_message_text("🔓 Выбери группу для разъединения:", reply_markup=InlineKeyboardMarkup(kb))
+            return EDIT_GROUP_SELECT
     finally: unlock_cb(q)
 
 async def edit_event_name_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -1138,6 +1161,57 @@ async def ticker_text_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 # ── ADD ADMIN / RESET ──
+async def edit_group_name_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return EDIT_GROUP_SELECT
+    try:
+        gid = q.data.replace("egn_","")
+        ctx.user_data["edit_gid"] = gid
+        data = load_data()
+        group = next((g for g in data.get("groups",[]) if g["id"]==gid), None)
+        if not group:
+            await q.edit_message_text("Группа не найдена.", reply_markup=back_kb()); return ConversationHandler.END
+        await q.edit_message_text(
+            f"✏️ Группа: *{group['name']}*\n\nВведи новое название:",
+            parse_mode="Markdown")
+    finally: unlock_cb(q)
+    return EDIT_GROUP_NAME_VAL
+
+async def edit_group_name_value(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    new_name = update.message.text.strip()
+    data = load_data()
+    group = next((g for g in data.get("groups",[]) if g["id"]==ctx.user_data.get("edit_gid")), None)
+    adm = is_admin(update.effective_user.id, data)
+    if not group:
+        await update.message.reply_text("Группа не найдена.", reply_markup=main_menu_kb(adm))
+        return ConversationHandler.END
+    old_name = group["name"]
+    group["name"] = new_name
+    ok = save_data(data)
+    await update.message.reply_text(
+        f"{'✅ Переименовано!' if ok else '⚠️ Ошибка'}\n\n*{old_name}* → *{new_name}*",
+        parse_mode="Markdown", reply_markup=main_menu_kb(adm))
+    return ConversationHandler.END
+
+async def edit_ungroup_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return EDIT_GROUP_SELECT
+    try:
+        gid = q.data.replace("eug_","")
+        data = load_data()
+        group = next((g for g in data.get("groups",[]) if g["id"]==gid), None)
+        adm = is_admin(q.from_user.id, data)
+        if not group:
+            await q.edit_message_text("Группа не найдена.", reply_markup=back_kb()); return ConversationHandler.END
+        name = group["name"]
+        data["groups"] = [g for g in data.get("groups",[]) if g["id"] != gid]
+        ok = save_data(data)
+        await q.edit_message_text(
+            f"{'✅ Разъединено!' if ok else '⚠️ Ошибка'}\n\nГруппа *{name}* удалена. События остались нетронутыми.",
+            parse_mode="Markdown", reply_markup=main_menu_kb(adm))
+    finally: unlock_cb(q)
+    return ConversationHandler.END
+
 # ── GROUP ──
 async def grp_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
@@ -1349,6 +1423,9 @@ def main():
                                        CallbackQueryHandler(remove_participant_cb,      pattern="^rpp_")],
             DELETE_MATCH_SELECT:     [CallbackQueryHandler(delete_match_event_cb,    pattern="^edm_")],
             DELETE_MATCH_CONFIRM:    [CallbackQueryHandler(delete_match_confirm_cb,  pattern="^dmc_")],
+            EDIT_GROUP_SELECT:       [CallbackQueryHandler(edit_group_name_cb,  pattern="^egn_"),
+                                      CallbackQueryHandler(edit_ungroup_cb,     pattern="^eug_")],
+            EDIT_GROUP_NAME_VAL:     [MessageHandler(filters.TEXT & ~filters.COMMAND, edit_group_name_value)],
         },
         fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(back_main, pattern="^back_main$")],
     ))
