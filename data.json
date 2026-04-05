@@ -563,9 +563,14 @@
       "date_end": "",
       "rules": "",
       "active": true,
-      "participants": [],
+      "participants": [
+        "еггг"
+      ],
       "matches": [],
-      "created_at": "05.04.2026 08:04"
+      "created_at": "05.04.2026 08:04",
+      "participant_teams": {
+        "еггг": "ггене2"
+      }
     }
   ],
   "admins": [
