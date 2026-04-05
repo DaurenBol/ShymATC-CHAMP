@@ -144,11 +144,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 [data-theme="light"] .chip.group-chip.active{color:#0a0a0f;}
 
 /* Group standings — 3 columns */
-.group-tables{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.group-tables{display:flex;flex-direction:column;gap:20px;}
+.group-rounds-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .group-table-col{}
 .group-col-title{font-family:'DM Mono',monospace;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding:0 2px;transition:color .3s;}
 .group-col-title.overall{color:var(--gold);}
-@media(max-width:600px){.group-tables{grid-template-columns:1fr;}}
+@media(max-width:500px){.group-rounds-row{grid-template-columns:1fr;}}
 
 .table-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:background .3s,border-color .3s;}
 .t-head{display:grid;padding:10px 12px;border-bottom:1px solid var(--border);transition:border-color .3s;}
@@ -922,22 +923,26 @@ function calcGroupStandings(eventIds) {
 function renderMiniTable(rows, evId) {
   if(!rows.length) return `<div style="padding:16px;text-align:center;color:var(--text3);font-size:13px;">Нет данных</div>`;
   return `<div class="table-card">
-    <div class="t-head col-i">
+    <div class="t-head col-t">
       <div class="th">#</div><div class="th left">Участник</div>
-      <div class="th">В</div><div class="th">Н</div><div class="th">П</div>
-      <div class="th">±</div><div class="th">Оч</div>
+      <div class="th">И</div><div class="th">В</div><div class="th">Н</div><div class="th">П</div>
+      <div class="th">ГЗ</div><div class="th">ГП</div><div class="th">±</div><div class="th">Оч</div>
     </div>
     ${rows.map((r,i) => {
       const pts=r.w*3+r.d, gd=r.gf-r.ga;
       const gdCls=gd>=0?'gp':'gn';
       const c=COLORS[i%COLORS.length], bg=BGS[i%BGS.length];
       const clickAttr = evId ? `onclick="openPlayer('${r.name}','${evId}')" style="cursor:pointer;"` : '';
-      return `<div class="t-row col-i" ${clickAttr}>
+      return `<div class="t-row col-t" ${clickAttr}>
+        <div class="zone-line" style="background:transparent"></div>
         <div class="rk" style="color:${i<3?c:'var(--text3)'}">${medal(i)}</div>
         <div class="team-c"><div class="t-ava" style="background:${bg};color:${c}">${ini(r.name)}</div><div class="t-nm">${r.name}</div></div>
+        <div class="cn">${r.p}</div>
         <div class="cn" style="color:var(--accent)">${r.w}</div>
         <div class="cn">${r.d}</div>
         <div class="cn" style="color:var(--accent3)">${r.l}</div>
+        <div class="cn" style="color:var(--accent2)">${r.gf}</div>
+        <div class="cn" style="color:var(--accent3)">${r.ga}</div>
         <div class="cn ${gdCls}">${gd>=0?'+'+gd:gd}</div>
         <div class="cp">${pts}</div>
       </div>`;
@@ -952,13 +957,21 @@ function renderGroupTable(group, container) {
     {title:'🔗 Общая', rows: overallRows, overall: true, evId: null},
     ...events.map(ev=>({title: ev.name, rows: calcStandings(ev), overall: false, evId: ev.id}))
   ];
+  const roundCols = cols.filter(c=>!c.overall);
+  const overallCol = cols.find(c=>c.overall);
   container.innerHTML = `
     <div class="group-tables">
-      ${cols.map(col=>`
-        <div class="group-table-col">
-          <div class="group-col-title ${col.overall?'overall':''}">${col.title}</div>
-          ${renderMiniTable(col.rows, col.evId)}
-        </div>`).join('')}
+      <div class="group-table-col">
+        <div class="group-col-title overall">${overallCol.title}</div>
+        ${renderMiniTable(overallCol.rows, overallCol.evId)}
+      </div>
+      <div class="group-rounds-row">
+        ${roundCols.map(col=>`
+          <div class="group-table-col">
+            <div class="group-col-title">${col.title}</div>
+            ${renderMiniTable(col.rows, col.evId)}
+          </div>`).join('')}
+      </div>
     </div>`;
 }
 
@@ -971,12 +984,20 @@ function renderEventTable(ev, container) {
       {title: '🔗 Общая', rows: overallRows, evId: ev.id, overall: true},
       ...rounds.map(r=>({title: r.name, rows: calcStandingsFromMatches(ev.participants||[], roundMatches(ev,r.id)), evId: ev.id, overall: false}))
     ];
+    const roundColsEv = cols.filter(c=>!c.overall);
+    const overallColEv = cols.find(c=>c.overall);
     container.innerHTML = `<div class="group-tables">
-      ${cols.map(col=>`
-        <div class="group-table-col">
-          <div class="group-col-title ${col.overall?'overall':''}">${col.title}</div>
-          ${renderMiniTable(col.rows, col.evId)}
-        </div>`).join('')}
+      <div class="group-table-col">
+        <div class="group-col-title overall">${overallColEv.title}</div>
+        ${renderMiniTable(overallColEv.rows, overallColEv.evId)}
+      </div>
+      <div class="group-rounds-row">
+        ${roundColsEv.map(col=>`
+          <div class="group-table-col">
+            <div class="group-col-title">${col.title}</div>
+            ${renderMiniTable(col.rows, col.evId)}
+          </div>`).join('')}
+      </div>
     </div>`;
     return;
   }
