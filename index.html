@@ -559,7 +559,22 @@ function openPlayer(playerName, eventId) {
   const pendingLabel = pendingByRound.length > 1
     ? pendingByRound.map(r=>`${r.name}: ${r.count}`).join(' / ')
     : String(pendingCount);
-  const playerTeam = (ev.participant_teams && ev.participant_teams[playerName]) ? ev.participant_teams[playerName] : 'не определено';
+  // Команда по раундам: round_teams[rid][name], fallback → participant_teams
+  const rounds = ev.rounds||[];
+  const pt = ev.participant_teams||{};
+  const rt = ev.round_teams||{};
+  let playerTeamHtml = '';
+  if(rounds.length > 1) {
+    // Показываем по каждому раунду
+    playerTeamHtml = rounds.map(r => {
+      const team = (rt[String(r.id)]||{})[playerName] || pt[playerName] || 'не определено';
+      return `<span style="display:inline-block;margin-right:12px;">${r.name}: <b>${team}</b></span>`;
+    }).join('');
+  } else {
+    const team = (rt[String((rounds[0]||{}).id)]||{})[playerName] || pt[playerName] || 'не определено';
+    playerTeamHtml = `<b>${team}</b>`;
+  }
+  const playerTeam = playerTeamHtml;
 
   document.getElementById('player-content').innerHTML = `
     <div class="player-hero">

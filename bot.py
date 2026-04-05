@@ -97,7 +97,8 @@ def unlock_cb(q): _busy.discard(q.from_user.id)
     GROUP_SELECT, GROUP_NAME,
     GROUP_DELETE_SELECT,
     EDIT_GROUP_SELECT, EDIT_GROUP_NAME_VAL,
-) = range(42)
+    EDIT_TEAM_ROUND,
+) = range(43)
 
 # ── CONSTANTS ──
 EVENT_TYPES = [
@@ -266,7 +267,7 @@ async def menu_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             text = "📋 *События:*\n\n"
             for e in data["events"]:
                 s = "🟢" if e.get("active") else "⚫"
-                mp = len([m for m in e.get("matches", []) if m.get("played")])
+                mp = sum(len([m for m in r.get("matches",[]) if m.get("played")]) for r in e.get("rounds",[]))
                 text += f"{s} *{e['name']}*\n{TYPE_LABELS.get(e.get('event_type',''),'')}\n👥 {len(e.get('participants',[]))} уч. · ⚽ {mp} матчей\n\n"
             await q.edit_message_text(text, parse_mode="Markdown", reply_markup=back_kb())
 
@@ -968,9 +969,15 @@ async def edit_participant_select_cb(update: Update, ctx: ContextTypes.DEFAULT_T
         ctx.user_data["edit_participant_old"] = pname
         if ctx.user_data.get("edit_mode") == "team":
             data = load_data(); event = get_event(data, ctx.user_data["edit_eid"])
-            current_team = event.get("participant_teams",{}).get(pname,"не определено")
+            rid = ctx.user_data.get("edit_team_rid")
+            rid_str = str(rid) if rid else None
+            round_teams = event.get("round_teams", {})
+            pt = event.get("participant_teams", {})
+            current_team = round_teams.get(rid_str,{}).get(pname, pt.get(pname,"не определено")) if rid_str else pt.get(pname,"не определено")
+            rnd = get_round(event, rid) if rid else None
+            round_label = f" [{rnd['name']}]" if rnd else ""
             await q.edit_message_text(
-                f"👤 *{pname}*\nТекущая команда: *{current_team}*\n\nВведи новое название команды:",
+                f"👤 *{pname}*{round_label}\nТекущая команда: *{current_team}*\n\nВведи новое название команды:",
                 parse_mode="Markdown")
         else:
             await q.edit_message_text(f"Текущее: *{pname}*\n\nВведи новое имя:", parse_mode="Markdown")
@@ -983,10 +990,18 @@ async def edit_participant_new_value(update: Update, ctx: ContextTypes.DEFAULT_T
     data = load_data(); event = get_event(data, ctx.user_data["edit_eid"])
     adm = is_admin(update.effective_user.id, data)
     if ctx.user_data.get("edit_mode") == "team":
-        event.setdefault("participant_teams", {})[old_name] = value
+        rid = ctx.user_data.get("edit_team_rid")
+        if rid:
+            rid_str = str(rid)
+            event.setdefault("round_teams", {}).setdefault(rid_str, {})[old_name] = value
+            rnd = get_round(event, rid)
+            round_label = f" [{rnd['name']}]" if rnd else ""
+        else:
+            event.setdefault("participant_teams", {})[old_name] = value
+            round_label = ""
         ok = save_data(data)
         await update.message.reply_text(
-            f"{'✅ Команда обновлена!' if ok else '⚠️ Ошибка'}\n\n👤 *{old_name}* · 🎮 *{value}*",
+            f"{'✅ Команда обновлена!' if ok else '⚠️ Ошибка'}\n\n👤 *{old_name}*{round_label} · 🎮 *{value}*",
             parse_mode="Markdown", reply_markup=main_menu_kb(adm))
     else:
         new_name = value
@@ -1006,6 +1021,16 @@ async def edit_participant_new_value(update: Update, ctx: ContextTypes.DEFAULT_T
     ctx.user_data.pop("edit_mode", None)
     return ConversationHandler.END
 
+async def _team_participant_kb(event, rid):
+    round_teams = event.get("round_teams", {})
+    pt = event.get("participant_teams", {})
+    rid_str = str(rid) if rid else None
+    kb = [[InlineKeyboardButton(
+        f"{p} · {round_teams.get(rid_str,{}).get(p, pt.get(p,'не определено')) if rid_str else pt.get(p,'не определено')}",
+        callback_data=f"epp_{p}")] for p in event["participants"]]
+    kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
+    return InlineKeyboardMarkup(kb)
+
 async def edit_team_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not await lock_cb(q): return EDIT_PARTICIPANT_OLD
@@ -1013,12 +1038,30 @@ async def edit_team_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         ctx.user_data["edit_eid"] = q.data.replace("etm_","")
         ctx.user_data["edit_mode"] = "team"
         data = load_data(); event = get_event(data, ctx.user_data["edit_eid"])
-        teams = event.get("participant_teams", {})
-        kb = [[InlineKeyboardButton(
-            f"{p} · {teams.get(p,'не определено')}",
-            callback_data=f"epp_{p}")] for p in event["participants"]]
-        kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
-        await q.edit_message_text("🎮 Выбери участника:", reply_markup=InlineKeyboardMarkup(kb))
+        rounds = event.get("rounds", [])
+        if len(rounds) > 1:
+            kb = [[InlineKeyboardButton(f"🔄 {r['name']}", callback_data=f"etr_{r['id']}")] for r in rounds]
+            kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
+            await q.edit_message_text("🎮 В каком круге устанавливаем команду?", reply_markup=InlineKeyboardMarkup(kb))
+            return EDIT_TEAM_ROUND
+        else:
+            rid = rounds[0]["id"] if rounds else None
+            ctx.user_data["edit_team_rid"] = rid
+            await q.edit_message_text("🎮 Выбери участника:", reply_markup=await _team_participant_kb(event, rid))
+            return EDIT_PARTICIPANT_NEW
+    finally: unlock_cb(q)
+
+async def edit_team_round_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return EDIT_TEAM_ROUND
+    try:
+        rid = int(q.data.replace("etr_",""))
+        ctx.user_data["edit_team_rid"] = rid
+        data = load_data(); event = get_event(data, ctx.user_data["edit_eid"])
+        rnd = get_round(event, rid)
+        await q.edit_message_text(
+            f"🎮 *{rnd['name']}* — выбери участника:",
+            parse_mode="Markdown", reply_markup=await _team_participant_kb(event, rid))
     finally: unlock_cb(q)
     return EDIT_PARTICIPANT_NEW
 
@@ -1573,6 +1616,7 @@ def main():
                                        CallbackQueryHandler(remove_participant_cb,      pattern="^rpp_")],
             DELETE_MATCH_SELECT:     [CallbackQueryHandler(delete_match_event_cb,    pattern="^edm_")],
             DELETE_MATCH_CONFIRM:    [CallbackQueryHandler(delete_match_confirm_cb,  pattern="^dmc_")],
+            EDIT_TEAM_ROUND:         [CallbackQueryHandler(edit_team_round_cb,   pattern="^etr_")],
             EDIT_GROUP_SELECT:       [CallbackQueryHandler(edit_group_name_cb,  pattern="^egn_"),
                                       CallbackQueryHandler(edit_ungroup_cb,     pattern="^eug_")],
             EDIT_GROUP_NAME_VAL:     [MessageHandler(filters.TEXT & ~filters.COMMAND, edit_group_name_value)],
