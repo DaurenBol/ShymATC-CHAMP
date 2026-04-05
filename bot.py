@@ -262,18 +262,7 @@ async def menu_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
         # ── PARTICIPANTS ──
         elif action == "participants":
-            if not is_admin(q.from_user.id, data): await q.edit_message_text("⛔ Нет доступа."); return
-            active = [e for e in data["events"] if e.get("active")]
-            if not active:
-                await q.edit_message_text("Нет активных событий.", reply_markup=back_kb()); return
-            if len(active) == 1:
-                ctx.user_data["ap_eid"] = active[0]["id"]
-                await _ap_show(q, active[0])
-                return ADD_PARTICIPANT
-            kb = [[InlineKeyboardButton(e["name"], callback_data=f"ap_{e['id']}")] for e in active]
-            kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
-            await q.edit_message_text("👤 Выбери событие:", reply_markup=InlineKeyboardMarkup(kb))
-            return ADD_PARTICIPANT
+            return await ap_start(update, ctx)
 
         # ── ADD MATCH ──
         elif action == "add_match":
@@ -529,6 +518,29 @@ def _ap_text(event):
 
 async def _ap_show(q, event):
     await q.edit_message_text(_ap_text(event), parse_mode="Markdown", reply_markup=done_kb())
+
+async def ap_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    """Entry point for participants ConversationHandler — works from any context."""
+    q = update.callback_query
+    if not await lock_cb(q): return ADD_PARTICIPANT
+    data = load_data()
+    try:
+        if not is_admin(q.from_user.id, data):
+            await q.edit_message_text("⛔ Нет доступа."); return ConversationHandler.END
+        active = [e for e in data["events"] if e.get("active")]
+        if not active:
+            await q.edit_message_text("Нет активных событий.", reply_markup=back_kb())
+            return ConversationHandler.END
+        if len(active) == 1:
+            ctx.user_data["ap_eid"] = active[0]["id"]
+            await _ap_show(q, active[0])
+            return ADD_PARTICIPANT
+        kb = [[InlineKeyboardButton(e["name"], callback_data=f"ap_{e['id']}")] for e in active]
+        kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
+        await q.edit_message_text("👤 Выбери событие:", reply_markup=InlineKeyboardMarkup(kb))
+        return ADD_PARTICIPANT
+    finally:
+        unlock_cb(q)
 
 async def ap_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
@@ -1118,7 +1130,7 @@ def main():
     ))
 
     app.add_handler(ConversationHandler(
-        entry_points=[CallbackQueryHandler(menu_handler, pattern="^menu_participants$")],
+        entry_points=[CallbackQueryHandler(ap_start, pattern="^menu_participants$")],
         states={
             ADD_PARTICIPANT: [
                 CallbackQueryHandler(ap_done_cb,    pattern="^ap_done$"),
