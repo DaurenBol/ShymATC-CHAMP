@@ -261,10 +261,6 @@ async def menu_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             await q.edit_message_text("✏️ Введи *название события*:", parse_mode="Markdown")
             return EV_NAME
 
-        # ── PARTICIPANTS ──
-        elif action == "participants":
-            return await ap_start(update, ctx)
-
         # ── ADD MATCH ──
         elif action == "add_match":
             if not is_admin(q.from_user.id, data): await q.edit_message_text("⛔ Нет доступа."); return
@@ -525,72 +521,65 @@ async def _ap_show(q, event, ctx=None):
         ctx.user_data["ap_chat_id"] = q.message.chat_id
 
 async def ap_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    """Entry point for participants ConversationHandler — works from any context."""
     q = update.callback_query
-    if not await lock_cb(q): return ADD_PARTICIPANT
+    if not await lock_cb(q): return
     data = load_data()
     try:
         if not is_admin(q.from_user.id, data):
-            await q.edit_message_text("⛔ Нет доступа."); return ConversationHandler.END
+            await q.edit_message_text("⛔ Нет доступа."); return
         active = [e for e in data["events"] if e.get("active")]
         if not active:
-            await q.edit_message_text("Нет активных событий.", reply_markup=back_kb())
-            return ConversationHandler.END
+            await q.edit_message_text("Нет активных событий.", reply_markup=back_kb()); return
         if len(active) == 1:
             ctx.user_data["ap_eid"] = active[0]["id"]
-            await _ap_show(q, active[0], ctx)
-            return ADD_PARTICIPANT
+            ctx.user_data["ap_mode"] = True
+            await _ap_show(q, active[0], ctx); return
         kb = [[InlineKeyboardButton(e["name"], callback_data=f"ap_{e['id']}")] for e in active]
         kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
         await q.edit_message_text("👤 Выбери событие:", reply_markup=InlineKeyboardMarkup(kb))
-        return ADD_PARTICIPANT
     finally:
         unlock_cb(q)
 
 async def ap_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
-    if not await lock_cb(q): return ADD_PARTICIPANT
+    if not await lock_cb(q): return
     try:
         ctx.user_data["ap_eid"] = q.data.replace("ap_","")
+        ctx.user_data["ap_mode"] = True
         data = load_data(); event = get_event(data, ctx.user_data["ap_eid"])
         await _ap_show(q, event, ctx)
     finally: unlock_cb(q)
-    return ADD_PARTICIPANT
 
 async def ap_name(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not ctx.user_data.get("ap_mode"): return
     name = update.message.text.strip()
     data = load_data(); event = get_event(data, ctx.user_data.get("ap_eid"))
     if not event:
-        await update.message.reply_text("Ошибка. Начни заново."); return ConversationHandler.END
+        ctx.user_data.pop("ap_mode", None)
+        await update.message.reply_text("Ошибка. Начни заново."); return
     if name in event["participants"]:
-        await update.message.reply_text(f"⚠️ *{name}* уже есть.", parse_mode="Markdown")
-        return ADD_PARTICIPANT
+        await update.message.reply_text(f"⚠️ *{name}* уже есть.", parse_mode="Markdown"); return
     event["participants"].append(name)
     event.setdefault("participant_teams", {})[name] = "не определено"
-    ok = save_data(data)
-    current = ", ".join(event["participants"])
+    save_data(data)
     data2 = load_data(); event2 = get_event(data2, ctx.user_data.get("ap_eid"))
     upd_text = _ap_text(event2) if event2 else f"✅ *{name}* добавлен"
     msg_id  = ctx.user_data.get("ap_msg_id")
     chat_id = ctx.user_data.get("ap_chat_id")
     if msg_id and chat_id:
         try:
-            await ctx.bot.edit_message_text(
-                upd_text, chat_id=chat_id, message_id=msg_id,
-                parse_mode="Markdown", reply_markup=home_inline_kb())
-            return ADD_PARTICIPANT
-        except Exception:
-            pass
+            await ctx.bot.edit_message_text(upd_text, chat_id=chat_id, message_id=msg_id,
+                parse_mode="Markdown", reply_markup=home_inline_kb()); return
+        except Exception: pass
     msg = await update.message.reply_text(upd_text, parse_mode="Markdown", reply_markup=home_inline_kb())
     ctx.user_data["ap_msg_id"]  = msg.message_id
     ctx.user_data["ap_chat_id"] = msg.chat_id
-    return ADD_PARTICIPANT
 
 async def ap_done_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query; await q.answer()
+    ctx.user_data.pop("ap_mode", None)
     data = load_data(); adm = is_admin(q.from_user.id, data)
     await q.edit_message_text("✅ Участники сохранены!", reply_markup=main_menu_kb(adm))
-    return ConversationHandler.END
 
 # ── ADD MATCH ──
 async def match_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -1179,18 +1168,6 @@ def main():
     ))
 
     app.add_handler(ConversationHandler(
-        entry_points=[CallbackQueryHandler(ap_start, pattern="^menu_participants$")],
-        states={
-            ADD_PARTICIPANT: [
-                CallbackQueryHandler(ap_done_cb,    pattern="^ap_done$"),
-                CallbackQueryHandler(ap_event_cb,   pattern="^ap_"),
-                MessageHandler(filters.TEXT & ~filters.COMMAND, ap_name),
-            ],
-        },
-        fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(back_main, pattern="^back_main$")],
-    ))
-
-    app.add_handler(ConversationHandler(
         entry_points=[CallbackQueryHandler(menu_handler, pattern="^menu_add_match$")],
         states={
             MATCH_EVENT: [CallbackQueryHandler(match_event_cb, pattern="^me_")],
@@ -1270,10 +1247,13 @@ def main():
 
     # ── GLOBAL HANDLERS ──
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(ap_done_cb,    pattern="^ap_done$"))
-    app.add_handler(CallbackQueryHandler(standings_cb,  pattern="^st_"))
-    app.add_handler(CallbackQueryHandler(back_main,     pattern="^back_main$"))
-    app.add_handler(CallbackQueryHandler(menu_handler,  pattern="^menu_"))
+    app.add_handler(CallbackQueryHandler(ap_start,     pattern="^menu_participants$"))
+    app.add_handler(CallbackQueryHandler(ap_event_cb,  pattern="^ap_"))
+    app.add_handler(CallbackQueryHandler(ap_done_cb,   pattern="^ap_done$"))
+    app.add_handler(CallbackQueryHandler(standings_cb, pattern="^st_"))
+    app.add_handler(CallbackQueryHandler(back_main,    pattern="^back_main$"))
+    app.add_handler(CallbackQueryHandler(menu_handler, pattern="^menu_"))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, ap_name))
 
     print("✅ ShymATC-CHAMP bot v5.5 started")
     _load_from_github()
