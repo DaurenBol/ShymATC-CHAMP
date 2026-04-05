@@ -192,6 +192,53 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .upc-h{text-align:right;}.upc-a{text-align:left;}
 .vs-b{font-family:'DM Mono',monospace;font-size:9px;border:1px solid var(--border2);border-radius:4px;padding:2px 4px;text-align:center;color:var(--text3);transition:all .3s;}
 
+
+/* ── PLAYER PROFILE ── */
+.pl-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--surface);margin-bottom:0;}
+.pl-tab{flex:1;padding:10px;text-align:center;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;color:var(--text3);border:none;background:none;border-bottom:2px solid transparent;transition:all .2s;}
+.pl-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.pl-tab-content{display:none;}
+.pl-tab-content.active{display:block;}
+.pl-pending-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;transition:background .3s,border-color .3s;}
+.pl-pending-opp{font-size:14px;font-weight:700;transition:color .3s;}
+.pl-pending-badge{font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:4px;background:var(--surface2);color:var(--text3);border:1px solid var(--border);letter-spacing:1px;}
+
+.player-profile-page{padding:0;}
+.player-hdr{position:sticky;top:0;height:50px;background:var(--header-bg);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:10;transition:background .3s,border-color .3s;}
+.player-back{background:none;border:none;color:var(--accent);font-size:22px;cursor:pointer;padding:4px 8px 4px 0;line-height:1;}
+.player-hdr-title{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);transition:color .3s;}
+.player-hero{background:var(--surface);border-bottom:1px solid var(--border);padding:20px 16px 16px;transition:background .3s,border-color .3s;}
+.player-ava-wrap{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+.player-ava-lg{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0;}
+.player-info{flex:1;}
+.player-nm{font-size:22px;font-weight:800;margin-bottom:3px;transition:color .3s;}
+.player-ev{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;transition:color .3s;}
+.pl-stats4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px;}
+.pl-stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.pl-sc{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center;position:relative;overflow:hidden;transition:background .3s,border-color .3s;}
+.pl-sv{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;}
+.pl-sl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-top:2px;transition:color .3s;}
+.pl-matches-wrap{padding:14px 16px;}
+.pl-sec-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;transition:color .3s;}
+.pl-match{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;transition:background .3s,border-color .3s;}
+.pl-match-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.pl-match-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:1px;transition:color .3s;}
+.pl-match-res{font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;letter-spacing:1px;}
+.pl-win{background:rgba(232,255,71,.1);color:var(--accent);border:1px solid rgba(232,255,71,.2);}
+.pl-draw{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.pl-lose{background:rgba(255,107,71,.1);color:var(--accent3);border:1px solid rgba(255,107,71,.2);}
+[data-theme="light"] .pl-win{background:rgba(26,122,0,.08);color:var(--accent);border-color:rgba(26,122,0,.2);}
+[data-theme="light"] .pl-lose{background:rgba(204,51,0,.08);color:var(--accent3);border-color:rgba(204,51,0,.2);}
+.pl-match-body{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;}
+.pl-match-team{font-size:13px;font-weight:700;transition:color .3s;}
+.pl-match-you{color:var(--accent);}
+.pl-mh{text-align:right;}.pl-ma{text-align:left;}
+.pl-match-score{font-family:'Bebas Neue',sans-serif;font-size:22px;text-align:center;border-radius:8px;padding:3px 10px;min-width:58px;transition:background .3s,color .3s;}
+.pl-score-win{color:var(--accent);background:rgba(232,255,71,.08);}
+.pl-score-draw{color:var(--text2);background:var(--surface2);}
+.pl-score-lose{color:var(--accent3);background:rgba(255,107,71,.08);}
+[data-theme="light"] .pl-score-win{background:rgba(26,122,0,.06);}
+[data-theme="light"] .pl-score-lose{background:rgba(204,51,0,.06);}
 /* ── STATS ── */
 .stats-wrap{padding:16px;}
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;transition:background .3s,border-color .3s;}
@@ -321,6 +368,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
   </div>
 
+  <!-- PLAYER PROFILE -->
+  <div class="page" id="page-player">
+    <div class="player-profile-page">
+      <div class="player-hdr">
+        <button class="player-back" onclick="closePlayer()">←</button>
+        <div class="player-hdr-title">Профиль игрока</div>
+        <div style="width:40px;"></div>
+      </div>
+      <div id="player-content"></div>
+    </div>
+  </div>
+
 </div>
 
 <nav class="bottom-nav">
@@ -391,6 +450,128 @@ function calcStandings(event) {
     else{if(st[h])st[h].d++;if(st[a])st[a].d++;}
   });
   return Object.values(st).sort((a,b)=>(b.w*3+b.d)-(a.w*3+a.d)||(b.gf-b.ga)-(a.gf-a.ga));
+}
+
+function openPlayer(playerName, eventId) {
+  const ev = (RAW_DATA?.events||[]).find(e=>e.id===eventId);
+  if(!ev) return;
+  const ps = new Set(ev.participants||[]);
+  const rows = calcStandings(ev);
+  const r = rows.find(x=>x.name===playerName);
+  if(!r) return;
+  const pts = r.w*3+r.d;
+  const gd = r.gf-r.ga;
+  const gdCls = gd>=0?'color:var(--accent)':'color:var(--accent3)';
+  const abbr = ini(playerName);
+  const colorIdx = rows.indexOf(r)%COLORS.length;
+  const c = COLORS[colorIdx], bg = BGS[colorIdx];
+  const icon = SPORT_ICONS[ev.category]||'🏆';
+
+  // Player matches
+  const matches = (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away) && (m.home===playerName||m.away===playerName));
+  const matchesHtml = matches.slice().reverse().map(m=>{
+    const isHome = m.home===playerName;
+    const myScore = isHome?m.score_home:m.score_away;
+    const oppScore = isHome?m.score_away:m.score_home;
+    const opp = isHome?m.away:m.home;
+    const win = myScore>oppScore, draw = myScore===oppScore;
+    const resLbl = win?'ПОБЕДА':draw?'НИЧЬЯ':'ПОРАЖ.';
+    const resCls = win?'pl-win':draw?'pl-draw':'pl-lose';
+    const scoreCls = win?'pl-score-win':draw?'pl-score-draw':'pl-score-lose';
+    const scoreHtml = isHome
+      ? `<span style="color:var(--accent)">${m.score_home}</span>:<span>${m.score_away}</span>`
+      : `<span>${m.score_home}</span>:<span style="color:var(--accent)">${m.score_away}</span>`;
+    const homeYou = isHome;
+    return `<div class="pl-match">
+      <div class="pl-match-top">
+        <div class="pl-match-date">${m.date||''}</div>
+        <div class="pl-match-res ${resCls}">${resLbl}</div>
+      </div>
+      <div class="pl-match-body">
+        <div class="pl-match-team pl-mh ${homeYou?'pl-match-you':''}">${m.home}</div>
+        <div class="pl-match-score ${scoreCls}">${m.score_home}:${m.score_away}</div>
+        <div class="pl-match-team pl-ma ${!homeYou?'pl-match-you':''}">${m.away}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('player-content').innerHTML = `
+    <div class="player-hero">
+      <div class="player-ava-wrap">
+        <div class="player-ava-lg" style="background:${bg};color:${c}">${abbr}</div>
+        <div class="player-info">
+          <div class="player-nm">${playerName}</div>
+          <div class="player-ev">${icon} ${ev.name}</div>
+        </div>
+      </div>
+      <div class="pl-stats4">
+        <div class="pl-sc" style="border-top:2px solid var(--accent)"><div class="pl-sv" style="color:var(--accent)">${pts}</div><div class="pl-sl">Очки</div></div>
+        <div class="pl-sc" style="border-top:2px solid var(--accent2)"><div class="pl-sv" style="color:var(--accent2)">${r.gf}</div><div class="pl-sl">Голы</div></div>
+        <div class="pl-sc" style="border-top:2px solid var(--accent3)"><div class="pl-sv" style="color:var(--accent3)">${r.ga}</div><div class="pl-sl">Проп.</div></div>
+        <div class="pl-sc" style="border-top:2px solid var(--gold)"><div class="pl-sv" style="color:var(--gold)">${r.p}</div><div class="pl-sl">Матчи</div></div>
+      </div>
+      <div class="pl-stats3">
+        <div class="pl-sc" style="border-top:2px solid var(--accent)"><div class="pl-sv" style="color:var(--accent);font-size:20px">${r.w}</div><div class="pl-sl">Победы</div></div>
+        <div class="pl-sc" style="border-top:2px solid var(--text2)"><div class="pl-sv" style="color:var(--text2);font-size:20px">${r.d}</div><div class="pl-sl">Ничьи</div></div>
+        <div class="pl-sc" style="border-top:2px solid var(--accent3)"><div class="pl-sv" style="color:var(--accent3);font-size:20px">${r.l}</div><div class="pl-sl">Пораж.</div></div>
+      </div>
+    </div>
+    <div class="pl-tabs">
+      <button class="pl-tab active" onclick="plTab('played','${ev.id}','${playerName}',this)">Сыграно (${matches.length})</button>
+      <button class="pl-tab" onclick="plTab('pending','${ev.id}','${playerName}',this)">Не сыграли</button>
+    </div>
+    <div class="pl-matches-wrap">
+      <div id="pl-played-${ev.id}" class="pl-tab-content active">
+        ${matchesHtml || '<div style="padding:20px;text-align:center;color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">Матчей нет</div>'}
+      </div>
+      <div id="pl-pending-${ev.id}" class="pl-tab-content">
+        <div id="pl-pending-list-${ev.id}"></div>
+      </div>
+    </div>`;
+
+  // Show player page
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-player').classList.add('active');
+  document.getElementById('scroll-root').scrollTop=0;
+}
+
+function closePlayer() {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-standings').classList.add('active');
+  document.getElementById('scroll-root').scrollTop=0;
+}
+
+function plTab(type, evId, playerName, btn) {
+  // Switch tabs
+  btn.closest('.pl-tabs').querySelectorAll('.pl-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('pl-played-'+evId).classList.toggle('active', type==='played');
+  document.getElementById('pl-pending-'+evId).classList.toggle('active', type==='pending');
+
+  if(type==='pending') {
+    const ev = (RAW_DATA?.events||[]).find(e=>e.id===evId);
+    if(!ev) return;
+    const ps = new Set(ev.participants||[]);
+    const playedSet = new Set();
+    (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).forEach(m=>{
+      const key = [m.home,m.away].sort().join('|||');
+      playedSet.add(key);
+    });
+    const pending = ev.participants.filter(p=>p!==playerName).filter(p=>{
+      const key = [playerName,p].sort().join('|||');
+      return !playedSet.has(key);
+    });
+    const container = document.getElementById('pl-pending-list-'+evId);
+    if(!pending.length) {
+      container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">✅ Сыграл со всеми!</div>';
+      return;
+    }
+    container.innerHTML = pending.map(opp=>`
+      <div class="pl-pending-item">
+        <div class="pl-pending-opp">${opp}</div>
+        <div class="pl-pending-badge">не играли</div>
+      </div>`).join('');
+  }
 }
 
 function togglePairs(listId, arrId) {
@@ -646,7 +827,7 @@ function renderEventTable(ev, container) {
     const abbr = ini(r.name);
     const c = COLORS[rows.indexOf(r)%COLORS.length];
     const bg = BGS[rows.indexOf(r)%BGS.length];
-    return `<div class="t-row col-t">
+    return `<div class="t-row col-t" onclick="openPlayer('${r.name}','${ev.id}')" style="cursor:pointer;">
       <div class="zone-line" style="background:${zc}"></div>
       <div class="rk" style="color:${i<3?c:'var(--text3)'}">${medal(i)}</div>
       <div class="team-c"><div class="t-ava" style="background:${bg};color:${c}">${abbr}</div><div class="t-nm">${r.name}</div></div>
