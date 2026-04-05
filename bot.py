@@ -91,7 +91,9 @@ def unlock_cb(q): _busy.discard(q.from_user.id)
     DELETE_MATCH_SELECT, DELETE_MATCH_CONFIRM,
     DIRTY_EVENT, DIRTY_PLAYER, DIRTY_LABEL,
     TICKER_INPUT,
-) = range(36)
+    GROUP_SELECT, GROUP_NAME,
+    GROUP_DELETE_SELECT,
+) = range(39)
 
 # ── CONSTANTS ──
 EVENT_TYPES = [
@@ -173,6 +175,7 @@ def main_menu_kb(is_adm):
              InlineKeyboardButton("🗑 Удалить", callback_data="menu_delete")],
             [InlineKeyboardButton("😈 Грязный игрок", callback_data="menu_dirty_player"),
              InlineKeyboardButton("📢 Бегущая строка", callback_data="menu_ticker")],
+            [InlineKeyboardButton("🔗 Объединить события", callback_data="menu_group")],
             [InlineKeyboardButton("👑 Добавить админа", callback_data="menu_add_admin"),
              InlineKeyboardButton("🔄 Сброс", callback_data="menu_reset")],
         ]
@@ -331,6 +334,27 @@ async def menu_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             if not is_admin(q.from_user.id, data): await q.edit_message_text("⛔ Нет доступа."); return
             await _show_ticker_menu(q, data)
             return TICKER_INPUT
+
+        # ── GROUP ──
+        elif action == "group":
+            if not is_admin(q.from_user.id, data): await q.edit_message_text("⛔ Нет доступа."); return
+            if len(data.get("events", [])) < 2:
+                await q.edit_message_text("Нужно минимум 2 события.", reply_markup=back_kb()); return
+            groups = data.get("groups", [])
+            kb_rows = []
+            for e in data["events"]:
+                kb_rows.append([InlineKeyboardButton(f"☐ {e['name']}", callback_data=f"grp_ev_{e['id']}")])
+            if groups:
+                kb_rows.append([InlineKeyboardButton("🗑 Удалить группу", callback_data="grp_delete")])
+            kb_rows.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
+            ctx.user_data["grp_selected"] = []
+            current_groups = ""
+            if groups:
+                current_groups = "\n\nТекущие группы:\n" + "\n".join(f"· {g['name']}" for g in groups)
+            await q.edit_message_text(
+                f"🔗 *Объединить события*{current_groups}\n\nВыбери события для объединения:",
+                parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb_rows))
+            return GROUP_SELECT
 
         # ── ADD ADMIN ──
         elif action == "add_admin":
@@ -1109,6 +1133,129 @@ async def ticker_text_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 # ── ADD ADMIN / RESET ──
+# ── GROUP ──
+async def grp_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return GROUP_SELECT
+    try:
+        data = load_data()
+        eid = q.data.replace("grp_ev_","")
+        selected = ctx.user_data.setdefault("grp_selected", [])
+        if eid in selected:
+            selected.remove(eid)
+        else:
+            selected.append(eid)
+        kb_rows = []
+        for e in data["events"]:
+            mark = "☑" if e["id"] in selected else "☐"
+            kb_rows.append([InlineKeyboardButton(f"{mark} {e['name']}", callback_data=f"grp_ev_{e['id']}")])
+        if len(selected) >= 2:
+            kb_rows.append([InlineKeyboardButton("✅ Объединить", callback_data="grp_confirm")])
+        kb_rows.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
+        await q.edit_message_text(
+            f"🔗 *Объединить события*\n\nВыбрано: {len(selected)}\nНажми «Объединить» когда выберешь нужные:",
+            parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb_rows))
+    finally: unlock_cb(q)
+    return GROUP_SELECT
+
+async def grp_confirm_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return GROUP_SELECT
+    try:
+        selected = ctx.user_data.get("grp_selected", [])
+        if len(selected) < 2:
+            await q.answer("Выбери минимум 2 события"); return GROUP_SELECT
+        data = load_data()
+        names = [e["name"] for e in data["events"] if e["id"] in selected]
+        auto_name = " + ".join(names) + " — Общая"
+        ctx.user_data["grp_auto_name"] = auto_name
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton(f"✅ Использовать: {auto_name[:30]}...", callback_data="grp_use_auto")],
+            [InlineKeyboardButton("✏️ Своё название", callback_data="grp_custom_name")],
+            [InlineKeyboardButton("◀️ Назад", callback_data="back_main")],
+        ])
+        events_list = "\n".join(f"· {n}" for n in names)
+        await q.edit_message_text(
+            f"🔗 Выбрано событий: {len(selected)}\n\n{events_list}\n\nКак назвать группу?",
+            parse_mode="Markdown", reply_markup=kb)
+    finally: unlock_cb(q)
+    return GROUP_NAME
+
+async def grp_use_auto_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return GROUP_NAME
+    try:
+        name = ctx.user_data.get("grp_auto_name", "Общая группа")
+        await _save_group(q, ctx, name)
+    finally: unlock_cb(q)
+    return ConversationHandler.END
+
+async def grp_custom_name_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return GROUP_NAME
+    try:
+        await q.edit_message_text("✏️ Введи название группы:")
+    finally: unlock_cb(q)
+    return GROUP_NAME
+
+async def grp_name_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    name = update.message.text.strip()
+    await _save_group_msg(update, ctx, name)
+    return ConversationHandler.END
+
+async def _save_group(q, ctx, name):
+    data = load_data()
+    selected = ctx.user_data.get("grp_selected", [])
+    groups = data.setdefault("groups", [])
+    i = 1
+    while f"grp_{i:03d}" in [g["id"] for g in groups]: i += 1
+    groups.append({"id": f"grp_{i:03d}", "name": name, "event_ids": selected})
+    ok = save_data(data); adm = is_admin(q.from_user.id, data)
+    await q.edit_message_text(
+        f"{'✅ Группа создана!' if ok else '⚠️ Ошибка'}\n\n🔗 *{name}*",
+        parse_mode="Markdown", reply_markup=main_menu_kb(adm))
+
+async def _save_group_msg(update, ctx, name):
+    data = load_data()
+    selected = ctx.user_data.get("grp_selected", [])
+    groups = data.setdefault("groups", [])
+    i = 1
+    while f"grp_{i:03d}" in [g["id"] for g in groups]: i += 1
+    groups.append({"id": f"grp_{i:03d}", "name": name, "event_ids": selected})
+    ok = save_data(data); adm = is_admin(update.effective_user.id, data)
+    await update.message.reply_text(
+        f"{'✅ Группа создана!' if ok else '⚠️ Ошибка'}\n\n🔗 *{name}*",
+        parse_mode="Markdown", reply_markup=main_menu_kb(adm))
+
+async def grp_delete_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return GROUP_SELECT
+    try:
+        data = load_data()
+        groups = data.get("groups", [])
+        if not groups:
+            await q.edit_message_text("Групп нет.", reply_markup=back_kb()); return ConversationHandler.END
+        kb = [[InlineKeyboardButton(f"🗑 {g['name']}", callback_data=f"grp_del_{g['id']}")] for g in groups]
+        kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
+        await q.edit_message_text("🗑 Выбери группу для удаления:", reply_markup=InlineKeyboardMarkup(kb))
+    finally: unlock_cb(q)
+    return GROUP_DELETE_SELECT
+
+async def grp_del_confirm_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return GROUP_DELETE_SELECT
+    try:
+        gid = q.data.replace("grp_del_","")
+        data = load_data()
+        name = next((g["name"] for g in data.get("groups",[]) if g["id"]==gid), "")
+        data["groups"] = [g for g in data.get("groups",[]) if g["id"] != gid]
+        ok = save_data(data); adm = is_admin(q.from_user.id, data)
+        await q.edit_message_text(
+            f"{'✅ Группа удалена!' if ok else '⚠️ Ошибка'}\n\n*{name}*",
+            parse_mode="Markdown", reply_markup=main_menu_kb(adm))
+    finally: unlock_cb(q)
+    return ConversationHandler.END
+
 async def add_admin_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     try: new_id = int(update.message.text.strip())
     except:
@@ -1232,6 +1379,26 @@ def main():
             DIRTY_PLAYER: [CallbackQueryHandler(dirty_player_cb,     pattern="^dp_pl_")],
             DIRTY_LABEL:  [CallbackQueryHandler(dirty_label_keep_cb, pattern="^dirty_lbl_keep$"),
                            MessageHandler(filters.TEXT & ~filters.COMMAND, dirty_label_msg)],
+        },
+        fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(back_main, pattern="^back_main$")],
+    ))
+
+    app.add_handler(ConversationHandler(
+        entry_points=[CallbackQueryHandler(menu_handler, pattern="^menu_group$")],
+        states={
+            GROUP_SELECT: [
+                CallbackQueryHandler(grp_event_cb,   pattern="^grp_ev_"),
+                CallbackQueryHandler(grp_confirm_cb, pattern="^grp_confirm$"),
+                CallbackQueryHandler(grp_delete_cb,  pattern="^grp_delete$"),
+            ],
+            GROUP_NAME: [
+                CallbackQueryHandler(grp_use_auto_cb,    pattern="^grp_use_auto$"),
+                CallbackQueryHandler(grp_custom_name_cb, pattern="^grp_custom_name$"),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, grp_name_msg),
+            ],
+            GROUP_DELETE_SELECT: [
+                CallbackQueryHandler(grp_del_confirm_cb, pattern="^grp_del_"),
+            ],
         },
         fallbacks=[CommandHandler("cancel", cancel), CallbackQueryHandler(back_main, pattern="^back_main$")],
     ))
