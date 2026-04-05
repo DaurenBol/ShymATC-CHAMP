@@ -1156,16 +1156,39 @@ function renderStatBlock(ev, ps, label) {
       </div>
       <div class="pb-bar-outer"><div class="pb-bar-inner" style="width:${pct}%"></div></div>
       <div class="pb-footer"><div class="pb-pct">${pct}% пар сыграли</div><div class="pb-sub">${n} участников</div></div>
-      ${(ev.rounds||[]).length > 1 ? `<div style="padding:4px 14px 8px;display:flex;gap:12px;flex-wrap:wrap;">
-        ${(ev.rounds||[]).map(r=>{
-          const rSet = new Set((r.matches||[]).filter(m=>m.played && ps.has(m.home)&&ps.has(m.away)).map(m=>[m.home,m.away].sort().join('|||')));
-          const rTotal = Math.round(n*(n-1)/2);
-          const rPlayed = [...new Set((r.matches||[]).filter(m=>m.played&&ps.has(m.home)&&ps.has(m.away)).map(m=>[m.home,m.away].sort().join('|||')))].length;
-          const rRem = rTotal - rPlayed;
-          return `<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);">${r.name}: <span style="color:var(--accent2)">${rPlayed}</span>/<span style="color:var(--accent3)">${rTotal}</span>${rRem>0?' (ост. '+rRem+')':' ✅'}</span>`;
-        }).join('')}
-      </div>` : ''}
-      ${remainingPairs>0?`<button class="pb-toggle" onclick="togglePairs('${pairsListId}','${pairsArrId}')"><span>${remainingPairs} ${remainingPairs===1?'пара':remainingPairs<5?'пары':'пар'} ещё не встречались</span><span class="pb-toggle-arr" id="${pairsArrId}">▼</span></button><div class="pb-pairs" id="${pairsListId}" style="display:none">${unplayedHtml}</div>`:`<div style="padding:10px 14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent)">✅ Все пары сыграли!</div>`}
+      ${(()=>{
+        const rounds = ev.rounds||[];
+        if(rounds.length > 1) {
+          // По каждому раунду — все незыгранные пары с подписью круга
+          let roundHtml = '';
+          let totalUnplayed = 0;
+          rounds.forEach(r => {
+            const rSet = new Set((r.matches||[]).filter(m=>m.played&&ps.has(m.home)&&ps.has(m.away)).map(m=>[m.home,m.away].sort().join('|||')));
+            const rUnplayed = [];
+            for(let i=0;i<ev.participants.length;i++)
+              for(let j=i+1;j<ev.participants.length;j++){
+                const key=[ev.participants[i],ev.participants[j]].sort().join('|||');
+                if(!rSet.has(key)) rUnplayed.push([ev.participants[i],ev.participants[j]]);
+              }
+            totalUnplayed += rUnplayed.length;
+            roundHtml += `<div style="padding:8px 14px 2px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;">${r.name} — не встречались (${rUnplayed.length})</div>`;
+            if(!rUnplayed.length) {
+              roundHtml += `<div style="padding:4px 14px 8px;font-family:'DM Mono',monospace;font-size:11px;color:var(--accent)">✅ Все пары сыграли</div>`;
+            } else {
+              roundHtml += rUnplayed.map(([a,b])=>`<div class="pb-pair"><span class="pb-pair-names">${a}<span class="pb-pair-sep">vs</span>${b}</span><span class="pb-pair-badge">${r.name}</span></div>`).join('');
+            }
+          });
+          const uid2 = ev.id+'-r-'+Math.random().toString(36).slice(2);
+          const rListId='pairs-list-'+uid2, rArrId='pairs-arr-'+uid2;
+          return totalUnplayed>0
+            ? `<button class="pb-toggle" onclick="togglePairs('${rListId}','${rArrId}')"><span>${totalUnplayed} ${totalUnplayed===1?'пара':totalUnplayed<5?'пары':'пар'} ещё не встречались</span><span class="pb-toggle-arr" id="${rArrId}">▼</span></button><div class="pb-pairs" id="${rListId}" style="display:none">${roundHtml}</div>`
+            : `<div style="padding:10px 14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent)">✅ Все пары сыграли!</div>`;
+        } else {
+          return remainingPairs>0
+            ? `<button class="pb-toggle" onclick="togglePairs('${pairsListId}','${pairsArrId}')"><span>${remainingPairs} ${remainingPairs===1?'пара':remainingPairs<5?'пары':'пар'} ещё не встречались</span><span class="pb-toggle-arr" id="${pairsArrId}">▼</span></button><div class="pb-pairs" id="${pairsListId}" style="display:none">${unplayedHtml}</div>`
+            : `<div style="padding:10px 14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent)">✅ Все пары сыграли!</div>`;
+        }
+      })()}
     </div>`;
   }
   if(rows.length) {
