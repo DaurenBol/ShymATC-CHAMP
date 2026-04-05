@@ -613,7 +613,16 @@
         {
           "id": 2,
           "name": "Круг 2",
-          "matches": []
+          "matches": [
+            {
+              "home": "111",
+              "away": "333",
+              "score_home": 0,
+              "score_away": 0,
+              "played": true,
+              "date": "05.04.2026"
+            }
+          ]
         }
       ],
       "created_at": "05.04.2026 10:25",
