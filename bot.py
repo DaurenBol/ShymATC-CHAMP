@@ -244,8 +244,8 @@ async def menu_handler(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
             if len(active)==1:
                 ctx.user_data["ap_event_id"]=active[0]["id"]
                 current=", ".join(active[0]["participants"]) or "пока никого"
-                await q.edit_message_text(f"👤 *{active[0]['name']}*\nСейчас: {current}\n\nВводи имена, кнопка ✅ Готово когда закончишь:",parse_mode="Markdown")
-                await ctx.bot.send_message(q.from_user.id,"👇",reply_markup=home_kb())
+                kb=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Готово",callback_data="ap_done")]])
+                await q.edit_message_text(f"👤 *{active[0]['name']}*\nСейчас: {current}\n\nВводи *ИМЕНА* — по одному.\nФормат: просто имя или _Имя | Команда_\n\nНажми «Готово» когда закончишь:",parse_mode="Markdown",reply_markup=kb)
                 return ADD_PARTICIPANT
             kb=[[InlineKeyboardButton(e["name"],callback_data=f"ap_{e['id']}")] for e in active]
             kb.append([InlineKeyboardButton("◀️ Назад",callback_data="back_main")])
@@ -687,8 +687,8 @@ async def ap_event_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
         ctx.user_data["ap_event_id"]=q.data.replace("ap_","")
         data=load_data(); event=get_event(data,ctx.user_data["ap_event_id"])
         current=", ".join(event["participants"]) or "пока никого"
-        await q.edit_message_text(f"👤 *{event['name']}*\nСейчас: {current}\n\nВводи имена, кнопка ✅ Готово когда закончишь:",parse_mode="Markdown")
-        await ctx.bot.send_message(q.from_user.id,"👇",reply_markup=home_kb())
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Готово",callback_data="ap_done")]])
+        await q.edit_message_text(f"👤 *{event['name']}*\nСейчас: {current}\n\nВводи *ИМЕНА* — по одному.\nФормат: просто имя или _Имя | Команда_\n\nНажми «Готово» когда закончишь:",parse_mode="Markdown",reply_markup=kb)
     finally: unlock_cb(q)
     return ADD_PARTICIPANT
 
@@ -700,64 +700,33 @@ async def handle_home_btn(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 async def ap_name(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
-    name=update.message.text.strip()
+    raw=update.message.text.strip()
+    # Format: "Имя" or "Имя | Команда"
+    if "|" in raw:
+        parts=raw.split("|",1)
+        name=parts[0].strip(); team=parts[1].strip()
+    else:
+        name=raw; team="не определено"
     data=load_data(); event=get_event(data,ctx.user_data.get("ap_event_id"))
     if not event:
         await update.message.reply_text("Ошибка. Начни заново."); return ConversationHandler.END
     if name in event["participants"]:
-        await update.message.reply_text(f"*{name}* уже есть.",parse_mode="Markdown"); return ADD_PARTICIPANT
-    ctx.user_data["ap_pending_name"]=name
-    kb=InlineKeyboardMarkup([[InlineKeyboardButton("⏭ Пропустить",callback_data="ap_team_skip")]])
-    msg=await update.message.reply_text(
-        f"👤 *{name}*\n\n*Введи название команды/клуба*\n_например: Барселона, Real Madrid_\n\nИли нажми «Пропустить»:",
-        parse_mode="Markdown",reply_markup=kb)
-    ctx.user_data["ap_prompt_msg_id"]=msg.message_id
-    ctx.user_data["ap_prompt_chat_id"]=msg.chat_id
-    return AP_TEAM_COMMENT
-
-async def ap_team_skip_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
-    q=update.callback_query; await q.answer()
-    name=ctx.user_data.get("ap_pending_name","")
-    data=load_data(); event=get_event(data,ctx.user_data.get("ap_event_id"))
-    if not event: return ConversationHandler.END
-    event["participants"].append(name)
-    teams=event.setdefault("participant_teams",{})
-    teams[name]="не определено"
-    ok=save_data(data)
-    current=", ".join(event["participants"])
-    kb=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Готово",callback_data="ap_done")]])
-    await q.edit_message_text(
-        f"{'✅' if ok else '⚠️'} *{name}* добавлен · _не определено_\nСписок: {current}\n\n*Ещё имя* или нажми «Готово»:",
-        parse_mode="Markdown",reply_markup=kb)
-    return ADD_PARTICIPANT
-
-async def ap_team_msg(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
-    team=update.message.text.strip()
-    if team=="🏠 Вернуться в меню":
-        data=load_data(); adm=is_admin(update.effective_user.id,data)
-        await update.message.reply_text("🏆 *ShymATC-CHAMP*",parse_mode="Markdown",reply_markup=remove_kb())
-        await update.message.reply_text("🏆 *ShymATC-CHAMP*",parse_mode="Markdown",reply_markup=main_menu_kb(adm))
-        return ConversationHandler.END
-    name=ctx.user_data.get("ap_pending_name","")
-    data=load_data(); event=get_event(data,ctx.user_data.get("ap_event_id"))
-    if not event: return ConversationHandler.END
+        await update.message.reply_text(f"⚠️ *{name}* уже есть.",parse_mode="Markdown"); return ADD_PARTICIPANT
     event["participants"].append(name)
     teams=event.setdefault("participant_teams",{})
     teams[name]=team
     ok=save_data(data)
     current=", ".join(event["participants"])
+    team_str=f" · _{team}_" if team!="не определено" else ""
     kb=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Готово",callback_data="ap_done")]])
-    # Edit the prompt message to avoid stale buttons in chat
-    chat_id=ctx.user_data.get("ap_prompt_chat_id")
-    msg_id=ctx.user_data.get("ap_prompt_msg_id")
-    text=f"{'✅' if ok else '⚠️'} *{name}* добавлен · *{team}*\nСписок: {current}\n\n*Ещё имя* или нажми «Готово»:"
-    if chat_id and msg_id:
-        try:
-            await ctx.bot.edit_message_text(text,chat_id=chat_id,message_id=msg_id,parse_mode="Markdown",reply_markup=kb)
-        except: await update.message.reply_text(text,parse_mode="Markdown",reply_markup=kb)
-    else:
-        await update.message.reply_text(text,parse_mode="Markdown",reply_markup=kb)
+    await update.message.reply_text(
+        f"{'✅' if ok else '⚠️'} *{name}*{team_str} добавлен\nСписок: {current}\n\nВводи *ИМЕНА* — по одному.\nФормат: просто имя или _Имя | Команда_\n\nНажми «Готово» когда закончишь:",
+        parse_mode="Markdown",reply_markup=kb)
     return ADD_PARTICIPANT
+
+
+
+
 
 async def ap_done_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     q=update.callback_query; await q.answer()
@@ -1135,12 +1104,6 @@ def main():
                 CallbackQueryHandler(ap_event_cb,pattern="^ap_"),
                 MessageHandler(filters.Regex("^🏠 Вернуться в меню$"),handle_home_btn),
                 MessageHandler(filters.TEXT&~filters.COMMAND,ap_name),
-            ],
-            AP_TEAM_COMMENT:[
-                CallbackQueryHandler(ap_team_skip_cb,pattern="^ap_team_skip$"),
-                CallbackQueryHandler(ap_done_cb,pattern="^ap_done$"),
-                MessageHandler(filters.Regex("^🏠 Вернуться в меню$"),handle_home_btn),
-                MessageHandler(filters.TEXT&~filters.COMMAND,ap_team_msg),
             ],
         },
         fallbacks=[CommandHandler("cancel",cancel),CallbackQueryHandler(back_main,pattern="^back_main$")]
