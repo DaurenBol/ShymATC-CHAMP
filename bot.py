@@ -290,6 +290,7 @@ async def menu_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 [InlineKeyboardButton("⚽ Изменить счёт матча", callback_data="edit_match_score")],
                 [InlineKeyboardButton("🗑 Удалить матч", callback_data="edit_delete_match")],
                 [InlineKeyboardButton("👤 Переименовать участника", callback_data="edit_participant")],
+                [InlineKeyboardButton("🎮 Команда участника", callback_data="edit_team")],
                 [InlineKeyboardButton("🗑 Удалить участника", callback_data="edit_remove_participant")],
                 [InlineKeyboardButton("◀️ Назад", callback_data="back_main")],
             ]
@@ -512,8 +513,7 @@ async def ev_confirm_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 def _ap_text(event):
     current = ", ".join(event["participants"]) or "пока никого"
     return (f"👤 *{event['name']}*\nУчастники: {current}\n\n"
-            f"Вводи *ИМЕНА* по одному.\n"
-            f"Формат: просто имя или _Имя | Команда_\n\n"
+            f"Вводи *ИМЕНА* по одному.\n\n"
             f"Нажми «Готово» когда закончишь:")
 
 async def _ap_show(q, event):
@@ -553,12 +553,7 @@ async def ap_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return ADD_PARTICIPANT
 
 async def ap_name(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    raw = update.message.text.strip()
-    if "|" in raw:
-        parts = raw.split("|", 1)
-        name = parts[0].strip(); team = parts[1].strip()
-    else:
-        name = raw; team = "не определено"
+    name = update.message.text.strip()
     data = load_data(); event = get_event(data, ctx.user_data.get("ap_eid"))
     if not event:
         await update.message.reply_text("Ошибка. Начни заново."); return ConversationHandler.END
@@ -566,15 +561,13 @@ async def ap_name(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"⚠️ *{name}* уже есть.", parse_mode="Markdown")
         return ADD_PARTICIPANT
     event["participants"].append(name)
-    event.setdefault("participant_teams", {})[name] = team
+    event.setdefault("participant_teams", {})[name] = "не определено"
     ok = save_data(data)
-    team_str = f" · _{team}_" if team != "не определено" else ""
     current = ", ".join(event["participants"])
     await update.message.reply_text(
-        f"{'✅' if ok else '⚠️'} *{name}*{team_str} добавлен\n\n"
+        f"{'✅' if ok else '⚠️'} *{name}* добавлен\n\n"
         f"Список: {current}\n\n"
         f"Вводи *ИМЕНА* по одному.\n"
-        f"Формат: просто имя или _Имя | Команда_\n\n"
         f"Нажми «Готово» когда закончишь:",
         parse_mode="Markdown", reply_markup=done_kb())
     return ADD_PARTICIPANT
@@ -692,6 +685,14 @@ async def edit_select_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
             await q.edit_message_text("👤 Выбери событие:", reply_markup=InlineKeyboardMarkup(kb))
             return EDIT_PARTICIPANT_OLD
+        elif q.data == "edit_team":
+            active = [e for e in data["events"] if e.get("active") and e.get("participants")]
+            if not active:
+                await q.edit_message_text("Нет событий с участниками.", reply_markup=back_kb()); return ConversationHandler.END
+            kb = [[InlineKeyboardButton(e["name"], callback_data=f"etm_{e['id']}")] for e in active]
+            kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
+            await q.edit_message_text("🎮 Выбери событие:", reply_markup=InlineKeyboardMarkup(kb))
+            return EDIT_PARTICIPANT_OLD
         elif q.data == "edit_remove_participant":
             active = [e for e in data["events"] if e.get("active") and e.get("participants")]
             if not active:
@@ -794,28 +795,62 @@ async def edit_participant_select_cb(update: Update, ctx: ContextTypes.DEFAULT_T
     q = update.callback_query
     if not await lock_cb(q): return EDIT_PARTICIPANT_NEW
     try:
-        ctx.user_data["edit_participant_old"] = q.data.replace("epp_","")
-        await q.edit_message_text(f"Текущее: *{ctx.user_data['edit_participant_old']}*\n\nВведи новое имя:", parse_mode="Markdown")
+        pname = q.data.replace("epp_","")
+        ctx.user_data["edit_participant_old"] = pname
+        if ctx.user_data.get("edit_mode") == "team":
+            data = load_data(); event = get_event(data, ctx.user_data["edit_eid"])
+            current_team = event.get("participant_teams",{}).get(pname,"не определено")
+            await q.edit_message_text(
+                f"👤 *{pname}*\nТекущая команда: *{current_team}*\n\nВведи новое название команды:",
+                parse_mode="Markdown")
+        else:
+            await q.edit_message_text(f"Текущее: *{pname}*\n\nВведи новое имя:", parse_mode="Markdown")
     finally: unlock_cb(q)
     return EDIT_PARTICIPANT_NEW
 
 async def edit_participant_new_value(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    new_name = update.message.text.strip(); old_name = ctx.user_data["edit_participant_old"]
+    value = update.message.text.strip()
+    old_name = ctx.user_data["edit_participant_old"]
     data = load_data(); event = get_event(data, ctx.user_data["edit_eid"])
-    if old_name in event["participants"]:
-        event["participants"][event["participants"].index(old_name)] = new_name
-    for m in event.get("matches",[]):
-        if m.get("home") == old_name: m["home"] = new_name
-        if m.get("away") == old_name: m["away"] = new_name
-    # Update participant_teams key
-    teams = event.get("participant_teams", {})
-    if old_name in teams:
-        teams[new_name] = teams.pop(old_name)
-    ok = save_data(data); adm = is_admin(update.effective_user.id, data)
-    await update.message.reply_text(
-        f"{'✅ Имя изменено!' if ok else '⚠️ Ошибка'}\n\n*{old_name}* → *{new_name}*",
-        parse_mode="Markdown", reply_markup=main_menu_kb(adm))
+    adm = is_admin(update.effective_user.id, data)
+    if ctx.user_data.get("edit_mode") == "team":
+        event.setdefault("participant_teams", {})[old_name] = value
+        ok = save_data(data)
+        await update.message.reply_text(
+            f"{'✅ Команда обновлена!' if ok else '⚠️ Ошибка'}\n\n👤 *{old_name}* · 🎮 *{value}*",
+            parse_mode="Markdown", reply_markup=main_menu_kb(adm))
+    else:
+        new_name = value
+        if old_name in event["participants"]:
+            event["participants"][event["participants"].index(old_name)] = new_name
+        for m in event.get("matches",[]):
+            if m.get("home") == old_name: m["home"] = new_name
+            if m.get("away") == old_name: m["away"] = new_name
+        teams = event.get("participant_teams", {})
+        if old_name in teams:
+            teams[new_name] = teams.pop(old_name)
+        ok = save_data(data)
+        await update.message.reply_text(
+            f"{'✅ Имя изменено!' if ok else '⚠️ Ошибка'}\n\n*{old_name}* → *{new_name}*",
+            parse_mode="Markdown", reply_markup=main_menu_kb(adm))
+    ctx.user_data.pop("edit_mode", None)
     return ConversationHandler.END
+
+async def edit_team_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return EDIT_PARTICIPANT_OLD
+    try:
+        ctx.user_data["edit_eid"] = q.data.replace("etm_","")
+        ctx.user_data["edit_mode"] = "team"
+        data = load_data(); event = get_event(data, ctx.user_data["edit_eid"])
+        teams = event.get("participant_teams", {})
+        kb = [[InlineKeyboardButton(
+            f"{p} · {teams.get(p,'не определено')}",
+            callback_data=f"epp_{p}")] for p in event["participants"]]
+        kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
+        await q.edit_message_text("🎮 Выбери участника:", reply_markup=InlineKeyboardMarkup(kb))
+    finally: unlock_cb(q)
+    return EDIT_PARTICIPANT_NEW
 
 async def remove_participant_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
@@ -1163,7 +1198,8 @@ def main():
             EDIT_MATCH_SELECT:       [CallbackQueryHandler(edit_match_event_cb,       pattern="^ems_")],
             EDIT_MATCH_FIELD:        [CallbackQueryHandler(edit_match_select_cb,      pattern="^emm_")],
             EDIT_MATCH_VALUE:        [MessageHandler(filters.TEXT & ~filters.COMMAND, edit_match_score_value)],
-            EDIT_PARTICIPANT_OLD:    [CallbackQueryHandler(edit_participant_event_cb, pattern="^ep_")],
+            EDIT_PARTICIPANT_OLD:    [CallbackQueryHandler(edit_team_event_cb,        pattern="^etm_"),
+                                      CallbackQueryHandler(edit_participant_event_cb, pattern="^ep_")],
             EDIT_PARTICIPANT_NEW:    [CallbackQueryHandler(edit_participant_select_cb,pattern="^epp_"),
                                       MessageHandler(filters.TEXT & ~filters.COMMAND, edit_participant_new_value)],
             REMOVE_PARTICIPANT_SELECT:[CallbackQueryHandler(remove_participant_event_cb, pattern="^erp_"),
