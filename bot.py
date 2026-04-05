@@ -594,13 +594,15 @@ async def ev_venue_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
         if val=="other_venue":
             await q.edit_message_text("✏️ Введи площадку:"); return EV_VENUE_CUSTOM
         ctx.user_data["ev"]["venue_type"]=val
-        await q.edit_message_text("📅 Дата начала (01.04.2026)\nИли /skip:")
+        kb_skip=InlineKeyboardMarkup([[InlineKeyboardButton("⏭ Пропустить",callback_data="skip_date_start")]])
+        await q.edit_message_text("📅 Дата начала (например: 01.04.2026)\nИли пропусти:",reply_markup=kb_skip)
     finally: unlock_cb(q)
     return EV_DATE_START
 
 async def ev_venue_custom(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     ctx.user_data["ev"]["venue_type"]=update.message.text.strip()
-    await update.message.reply_text("📅 Дата начала (01.04.2026)\nИли /skip:")
+    kb_skip=InlineKeyboardMarkup([[InlineKeyboardButton("⏭ Пропустить",callback_data="skip_date_start")]])
+    await update.message.reply_text("📅 Дата начала (например: 01.04.2026)\nИли пропусти:",reply_markup=kb_skip)
     return EV_DATE_START
 
 async def ev_date_start(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
@@ -619,7 +621,12 @@ async def ev_date_end(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
 
 async def ev_skip_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     q=update.callback_query; await q.answer()
-    if q.data=="skip_date_end":
+    if q.data=="skip_date_start":
+        ctx.user_data["ev"]["date_start"]=""
+        kb=InlineKeyboardMarkup([[InlineKeyboardButton("⏭ Пропустить",callback_data="skip_date_end")]])
+        await q.edit_message_text("📅 Дата окончания\nИли пропусти:",reply_markup=kb)
+        return EV_DATE_END
+    elif q.data=="skip_date_end":
         ctx.user_data["ev"]["date_end"]=""
         kb=InlineKeyboardMarkup([[InlineKeyboardButton("⏭ Пропустить",callback_data="skip_rules")]])
         await q.edit_message_text("📋 Правила события\nИли пропусти:",reply_markup=kb)
@@ -1104,7 +1111,7 @@ def main():
             EV_FORMAT:[CallbackQueryHandler(ev_format_cb,pattern="^fmt_")],
             EV_VENUE:[CallbackQueryHandler(ev_venue_cb,pattern="^ven_")],
             EV_VENUE_CUSTOM:[MessageHandler(filters.TEXT&~filters.COMMAND,ev_venue_custom)],
-            EV_DATE_START:[MessageHandler(filters.TEXT&~filters.COMMAND,ev_date_start)],
+            EV_DATE_START:[MessageHandler(filters.TEXT&~filters.COMMAND,ev_date_start),CallbackQueryHandler(ev_skip_cb,pattern="^skip_date_start$")],
             EV_DATE_END:[MessageHandler(filters.TEXT&~filters.COMMAND,ev_date_end),CallbackQueryHandler(ev_skip_cb,pattern="^skip_date_end$")],
             EV_RULES:[MessageHandler(filters.TEXT&~filters.COMMAND,ev_rules),CallbackQueryHandler(ev_skip_cb,pattern="^skip_rules$")],
             EV_CONFIRM:[CallbackQueryHandler(ev_confirm_cb,pattern="^(ev_create|back_main)$")],
