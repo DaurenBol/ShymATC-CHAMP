@@ -585,7 +585,16 @@
         {
           "id": 1,
           "name": "Круг 1",
-          "matches": []
+          "matches": [
+            {
+              "home": "111",
+              "away": "222",
+              "score_home": 2,
+              "score_away": 1,
+              "played": true,
+              "date": "05.04.2026"
+            }
+          ]
         },
         {
           "id": 2,
