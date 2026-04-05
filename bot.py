@@ -1,6 +1,6 @@
 import os, json, base64, requests, asyncio, threading
 from datetime import datetime
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton, MenuButtonCommands, MenuButtonDefault, BotCommand
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, CallbackQueryHandler,
     MessageHandler, filters, ContextTypes, ConversationHandler
@@ -1012,7 +1012,14 @@ async def cancel(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 def main():
-    app=ApplicationBuilder().token(BOT_TOKEN).build()
+    async def post_init(application):
+        await application.bot.set_chat_menu_button(menu_button=MenuButtonCommands())
+        await application.bot.set_my_commands([
+            BotCommand("start", "Главное меню"),
+            BotCommand("cancel", "Отменить действие"),
+        ])
+
+    app=ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
 
     app.add_handler(ConversationHandler(
         entry_points=[CallbackQueryHandler(menu_handler,pattern="^menu_new_event$")],
