@@ -551,33 +551,6 @@
       "created_at": "01.04.2026 15:56",
       "dirty_player": "Есімхан",
       "dirty_label": "Админ Сайта"
-    },
-    {
-      "id": "ev_002",
-      "name": "тест11",
-      "event_type": "league",
-      "category": "football",
-      "participation_format": "individual",
-      "venue_type": "playstation",
-      "date_start": "",
-      "date_end": "",
-      "rules": "",
-      "active": true,
-      "participants": [
-        "йййй",
-        "ууу",
-        "алр"
-      ],
-      "matches": [],
-      "created_at": "05.04.2026 07:51",
-      "participant_teams": {
-        "йййй": "цццц",
-        "ууу": "кккк",
-        "ннгг": "дло",
-        "ввв": "пордл",
-        "алр": "алрпр",
-        "ззщ": "фапр"
-      }
     }
   ],
   "admins": [
