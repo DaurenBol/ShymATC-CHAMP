@@ -522,7 +522,7 @@ function openPlayer(playerName, eventId) {
     </div>
     <div class="pl-matches-wrap">
       <div id="pl-played-${ev.id}" class="pl-tab-content active">
-        ${matchesHtml || '<div style="padding:20px;text-align:center;color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">Матчей нет</div>'}
+        ${matchesHtml || '<div style="padding:20px;text-align:center;color:var(--text3);font-family:monospace;font-size:12px;">Матчей нет</div>'}
       </div>
       <div id="pl-pending-${ev.id}" class="pl-tab-content">
         <div id="pl-pending-list-${ev.id}"></div>
@@ -563,7 +563,7 @@ function plTab(type, evId, playerName, btn) {
     });
     const container = document.getElementById('pl-pending-list-'+evId);
     if(!pending.length) {
-      container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">✅ Сыграл со всеми!</div>';
+      container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-family:monospace;font-size:12px;">✅ Сыграл со всеми!</div>';
       return;
     }
     container.innerHTML = pending.map(opp=>`
