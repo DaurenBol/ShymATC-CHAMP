@@ -563,8 +563,12 @@
       "date_end": "",
       "rules": "будет 2 круга игр",
       "active": true,
-      "participants": [],
-      "participant_teams": {},
+      "participants": [
+        "имя тест1"
+      ],
+      "participant_teams": {
+        "имя тест1": "не определено"
+      },
       "matches": [],
       "created_at": "05.04.2026 08:33"
     }
