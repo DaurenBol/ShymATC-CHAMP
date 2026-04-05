@@ -569,8 +569,12 @@
       "date_end": "",
       "rules": "",
       "active": true,
-      "participants": [],
-      "participant_teams": {},
+      "participants": [
+        "السلام عليكم ورحمة الله وبركاته."
+      ],
+      "participant_teams": {
+        "السلام عليكم ورحمة الله وبركاته.": "не определено"
+      },
       "rounds": [
         {
           "id": 1,
