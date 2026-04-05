@@ -549,7 +549,6 @@ async def ticker_text_msg(update:Update, ctx:ContextTypes.DEFAULT_TYPE):
 async def ev_name(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     ctx.user_data["ev"]={"name":update.message.text.strip()}
     await update.message.reply_text("📌 *Тип события:*",parse_mode="Markdown",reply_markup=options_kb(EVENT_TYPES,"evt_"))
-    await update.message.reply_text("​",reply_markup=remove_kb())
     return EV_TYPE
 
 async def ev_type_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
