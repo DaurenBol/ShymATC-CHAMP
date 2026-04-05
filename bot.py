@@ -709,7 +709,7 @@ async def ap_name(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     ctx.user_data["ap_pending_name"]=name
     kb=InlineKeyboardMarkup([[InlineKeyboardButton("⏭ Пропустить",callback_data="ap_team_skip")]])
     await update.message.reply_text(
-        f"👤 *{name}*\n\nВведи название команды/клуба (например: _Барселона_, _Real Madrid_)\nИли нажми «Пропустить»:",
+        f"👤 *{name}*\n\n*Введи название команды/клуба*\n_например: Барселона, Real Madrid_\n\nИли нажми «Пропустить»:",
         parse_mode="Markdown",reply_markup=kb)
     return AP_TEAM_COMMENT
 
@@ -725,7 +725,7 @@ async def ap_team_skip_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     current=", ".join(event["participants"])
     kb=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Готово",callback_data="ap_done")]])
     await q.edit_message_text(
-        f"{'✅' if ok else '⚠️'} *{name}* добавлен\nКоманда: _не определено_\nСписок: {current}\n\nЕщё имя или нажми «Готово»:",
+        f"{'✅' if ok else '⚠️'} *{name}* добавлен\nКоманда: _не определено_\nСписок: {current}\n\n*Ещё имя* или нажми «Готово»:",
         parse_mode="Markdown",reply_markup=kb)
     return ADD_PARTICIPANT
 
@@ -746,7 +746,7 @@ async def ap_team_msg(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     current=", ".join(event["participants"])
     kb=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Готово",callback_data="ap_done")]])
     await update.message.reply_text(
-        f"{'✅' if ok else '⚠️'} *{name}* добавлен\nКоманда: *{team}*\nСписок: {current}\n\nЕщё имя или нажми «Готово»:",
+        f"{'✅' if ok else '⚠️'} *{name}* добавлен\nКоманда: *{team}*\nСписок: {current}\n\n*Ещё имя* или нажми «Готово»:",
         parse_mode="Markdown",reply_markup=kb)
     return ADD_PARTICIPANT
 
@@ -1122,8 +1122,8 @@ def main():
         entry_points=[CallbackQueryHandler(menu_handler,pattern="^menu_participants$")],
         states={
             ADD_PARTICIPANT:[
-                CallbackQueryHandler(ap_event_cb,pattern="^ap_"),
                 CallbackQueryHandler(ap_done_cb,pattern="^ap_done$"),
+                CallbackQueryHandler(ap_event_cb,pattern="^ap_"),
                 MessageHandler(filters.Regex("^🏠 Вернуться в меню$"),handle_home_btn),
                 MessageHandler(filters.TEXT&~filters.COMMAND,ap_name),
             ],
