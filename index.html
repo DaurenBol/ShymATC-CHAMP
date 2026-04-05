@@ -380,7 +380,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
             Tournament Operator&nbsp;<span style="color:var(--accent2);letter-spacing:2px;transition:color .3s;">ЕСЫМХАН</span>
           </div>
           <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:2px;transition:color .3s;">
-            v5.7
+            v5.8
           </div>
         </div>
       </div>
@@ -987,7 +987,7 @@ function renderGroupTable(group, container) {
     {title:'🔗 Общая', rows: overallRows, overall: true, evId: null},
     ...events.map(ev=>({title: ev.name, rows: calcStandings(ev), overall: false, evId: ev.id}))
   ];
-  const roundCols = cols.filter(c=>!c.overall);
+  const roundCols = cols.filter(c=>!c.overall).reverse();
   const overallCol = cols.find(c=>c.overall);
   container.innerHTML = `
     <div class="group-tables">
@@ -1014,7 +1014,7 @@ function renderEventTable(ev, container) {
       {title: '🔗 Общая', rows: overallRows, evId: ev.id, overall: true},
       ...rounds.map(r=>({title: r.name, rows: calcStandingsFromMatches(ev.participants||[], roundMatches(ev,r.id)), evId: ev.id, overall: false}))
     ];
-    const roundColsEv = cols.filter(c=>!c.overall);
+    const roundColsEv = cols.filter(c=>!c.overall).reverse();
     const overallColEv = cols.find(c=>c.overall);
     container.innerHTML = `<div class="group-tables">
       <div class="group-table-col">
