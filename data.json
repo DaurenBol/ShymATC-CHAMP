@@ -551,29 +551,6 @@
       "created_at": "01.04.2026 15:56",
       "dirty_player": "Есімхан",
       "dirty_label": "Админ Сайта"
-    },
-    {
-      "id": "ev_002",
-      "name": "бдш",
-      "event_type": "league",
-      "category": "ufc",
-      "participation_format": "individual",
-      "venue_type": "playstation",
-      "date_start": "",
-      "date_end": "",
-      "rules": "",
-      "active": true,
-      "participants": [],
-      "matches": [],
-      "created_at": "05.04.2026 08:04",
-      "participant_teams": {
-        "еггг": "ггене2",
-        "дллр": "не определено",
-        "оррррр": "не определено",
-        "ололол": "не определено",
-        "ненен": "не определено",
-        "4343": "пепе"
-      }
     }
   ],
   "admins": [
