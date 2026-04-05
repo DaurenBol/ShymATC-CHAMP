@@ -1186,6 +1186,7 @@ def main():
     app.add_handler(CallbackQueryHandler(menu_handler,pattern="^menu_"))
     app.add_handler(CallbackQueryHandler(standings_cb,pattern="^st_"))
     app.add_handler(CallbackQueryHandler(back_main,pattern="^back_main$"))
+    app.add_handler(CallbackQueryHandler(ap_done_cb,pattern="^ap_done$"))
 
     print("✅ ShymATC-CHAMP bot v5.1 started")
     print("📦 Preloading data from GitHub...")
