@@ -676,9 +676,30 @@ async def match_home_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     if not await lock_cb(q): return MATCH_HOME
     try:
-        ctx.user_data["match"]["home"] = q.data.replace("mh_","")
+        home = q.data.replace("mh_","")
+        ctx.user_data["match"]["home"] = home
         data = load_data(); event = get_event(data, ctx.user_data["match"]["event_id"])
-        others = [p for p in event["participants"] if p != ctx.user_data["match"]["home"]]
+        rounds = event.get("rounds", [])
+        # Если раунд один — исключаем тех с кем home уже сыграл в нём
+        if len(rounds) == 1:
+            rnd = rounds[0]
+            played_against = {
+                frozenset({m["home"], m["away"]})
+                for m in rnd.get("matches", []) if m.get("played") and m.get("home") == home or m.get("away") == home
+            }
+            played_against = {
+                (m["away"] if m["home"] == home else m["home"])
+                for m in rnd.get("matches", []) if m.get("played") and home in {m.get("home"), m.get("away")}
+            }
+            others = [p for p in event["participants"] if p != home and p not in played_against]
+            if not others:
+                adm = is_admin(q.from_user.id, data)
+                await q.edit_message_text(
+                    f"⚠️ *{home}* уже сыграл со всеми в {rnd['name']}!",
+                    parse_mode="Markdown", reply_markup=main_menu_kb(adm))
+                return ConversationHandler.END
+        else:
+            others = [p for p in event["participants"] if p != home]
         kb = [[InlineKeyboardButton(p, callback_data=f"ma_{p}")] for p in others]
         await q.edit_message_text("Кто второй:", reply_markup=InlineKeyboardMarkup(kb))
     finally: unlock_cb(q)
