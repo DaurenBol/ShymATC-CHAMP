@@ -757,9 +757,9 @@ async def match_score_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         event["rounds"].append(rnd)
     # Проверка: эта пара уже играла в этом раунде?
     ps = set(event.get("participants",[]))
+    pair = frozenset({m["home"], m["away"]})
     already = any(
-        x.get("played") and ps.issuperset({x.get("home",""),x.get("away","")}) and
-        {x.get("home"),x.get("away")} == {m["home"], m["away"]}
+        x.get("played") and frozenset({x.get("home",""), x.get("away","")}) == pair
         for x in rnd.get("matches",[])
     )
     if already:
