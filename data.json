@@ -26,531 +26,559 @@
         "Мейірлан",
         "Алмат"
       ],
-      "matches": [
-        {
-          "home": "Абылай",
-          "away": "Акмаль",
-          "score_home": 3,
-          "score_away": 2,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мақсат М",
-          "away": "Мақсат С",
-          "score_home": 4,
-          "score_away": 0,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Алмат",
-          "away": "Бақберген",
-          "score_home": 4,
-          "score_away": 0,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мақсат М",
-          "away": "Акмаль",
-          "score_home": 1,
-          "score_away": 2,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Максим",
-          "away": "Мақсат М",
-          "score_home": 3,
-          "score_away": 3,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Акмаль",
-          "away": "Қазбек",
-          "score_home": 9,
-          "score_away": 2,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Бақберген",
-          "away": "Қазбек",
-          "score_home": 6,
-          "score_away": 5,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Максим",
-          "away": "Қазбек",
-          "score_home": 8,
-          "score_away": 2,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Абылай",
-          "away": "Қазбек",
-          "score_home": 10,
-          "score_away": 3,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Абылай",
-          "away": "Есімхан",
-          "score_home": 3,
-          "score_away": 4,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Ерлан",
-          "away": "Азиз",
-          "score_home": 4,
-          "score_away": 3,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мейірлан",
-          "away": "Есімхан",
-          "score_home": 2,
-          "score_away": 7,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Максим",
-          "away": "Мейірлан",
-          "score_home": 5,
-          "score_away": 1,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Азиз",
-          "away": "Есімхан",
-          "score_home": 1,
-          "score_away": 5,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мейірлан",
-          "away": "Азиз",
-          "score_home": 7,
-          "score_away": 2,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Ерлан",
-          "away": "Абылай",
-          "score_home": 4,
-          "score_away": 3,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Максим",
-          "away": "Абылай",
-          "score_home": 8,
-          "score_away": 0,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мейірлан",
-          "away": "Ерлан",
-          "score_home": 2,
-          "score_away": 1,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Максим",
-          "away": "Азиз",
-          "score_home": 5,
-          "score_away": 2,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Азиз",
-          "away": "Абылай",
-          "score_home": 3,
-          "score_away": 0,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Абылай",
-          "away": "Мейірлан",
-          "score_home": 3,
-          "score_away": 2,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Максим",
-          "away": "Ерлан",
-          "score_home": 4,
-          "score_away": 2,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Есімхан",
-          "away": "Максим",
-          "score_home": 3,
-          "score_away": 2,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Ерлан",
-          "away": "Есімхан",
-          "score_home": 1,
-          "score_away": 4,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Есімхан",
-          "away": "Алмат",
-          "score_home": 2,
-          "score_away": 0,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Есімхан",
-          "away": "Мақсат С",
-          "score_home": 5,
-          "score_away": 3,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Азиз",
-          "away": "Алмат",
-          "score_home": 2,
-          "score_away": 4,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Азиз",
-          "away": "Мақсат С",
-          "score_home": 2,
-          "score_away": 5,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мақсат С",
-          "away": "Максим",
-          "score_home": 2,
-          "score_away": 5,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мақсат С",
-          "away": "Алмат",
-          "score_home": 6,
-          "score_away": 2,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мақсат С",
-          "away": "Ерлан",
-          "score_home": 7,
-          "score_away": 1,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мақсат С",
-          "away": "Абылай",
-          "score_home": 2,
-          "score_away": 6,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Максим",
-          "away": "Алмат",
-          "score_home": 8,
-          "score_away": 2,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Алмат",
-          "away": "Абылай",
-          "score_home": 2,
-          "score_away": 0,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Алмат",
-          "away": "Ерлан",
-          "score_home": 4,
-          "score_away": 1,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Есімхан",
-          "away": "Акмаль",
-          "score_home": 4,
-          "score_away": 0,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Есімхан",
-          "away": "Али",
-          "score_home": 6,
-          "score_away": 1,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Есімхан",
-          "away": "Бақберген",
-          "score_home": 7,
-          "score_away": 3,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Акмаль",
-          "away": "Мақсат С",
-          "score_home": 3,
-          "score_away": 8,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Акмаль",
-          "away": "Али",
-          "score_home": 4,
-          "score_away": 3,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Акмаль",
-          "away": "Бақберген",
-          "score_home": 4,
-          "score_away": 0,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Максим",
-          "away": "Али",
-          "score_home": 5,
-          "score_away": 3,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Максим",
-          "away": "Бақберген",
-          "score_home": 4,
-          "score_away": 2,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Максим",
-          "away": "Акмаль",
-          "score_home": 4,
-          "score_away": 2,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мақсат С",
-          "away": "Бақберген",
-          "score_home": 4,
-          "score_away": 3,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Алмат",
-          "away": "Акмаль",
-          "score_home": 2,
-          "score_away": 2,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Алмат",
-          "away": "Мақсат М",
-          "score_home": 4,
-          "score_away": 4,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Абылай",
-          "away": "Бақберген",
-          "score_home": 6,
-          "score_away": 6,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мақсат М",
-          "away": "Бақберген",
-          "score_home": 4,
-          "score_away": 5,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мақсат М",
-          "away": "Али",
-          "score_home": 6,
-          "score_away": 4,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мақсат М",
-          "away": "Абылай",
-          "score_home": 0,
-          "score_away": 4,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мақсат М",
-          "away": "Азиз",
-          "score_home": 2,
-          "score_away": 3,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Азиз",
-          "away": "Бақберген",
-          "score_home": 3,
-          "score_away": 3,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Азиз",
-          "away": "Али",
-          "score_home": 5,
-          "score_away": 4,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Мақсат С",
-          "away": "Али",
-          "score_home": 2,
-          "score_away": 1,
-          "played": true,
-          "date": "01.04.2026"
-        },
-        {
-          "home": "Бақберген",
-          "away": "Али",
-          "score_home": 3,
-          "score_away": 3,
-          "played": true,
-          "date": "02.04.2026"
-        },
-        {
-          "home": "Али",
-          "away": "Абылай",
-          "score_home": 2,
-          "score_away": 4,
-          "played": true,
-          "date": "02.04.2026"
-        },
-        {
-          "home": "Қазбек",
-          "away": "Мақсат С",
-          "score_home": 2,
-          "score_away": 13,
-          "played": true,
-          "date": "02.04.2026"
-        },
-        {
-          "home": "Мейірлан",
-          "away": "Мақсат С",
-          "score_home": 4,
-          "score_away": 6,
-          "played": true,
-          "date": "02.04.2026"
-        },
-        {
-          "home": "Мейірлан",
-          "away": "Қазбек",
-          "score_home": 3,
-          "score_away": 2,
-          "played": true,
-          "date": "02.04.2026"
-        },
-        {
-          "home": "Азиз",
-          "away": "Қазбек",
-          "score_home": 5,
-          "score_away": 4,
-          "played": true,
-          "date": "02.04.2026"
-        },
-        {
-          "home": "Қазбек",
-          "away": "Есімхан",
-          "score_home": 1,
-          "score_away": 4,
-          "played": true,
-          "date": "03.04.2026"
-        },
-        {
-          "home": "Қазбек",
-          "away": "Мақсат М",
-          "score_home": 1,
-          "score_away": 2,
-          "played": true,
-          "date": "03.04.2026"
-        },
-        {
-          "home": "Мақсат М",
-          "away": "Есімхан",
-          "score_home": 0,
-          "score_away": 3,
-          "played": true,
-          "date": "03.04.2026"
-        },
-        {
-          "home": "Қазбек",
-          "away": "Алмат",
-          "score_home": 2,
-          "score_away": 2,
-          "played": true,
-          "date": "03.04.2026"
-        }
-      ],
       "created_at": "01.04.2026 15:56",
       "dirty_player": "Есімхан",
-      "dirty_label": "Админ Сайта"
+      "dirty_label": "Админ Сайта",
+      "rounds": [
+        {
+          "id": 1,
+          "name": "Круг 1",
+          "matches": [
+            {
+              "home": "Абылай",
+              "away": "Акмаль",
+              "score_home": 3,
+              "score_away": 2,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мақсат М",
+              "away": "Мақсат С",
+              "score_home": 4,
+              "score_away": 0,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Алмат",
+              "away": "Бақберген",
+              "score_home": 4,
+              "score_away": 0,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мақсат М",
+              "away": "Акмаль",
+              "score_home": 1,
+              "score_away": 2,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Максим",
+              "away": "Мақсат М",
+              "score_home": 3,
+              "score_away": 3,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Акмаль",
+              "away": "Қазбек",
+              "score_home": 9,
+              "score_away": 2,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Бақберген",
+              "away": "Қазбек",
+              "score_home": 6,
+              "score_away": 5,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Максим",
+              "away": "Қазбек",
+              "score_home": 8,
+              "score_away": 2,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Абылай",
+              "away": "Қазбек",
+              "score_home": 10,
+              "score_away": 3,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Абылай",
+              "away": "Есімхан",
+              "score_home": 3,
+              "score_away": 4,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Ерлан",
+              "away": "Азиз",
+              "score_home": 4,
+              "score_away": 3,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мейірлан",
+              "away": "Есімхан",
+              "score_home": 2,
+              "score_away": 7,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Максим",
+              "away": "Мейірлан",
+              "score_home": 5,
+              "score_away": 1,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Азиз",
+              "away": "Есімхан",
+              "score_home": 1,
+              "score_away": 5,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мейірлан",
+              "away": "Азиз",
+              "score_home": 7,
+              "score_away": 2,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Ерлан",
+              "away": "Абылай",
+              "score_home": 4,
+              "score_away": 3,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Максим",
+              "away": "Абылай",
+              "score_home": 8,
+              "score_away": 0,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мейірлан",
+              "away": "Ерлан",
+              "score_home": 2,
+              "score_away": 1,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Максим",
+              "away": "Азиз",
+              "score_home": 5,
+              "score_away": 2,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Азиз",
+              "away": "Абылай",
+              "score_home": 3,
+              "score_away": 0,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Абылай",
+              "away": "Мейірлан",
+              "score_home": 3,
+              "score_away": 2,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Максим",
+              "away": "Ерлан",
+              "score_home": 4,
+              "score_away": 2,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Есімхан",
+              "away": "Максим",
+              "score_home": 3,
+              "score_away": 2,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Ерлан",
+              "away": "Есімхан",
+              "score_home": 1,
+              "score_away": 4,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Есімхан",
+              "away": "Алмат",
+              "score_home": 2,
+              "score_away": 0,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Есімхан",
+              "away": "Мақсат С",
+              "score_home": 5,
+              "score_away": 3,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Азиз",
+              "away": "Алмат",
+              "score_home": 2,
+              "score_away": 4,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Азиз",
+              "away": "Мақсат С",
+              "score_home": 2,
+              "score_away": 5,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мақсат С",
+              "away": "Максим",
+              "score_home": 2,
+              "score_away": 5,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мақсат С",
+              "away": "Алмат",
+              "score_home": 6,
+              "score_away": 2,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мақсат С",
+              "away": "Ерлан",
+              "score_home": 7,
+              "score_away": 1,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мақсат С",
+              "away": "Абылай",
+              "score_home": 2,
+              "score_away": 6,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Максим",
+              "away": "Алмат",
+              "score_home": 8,
+              "score_away": 2,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Алмат",
+              "away": "Абылай",
+              "score_home": 2,
+              "score_away": 0,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Алмат",
+              "away": "Ерлан",
+              "score_home": 4,
+              "score_away": 1,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Есімхан",
+              "away": "Акмаль",
+              "score_home": 4,
+              "score_away": 0,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Есімхан",
+              "away": "Али",
+              "score_home": 6,
+              "score_away": 1,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Есімхан",
+              "away": "Бақберген",
+              "score_home": 7,
+              "score_away": 3,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Акмаль",
+              "away": "Мақсат С",
+              "score_home": 3,
+              "score_away": 8,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Акмаль",
+              "away": "Али",
+              "score_home": 4,
+              "score_away": 3,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Акмаль",
+              "away": "Бақберген",
+              "score_home": 4,
+              "score_away": 0,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Максим",
+              "away": "Али",
+              "score_home": 5,
+              "score_away": 3,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Максим",
+              "away": "Бақберген",
+              "score_home": 4,
+              "score_away": 2,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Максим",
+              "away": "Акмаль",
+              "score_home": 4,
+              "score_away": 2,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мақсат С",
+              "away": "Бақберген",
+              "score_home": 4,
+              "score_away": 3,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Алмат",
+              "away": "Акмаль",
+              "score_home": 2,
+              "score_away": 2,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Алмат",
+              "away": "Мақсат М",
+              "score_home": 4,
+              "score_away": 4,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Абылай",
+              "away": "Бақберген",
+              "score_home": 6,
+              "score_away": 6,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мақсат М",
+              "away": "Бақберген",
+              "score_home": 4,
+              "score_away": 5,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мақсат М",
+              "away": "Али",
+              "score_home": 6,
+              "score_away": 4,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мақсат М",
+              "away": "Абылай",
+              "score_home": 0,
+              "score_away": 4,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мақсат М",
+              "away": "Азиз",
+              "score_home": 2,
+              "score_away": 3,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Азиз",
+              "away": "Бақберген",
+              "score_home": 3,
+              "score_away": 3,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Азиз",
+              "away": "Али",
+              "score_home": 5,
+              "score_away": 4,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Мақсат С",
+              "away": "Али",
+              "score_home": 2,
+              "score_away": 1,
+              "played": true,
+              "date": "01.04.2026"
+            },
+            {
+              "home": "Бақберген",
+              "away": "Али",
+              "score_home": 3,
+              "score_away": 3,
+              "played": true,
+              "date": "02.04.2026"
+            },
+            {
+              "home": "Али",
+              "away": "Абылай",
+              "score_home": 2,
+              "score_away": 4,
+              "played": true,
+              "date": "02.04.2026"
+            },
+            {
+              "home": "Қазбек",
+              "away": "Мақсат С",
+              "score_home": 2,
+              "score_away": 13,
+              "played": true,
+              "date": "02.04.2026"
+            },
+            {
+              "home": "Мейірлан",
+              "away": "Мақсат С",
+              "score_home": 4,
+              "score_away": 6,
+              "played": true,
+              "date": "02.04.2026"
+            },
+            {
+              "home": "Мейірлан",
+              "away": "Қазбек",
+              "score_home": 3,
+              "score_away": 2,
+              "played": true,
+              "date": "02.04.2026"
+            },
+            {
+              "home": "Азиз",
+              "away": "Қазбек",
+              "score_home": 5,
+              "score_away": 4,
+              "played": true,
+              "date": "02.04.2026"
+            },
+            {
+              "home": "Қазбек",
+              "away": "Есімхан",
+              "score_home": 1,
+              "score_away": 4,
+              "played": true,
+              "date": "03.04.2026"
+            },
+            {
+              "home": "Қазбек",
+              "away": "Мақсат М",
+              "score_home": 1,
+              "score_away": 2,
+              "played": true,
+              "date": "03.04.2026"
+            },
+            {
+              "home": "Мақсат М",
+              "away": "Есімхан",
+              "score_home": 0,
+              "score_away": 3,
+              "played": true,
+              "date": "03.04.2026"
+            },
+            {
+              "home": "Қазбек",
+              "away": "Алмат",
+              "score_home": 2,
+              "score_away": 2,
+              "played": true,
+              "date": "03.04.2026"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ev_002",
+      "name": "тест1",
+      "event_type": "league",
+      "category": "football",
+      "participation_format": "individual",
+      "venue_type": "playstation",
+      "date_start": "",
+      "date_end": "",
+      "rules": "",
+      "active": true,
+      "participants": [],
+      "participant_teams": {},
+      "rounds": [
+        {
+          "id": 1,
+          "name": "Круг 1",
+          "matches": []
+        }
+      ],
+      "created_at": "05.04.2026 10:25"
     }
   ],
   "admins": [
