@@ -89,8 +89,9 @@ def unlock_cb(q): _busy.discard(q.from_user.id)
     REMOVE_PARTICIPANT_SELECT,
     DELETE_MATCH_SELECT, DELETE_MATCH_CONFIRM,
     DIRTY_EVENT, DIRTY_PLAYER, DIRTY_LABEL,
-    TICKER_INPUT
-) = range(36)
+    TICKER_INPUT,
+    AP_TEAM_COMMENT
+) = range(37)
 
 EVENT_TYPES = [
     ("🏆 Турнир","tournament"),("🏅 Лига","league"),("🥇 Чемпионат","championship"),
@@ -699,11 +700,47 @@ async def ap_name(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Ошибка. Начни заново."); return ConversationHandler.END
     if name in event["participants"]:
         await update.message.reply_text(f"*{name}* уже есть.",parse_mode="Markdown"); return ADD_PARTICIPANT
-    event["participants"].append(name); ok=save_data(data)
+    ctx.user_data["ap_pending_name"]=name
+    kb=InlineKeyboardMarkup([[InlineKeyboardButton("⏭ Пропустить",callback_data="ap_team_skip")]])
+    await update.message.reply_text(
+        f"👤 *{name}*\n\nВведи название команды/клуба (например: _Барселона_, _Real Madrid_)\nИли нажми «Пропустить»:",
+        parse_mode="Markdown",reply_markup=kb)
+    return AP_TEAM_COMMENT
+
+async def ap_team_skip_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
+    q=update.callback_query; await q.answer()
+    name=ctx.user_data.get("ap_pending_name","")
+    data=load_data(); event=get_event(data,ctx.user_data.get("ap_event_id"))
+    if not event: return ConversationHandler.END
+    event["participants"].append(name)
+    teams=event.setdefault("participant_teams",{})
+    teams[name]="не определено"
+    ok=save_data(data)
+    current=", ".join(event["participants"])
+    kb=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Готово",callback_data="ap_done")]])
+    await q.edit_message_text(
+        f"{'✅' if ok else '⚠️'} *{name}* добавлен\nКоманда: _не определено_\nСписок: {current}\n\nЕщё имя или нажми «Готово»:",
+        parse_mode="Markdown",reply_markup=kb)
+    return ADD_PARTICIPANT
+
+async def ap_team_msg(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
+    team=update.message.text.strip()
+    if team=="🏠 Вернуться в меню":
+        data=load_data(); adm=is_admin(update.effective_user.id,data)
+        await update.message.reply_text("🏆 *ShymATC-CHAMP*",parse_mode="Markdown",reply_markup=remove_kb())
+        await update.message.reply_text("🏆 *ShymATC-CHAMP*",parse_mode="Markdown",reply_markup=main_menu_kb(adm))
+        return ConversationHandler.END
+    name=ctx.user_data.get("ap_pending_name","")
+    data=load_data(); event=get_event(data,ctx.user_data.get("ap_event_id"))
+    if not event: return ConversationHandler.END
+    event["participants"].append(name)
+    teams=event.setdefault("participant_teams",{})
+    teams[name]=team
+    ok=save_data(data)
     current=", ".join(event["participants"])
     kb=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Готово",callback_data="ap_done")]])
     await update.message.reply_text(
-        f"{'✅' if ok else '⚠️'} *{name}* добавлен\nСписок: {current}\n\nЕщё имя или нажми «Готово»:",
+        f"{'✅' if ok else '⚠️'} *{name}* добавлен\nКоманда: *{team}*\nСписок: {current}\n\nЕщё имя или нажми «Готово»:",
         parse_mode="Markdown",reply_markup=kb)
     return ADD_PARTICIPANT
 
@@ -1083,6 +1120,11 @@ def main():
                 CallbackQueryHandler(ap_done_cb,pattern="^ap_done$"),
                 MessageHandler(filters.Regex("^🏠 Вернуться в меню$"),handle_home_btn),
                 MessageHandler(filters.TEXT&~filters.COMMAND,ap_name),
+            ],
+            AP_TEAM_COMMENT:[
+                CallbackQueryHandler(ap_team_skip_cb,pattern="^ap_team_skip$"),
+                MessageHandler(filters.Regex("^🏠 Вернуться в меню$"),handle_home_btn),
+                MessageHandler(filters.TEXT&~filters.COMMAND,ap_team_msg),
             ],
         },
         fallbacks=[CommandHandler("cancel",cancel),CallbackQueryHandler(back_main,pattern="^back_main$")]

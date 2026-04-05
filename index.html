@@ -509,6 +509,7 @@ function openPlayer(playerName, eventId) {
     _playedSetForTab.add(key);
   });
   const pendingCount = ev.participants.filter(p=>p!==playerName && !_playedSetForTab.has([playerName,p].sort().join('|||'))).length;
+  const playerTeam = (ev.participant_teams && ev.participant_teams[playerName]) ? ev.participant_teams[playerName] : 'не определено';
 
   document.getElementById('player-content').innerHTML = `
     <div class="player-hero">
@@ -517,6 +518,7 @@ function openPlayer(playerName, eventId) {
         <div class="player-info">
           <div class="player-nm">${playerName}</div>
           <div class="player-ev">${icon} ${ev.name}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2);margin-top:4px;letter-spacing:1px;">🎮 ${playerTeam}</div>
         </div>
       </div>
       <div class="pl-stats4">
