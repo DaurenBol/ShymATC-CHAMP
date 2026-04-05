@@ -1129,6 +1129,7 @@ def main():
             ],
             AP_TEAM_COMMENT:[
                 CallbackQueryHandler(ap_team_skip_cb,pattern="^ap_team_skip$"),
+                CallbackQueryHandler(ap_done_cb,pattern="^ap_done$"),
                 MessageHandler(filters.Regex("^🏠 Вернуться в меню$"),handle_home_btn),
                 MessageHandler(filters.TEXT&~filters.COMMAND,ap_team_msg),
             ],
