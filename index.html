@@ -808,9 +808,17 @@ function selectEvent(id) {
 }
 
 // ── STANDINGS ──
+function activeGroups() {
+  const eventIds = new Set((RAW_DATA?.events||[]).map(e=>e.id));
+  return (RAW_DATA?.groups||[]).filter(g=>
+    g.event_ids && g.event_ids.length >= 2 &&
+    g.event_ids.every(id => eventIds.has(id))
+  );
+}
+
 function renderStandings() {
   const events = (RAW_DATA?.events||[]).filter(e=>e.active);
-  const groups = RAW_DATA?.groups || [];
+  const groups = activeGroups();
   const chips = document.getElementById('standings-chips');
   const content = document.getElementById('standings-content');
 
@@ -1073,7 +1081,7 @@ function renderStatBlock(ev, ps, label) {
 
 function renderStats() {
   const events = RAW_DATA?.events || [];
-  const groups = RAW_DATA?.groups || [];
+  const groups = activeGroups();
   const content = document.getElementById('stats-content');
   const active = events.filter(e=>e.active);
   if(!active.length) {

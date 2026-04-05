@@ -963,10 +963,15 @@ async def delete_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         data = load_data(); event = get_event(data, q.data.replace("del_",""))
         if event:
             name = event["name"]
-            data["events"] = [e for e in data["events"] if e["id"] != event["id"]]
+            eid = event["id"]
+            data["events"] = [e for e in data["events"] if e["id"] != eid]
+            # Удаляем группы где участвует это событие
+            removed_groups = [g["name"] for g in data.get("groups",[]) if eid in g.get("event_ids",[])]
+            data["groups"] = [g for g in data.get("groups",[]) if eid not in g.get("event_ids",[])]
             ok = save_data(data); adm = is_admin(q.from_user.id, data)
+            extra = f"\nТакже удалены группы: {', '.join(removed_groups)}" if removed_groups else ""
             await q.edit_message_text(
-                f"{'✅ Удалено!' if ok else '⚠️ Ошибка'}\n\n*{name}* удалено.",
+                f"{'✅ Удалено!' if ok else '⚠️ Ошибка'}\n\n*{name}* удалено.{extra}",
                 parse_mode="Markdown", reply_markup=main_menu_kb(adm))
     finally: unlock_cb(q)
     return ConversationHandler.END
