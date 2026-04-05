@@ -139,6 +139,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .chip{flex-shrink:0;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;color:var(--text2);font-family:"Avenir Next","Avenir","Plus Jakarta Sans",sans-serif;}
 .chip.active{background:var(--accent);border-color:var(--accent);color:#0a0a0f;}
 [data-theme="light"] .chip.active{color:#fff;}
+.chip.group-chip{border-color:var(--gold);}
+.chip.group-chip.active{background:var(--gold);border-color:var(--gold);color:#0a0a0f;}
+[data-theme="light"] .chip.group-chip.active{color:#0a0a0f;}
+
+/* Group standings — 3 columns */
+.group-tables{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.group-table-col{}
+.group-col-title{font-family:'DM Mono',monospace;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding:0 2px;transition:color .3s;}
+.group-col-title.overall{color:var(--gold);}
+@media(max-width:600px){.group-tables{grid-template-columns:1fr;}}
 
 .table-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:background .3s,border-color .3s;}
 .t-head{display:grid;padding:10px 12px;border-bottom:1px solid var(--border);transition:border-color .3s;}
@@ -800,6 +810,7 @@ function selectEvent(id) {
 // ── STANDINGS ──
 function renderStandings() {
   const events = (RAW_DATA?.events||[]).filter(e=>e.active);
+  const groups = RAW_DATA?.groups || [];
   const chips = document.getElementById('standings-chips');
   const content = document.getElementById('standings-content');
 
@@ -809,26 +820,112 @@ function renderStandings() {
     return;
   }
 
-  if(!CURRENT_EVENT_ID || !events.find(e=>e.id===CURRENT_EVENT_ID)) {
+  // Determine valid current ID
+  const allIds = [...events.map(e=>e.id), ...groups.map(g=>'grp_'+g.id)];
+  if(!CURRENT_EVENT_ID || !allIds.includes(CURRENT_EVENT_ID)) {
     CURRENT_EVENT_ID = events[0].id;
   }
 
-  chips.innerHTML = events.map((e,i) => {
+  // Render chips: groups (yellow) first, then events (green)
+  const groupChips = groups.map(g => {
+    const active = ('grp_'+g.id) === CURRENT_EVENT_ID ? 'active' : '';
+    return `<button class="chip group-chip ${active}" onclick="selectChip('grp_${g.id}',this)">🔗 ${g.name}</button>`;
+  }).join('');
+  const eventChips = events.map(e => {
     const icon = SPORT_ICONS[e.category] || '🏆';
     const active = e.id === CURRENT_EVENT_ID ? 'active' : '';
     return `<button class="chip ${active}" onclick="selectChip('${e.id}',this)">${icon} ${e.name}</button>`;
   }).join('');
+  chips.innerHTML = groupChips + eventChips;
 
-  const ev = events.find(e=>e.id===CURRENT_EVENT_ID) || events[0];
-  renderEventTable(ev, content);
+  // Render content
+  if(CURRENT_EVENT_ID.startsWith('grp_')) {
+    const gid = CURRENT_EVENT_ID.replace('grp_','');
+    const group = groups.find(g=>g.id===gid);
+    if(group) renderGroupTable(group, content);
+  } else {
+    const ev = events.find(e=>e.id===CURRENT_EVENT_ID) || events[0];
+    renderEventTable(ev, content);
+  }
 }
 
 function selectChip(id, btn) {
   CURRENT_EVENT_ID = id;
   document.querySelectorAll('#standings-chips .chip').forEach(c=>c.classList.remove('active'));
   btn.classList.add('active');
-  const ev = (RAW_DATA?.events||[]).find(e=>e.id===id);
-  if(ev) renderEventTable(ev, document.getElementById('standings-content'));
+  const content = document.getElementById('standings-content');
+  if(id.startsWith('grp_')) {
+    const gid = id.replace('grp_','');
+    const group = (RAW_DATA?.groups||[]).find(g=>g.id===gid);
+    if(group) renderGroupTable(group, content);
+  } else {
+    const ev = (RAW_DATA?.events||[]).find(e=>e.id===id);
+    if(ev) renderEventTable(ev, content);
+  }
+}
+
+function calcGroupStandings(eventIds) {
+  // Merge all matches from all events in group, participants = union
+  const events = (RAW_DATA?.events||[]).filter(e=>eventIds.includes(e.id));
+  const allParticipants = [...new Set(events.flatMap(e=>e.participants||[]))];
+  const st = {};
+  allParticipants.forEach(p => { st[p]={name:p,p:0,w:0,d:0,l:0,gf:0,ga:0}; });
+  events.forEach(ev => {
+    const ps = new Set(ev.participants||[]);
+    (ev.matches||[]).forEach(m => {
+      if(!m.played || !ps.has(m.home) || !ps.has(m.away)) return;
+      const {home:h,away:a,score_home:sh,score_away:sa} = m;
+      if(st[h]){st[h].p++;st[h].gf+=sh;st[h].ga+=sa;}
+      if(st[a]){st[a].p++;st[a].gf+=sa;st[a].ga+=sh;}
+      if(sh>sa){if(st[h])st[h].w++;if(st[a])st[a].l++;}
+      else if(sh<sa){if(st[a])st[a].w++;if(st[h])st[h].l++;}
+      else{if(st[h])st[h].d++;if(st[a])st[a].d++;}
+    });
+  });
+  return Object.values(st).sort((a,b)=>(b.w*3+b.d)-(a.w*3+a.d)||(b.gf-b.ga)-(a.gf-a.ga));
+}
+
+function renderMiniTable(rows, evId) {
+  if(!rows.length) return `<div style="padding:16px;text-align:center;color:var(--text3);font-size:13px;">Нет данных</div>`;
+  return `<div class="table-card">
+    <div class="t-head col-i">
+      <div class="th">#</div><div class="th left">Участник</div>
+      <div class="th">В</div><div class="th">Н</div><div class="th">П</div>
+      <div class="th">±</div><div class="th">Оч</div>
+    </div>
+    ${rows.map((r,i) => {
+      const pts=r.w*3+r.d, gd=r.gf-r.ga;
+      const gdCls=gd>=0?'gp':'gn';
+      const c=COLORS[i%COLORS.length], bg=BGS[i%BGS.length];
+      const clickAttr = evId ? `onclick="openPlayer('${r.name}','${evId}')" style="cursor:pointer;"` : '';
+      return `<div class="t-row col-i" ${clickAttr}>
+        <div class="rk" style="color:${i<3?c:'var(--text3)'}">${medal(i)}</div>
+        <div class="team-c"><div class="t-ava" style="background:${bg};color:${c}">${ini(r.name)}</div><div class="t-nm">${r.name}</div></div>
+        <div class="cn" style="color:var(--accent)">${r.w}</div>
+        <div class="cn">${r.d}</div>
+        <div class="cn" style="color:var(--accent3)">${r.l}</div>
+        <div class="cn ${gdCls}">${gd>=0?'+'+gd:gd}</div>
+        <div class="cp">${pts}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function renderGroupTable(group, container) {
+  const events = (RAW_DATA?.events||[]).filter(e=>group.event_ids.includes(e.id));
+  const overallRows = calcGroupStandings(group.event_ids);
+  const cols = [
+    {title:'🔗 Общая', rows: overallRows, overall: true, evId: null},
+    ...events.map(ev=>({title: ev.name, rows: calcStandings(ev), overall: false, evId: ev.id}))
+  ];
+  container.innerHTML = `
+    <div class="group-tables">
+      ${cols.map(col=>`
+        <div class="group-table-col">
+          <div class="group-col-title ${col.overall?'overall':''}">${col.title}</div>
+          ${renderMiniTable(col.rows, col.evId)}
+        </div>`).join('')}
+    </div>`;
 }
 
 function renderEventTable(ev, container) {
@@ -902,78 +999,46 @@ function renderMatches() {
 }
 
 // ── STATS ──
-function renderStats() {
-  const events = RAW_DATA?.events || [];
-  const content = document.getElementById('stats-content');
-  const active = events.filter(e=>e.active);
-  if(!active.length) {
-    content.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">Нет данных</div>`;
-    return;
-  }
+function renderStatBlock(ev, ps, label) {
+  const rows = calcStandings(ev) || [];
+  const icon = SPORT_ICONS[ev.category]||'🏆';
+  const goalsRaw = (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).map(m=>m.score_home+m.score_away);
+  const goals = goalsRaw.slice().reverse();
   let html = '';
-  active.forEach(ev => {
-    const rows = calcStandings(ev);
-    if(!rows.length) return;
-    const ps = new Set(ev.participants||[]);
-    const goalsRaw = (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).map(m=>m.score_home+m.score_away);
-    // Reverse: newest match first (leftmost)
-    const goals = goalsRaw.slice().reverse();
-    const icon = SPORT_ICONS[ev.category]||'🏆';
-    const chartId = 'chart-' + ev.id;
-
-    // Goals chart — scrollable, newest left
-    if(goals.length > 0) {
-      const mx = Math.max(...goals, 1);
-      html += `<div class="chart-card">
-        <div class="chart-title">${icon} ${ev.name} — голы по матчам (${goals.length})</div>
-        <div class="mini-chart-wrap" id="${chartId}">
-          <div class="mini-chart">${goals.map((g,i)=>`
-            <div class="bc">
-              <div class="bar" style="height:${Math.round(g/mx*48)}px;background:${i===0?'var(--accent)':'rgba(120,120,160,.35)'}"></div>
-              <div class="blbl">${goals.length-i}</div>
-            </div>`).join('')}
-          </div>
+  if(goals.length > 0) {
+    const mx = Math.max(...goals, 1);
+    const chartId = 'chart-'+ev.id+'-'+Math.random().toString(36).slice(2);
+    html += `<div class="chart-card">
+      <div class="chart-title">${label||ev.name} — голы по матчам (${goals.length})</div>
+      <div class="mini-chart-wrap" id="${chartId}">
+        <div class="mini-chart">${goals.map((g,i)=>`
+          <div class="bc">
+            <div class="bar" style="height:${Math.round(g/mx*48)}px;background:${i===0?'var(--accent)':'rgba(120,120,160,.35)'}"></div>
+            <div class="blbl">${goals.length-i}</div>
+          </div>`).join('')}
         </div>
-      </div>`;
-    }
-
-    // Progress block
-    const n = ev.participants.length;
-    const totalPairs = Math.round(n*(n-1)/2);
+      </div>
+    </div>`;
+  }
+  const n = ev.participants.length;
+  const totalPairs = Math.round(n*(n-1)/2);
+  if(totalPairs > 0) {
     const playedMatches = (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away));
-    // Unique pairs that played
     const playedPairsSet = new Set();
-    playedMatches.forEach(m=>{
-      const key = [m.home,m.away].sort().join('|||');
-      playedPairsSet.add(key);
-    });
+    playedMatches.forEach(m=>{ playedPairsSet.add([m.home,m.away].sort().join('|||')); });
     const playedPairs = playedPairsSet.size;
     const remainingPairs = totalPairs - playedPairs;
     const pct = Math.round(playedPairs/totalPairs*100);
-    // Find unplayed pairs
     const unplayed = [];
-    const participants = ev.participants;
-    for(let i=0;i<participants.length;i++){
-      for(let j=i+1;j<participants.length;j++){
-        const key = [participants[i],participants[j]].sort().join('|||');
-        if(!playedPairsSet.has(key)) unplayed.push([participants[i],participants[j]]);
+    for(let i=0;i<ev.participants.length;i++)
+      for(let j=i+1;j<ev.participants.length;j++){
+        const key=[ev.participants[i],ev.participants[j]].sort().join('|||');
+        if(!playedPairsSet.has(key)) unplayed.push([ev.participants[i],ev.participants[j]]);
       }
-    }
-    // Find players who played everyone
-    const completedPlayers = participants.filter(p=>{
-      return participants.filter(o=>o!==p).every(o=>{
-        const key=[p,o].sort().join('|||');
-        return playedPairsSet.has(key);
-      });
-    });
-    const pairsToggleId = 'pairs-toggle-'+ev.id;
-    const pairsListId = 'pairs-list-'+ev.id;
-    const pairsArrId = 'pairs-arr-'+ev.id;
-    const unplayedHtml = unplayed.map(([a,b])=>`
-      <div class="pb-pair">
-        <span class="pb-pair-names">${a}<span class="pb-pair-sep">vs</span>${b}</span>
-        <span class="pb-pair-badge">не играли</span>
-      </div>`).join('');
+    const completedPlayers = ev.participants.filter(p=>ev.participants.filter(o=>o!==p).every(o=>playedPairsSet.has([p,o].sort().join('|||'))));
+    const uid = ev.id+'-'+Math.random().toString(36).slice(2);
+    const pairsListId='pairs-list-'+uid, pairsArrId='pairs-arr-'+uid;
+    const unplayedHtml = unplayed.map(([a,b])=>`<div class="pb-pair"><span class="pb-pair-names">${a}<span class="pb-pair-sep">vs</span>${b}</span><span class="pb-pair-badge">не играли</span></div>`).join('');
     html += `<div class="prog-block">
       <div class="pb-nums">
         <div class="pb-n"><div class="pb-val" style="color:var(--accent2)">${playedPairs}</div><div class="pb-lbl">сыграли</div></div>
@@ -981,34 +1046,74 @@ function renderStats() {
         <div class="pb-n"><div class="pb-val" style="color:var(--text3)">${totalPairs}</div><div class="pb-lbl">всего пар</div></div>
       </div>
       <div class="pb-bar-outer"><div class="pb-bar-inner" style="width:${pct}%"></div></div>
-      <div class="pb-footer">
-        <div class="pb-pct">${pct}% пар сыграли</div>
-        <div class="pb-sub">${n} участников</div>
-      </div>
-      ${remainingPairs>0?`
-      <button class="pb-toggle" onclick="togglePairs('${pairsListId}','${pairsArrId}')">
-        <span>${remainingPairs} ${remainingPairs===1?'пара':remainingPairs<5?'пары':'пар'} ещё не встречались</span>
-        <span class="pb-toggle-arr" id="${pairsArrId}">▼</span>
-      </button>
-      <div class="pb-pairs" id="${pairsListId}" style="display:none">${unplayedHtml}</div>`
-      :`<div style="padding:10px 14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent)">✅ Все пары сыграли!</div>`}
+      <div class="pb-footer"><div class="pb-pct">${pct}% пар сыграли</div><div class="pb-sub">${n} участников</div></div>
+      ${remainingPairs>0?`<button class="pb-toggle" onclick="togglePairs('${pairsListId}','${pairsArrId}')"><span>${remainingPairs} ${remainingPairs===1?'пара':remainingPairs<5?'пары':'пар'} ещё не встречались</span><span class="pb-toggle-arr" id="${pairsArrId}">▼</span></button><div class="pb-pairs" id="${pairsListId}" style="display:none">${unplayedHtml}</div>`:`<div style="padding:10px 14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent)">✅ Все пары сыграли!</div>`}
     </div>`;
-
-    // Top 5 table — add ✅ for completed players
+  }
+  if(rows.length) {
     html += `<div class="card-sec">
-      <div class="cs-title">${icon} ${ev.name} — таблица</div>
+      <div class="cs-title">${label||ev.name} — таблица</div>
       <div>${rows.slice(0,5).map((r,i)=>{
         const pts=r.w*3+r.d;
         const c=COLORS[i%COLORS.length], bg=BGS[i%BGS.length];
-        const done = completedPlayers.includes(r.name);
+        const done = ev.participants.filter(o=>o!==r.name).every(o=>new Set(
+          (ev.matches||[]).filter(m=>m.played&&ps.has(m.home)&&ps.has(m.away)).map(m=>[m.home,m.away].sort().join('|||'))
+        ).has([r.name,o].sort().join('|||')));
         return `<div class="sc-row">
           <div class="sc-rk">${medal(i)}</div>
           <div class="sc-av" style="background:${bg};color:${c}">${ini(r.name)}</div>
-          <div class="sc-inf"><div class="sc-nm">${r.name}${done?' <span style="font-size:10px" title="Сыграл со всеми">✅</span>':''}</div><div class="sc-tm">${r.w}П · ${r.d}Н · ${r.l}Пр</div></div>
+          <div class="sc-inf"><div class="sc-nm">${r.name}${done?' <span style="font-size:10px">✅</span>':''}</div><div class="sc-tm">${r.w}П · ${r.d}Н · ${r.l}Пр</div></div>
           <div class="sc-g">${pts}</div>
         </div>`;}).join('')}
       </div>
     </div>`;
+  }
+  return html;
+}
+
+function renderStats() {
+  const events = RAW_DATA?.events || [];
+  const groups = RAW_DATA?.groups || [];
+  const content = document.getElementById('stats-content');
+  const active = events.filter(e=>e.active);
+  if(!active.length) {
+    content.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">Нет данных</div>`;
+    return;
+  }
+  let html = '';
+
+  // Группы — общая статистика сверху
+  groups.forEach(group => {
+    const groupEvents = events.filter(e=>group.event_ids.includes(e.id));
+    if(!groupEvents.length) return;
+    // Создаём виртуальное событие из всех матчей группы
+    const allParticipants = [...new Set(groupEvents.flatMap(e=>e.participants||[]))];
+    const allMatches = groupEvents.flatMap(ev => {
+      const ps = new Set(ev.participants||[]);
+      return (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away));
+    });
+    const virtualEv = {id:'grp_'+group.id, name:group.name, category:'other', participants:allParticipants, matches:allMatches};
+    const ps = new Set(allParticipants);
+    html += `<div style="margin-bottom:6px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid var(--gold);">🔗 ${group.name} — общая</div>`;
+    html += renderStatBlock(virtualEv, ps, group.name + ' — всего');
+    html += `<div style="height:16px;"></div>`;
+
+    // Затем каждое событие группы
+    groupEvents.forEach((ev, idx) => {
+      const ps2 = new Set(ev.participants||[]);
+      html += `<div style="margin-bottom:6px;padding:8px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">Круг ${idx+1}: ${ev.name}</div>`;
+      html += renderStatBlock(ev, ps2, ev.name);
+      html += `<div style="height:20px;"></div>`;
+    });
+    html += `<div style="height:8px;border-top:1px solid var(--border);margin-bottom:16px;"></div>`;
+  });
+
+  // Одиночные активные события (не в группах)
+  const groupedIds = new Set(groups.flatMap(g=>g.event_ids));
+  active.filter(e=>!groupedIds.has(e.id)).forEach(ev => {
+    const ps = new Set(ev.participants||[]);
+    if(!ev.participants.length) return;
+    html += renderStatBlock(ev, ps, null);
   });
 
   content.innerHTML = html || `<div style="padding:40px;text-align:center;color:var(--text3);">Нет данных</div>`;
