@@ -569,12 +569,8 @@
       "date_end": "",
       "rules": "",
       "active": true,
-      "participants": [
-        "السلام عليكم ورحمة الله وبركاته."
-      ],
-      "participant_teams": {
-        "السلام عليكم ورحمة الله وبركاته.": "не определено"
-      },
+      "participants": [],
+      "participant_teams": {},
       "rounds": [
         {
           "id": 1,
@@ -587,7 +583,8 @@
           "matches": []
         }
       ],
-      "created_at": "05.04.2026 10:25"
+      "created_at": "05.04.2026 10:25",
+      "matches": []
     }
   ],
   "admins": [
