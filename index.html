@@ -1086,7 +1086,16 @@ function renderMatches() {
 
   let html = '';
   events.forEach(ev => {
-    const matches = allMatches(ev).slice().reverse(); // новейшие сверху
+    // Последний раунд сверху; внутри раунда — последний добавленный сверху
+    const rounds = ev.rounds||[];
+    const allM = allMatches(ev);
+    const withIdx = allM.map((m,i)=>({...m, _idx:i}));
+    const matches = withIdx.sort((a,b)=>{
+      const ra = rounds.findIndex(r=>r.id===a._round_id);
+      const rb = rounds.findIndex(r=>r.id===b._round_id);
+      if(rb !== ra) return rb - ra; // последний раунд первым
+      return b._idx - a._idx;       // внутри раунда — последний добавленный первым
+    });
     if(!matches.length) return;
     const icon = SPORT_ICONS[ev.category] || '🏆';
     html += `<div class="ms-lbl">${icon} ${ev.name}</div>`;
