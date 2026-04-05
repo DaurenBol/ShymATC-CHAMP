@@ -32,6 +32,9 @@ def _load_from_github():
         if r.status_code == 200:
             c = r.json()
             data = json.loads(base64.b64decode(c["content"]).decode())
+            # Миграция: старые events с matches[] → rounds[]
+            for ev in data.get("events",[]):
+                migrate_event(ev)
             _cache = json.loads(json.dumps(data))
             _cache_sha = c["sha"]
             data["_sha"] = c["sha"]
@@ -81,7 +84,7 @@ def unlock_cb(q): _busy.discard(q.from_user.id)
     EV_FORMAT, EV_VENUE, EV_VENUE_CUSTOM,
     EV_DATE_START, EV_DATE_END, EV_RULES, EV_CONFIRM,
     ADD_PARTICIPANT,
-    MATCH_EVENT, MATCH_HOME, MATCH_AWAY, MATCH_DATE, MATCH_SCORE,
+    MATCH_EVENT, MATCH_ROUND, MATCH_HOME, MATCH_AWAY, MATCH_DATE, MATCH_SCORE,
     DELETE_CONFIRM, FINISH_CONFIRM,
     ADD_ADMIN_ID, RESET_CONFIRM,
     EDIT_SELECT, EDIT_EVENT_FIELD, EDIT_EVENT_VALUE,
@@ -94,7 +97,7 @@ def unlock_cb(q): _busy.discard(q.from_user.id)
     GROUP_SELECT, GROUP_NAME,
     GROUP_DELETE_SELECT,
     EDIT_GROUP_SELECT, EDIT_GROUP_NAME_VAL,
-) = range(41)
+) = range(42)
 
 # ── CONSTANTS ──
 EVENT_TYPES = [
@@ -142,23 +145,56 @@ def chunks(lst, n):
     for i in range(0, len(lst), n): yield lst[i:i+n]
 
 def calc_standings(event):
-    st = {p: {"name":p,"p":0,"w":0,"d":0,"l":0,"gf":0,"ga":0} for p in event["participants"]}
-    for m in event.get("matches", []):
+    """Общая таблица — все раунды."""""
+    return calc_standings_from_matches(event["participants"], all_matches(event))
+
+def migrate_event(event):
+    """Переносит старые matches[] в rounds[{id:1}] — вызывается при load_data."""""
+    if "rounds" not in event:
+        old_matches = event.pop("matches", [])
+        event["rounds"] = [{"id": 1, "name": "Круг 1", "matches": old_matches}]
+    return event
+
+def get_rounds(event):
+    return event.get("rounds", [])
+
+def get_round(event, rid):
+    return next((r for r in event.get("rounds",[]) if r["id"]==rid), None)
+
+def all_matches(event):
+    """Все матчи всех раундов."""""
+    ps = set(event.get("participants",[]))
+    result = []
+    for r in event.get("rounds",[]):
+        for m in r.get("matches",[]):
+            if m.get("played") and m.get("home") in ps and m.get("away") in ps:
+                result.append({**m, "_round_id": r["id"], "_round_name": r["name"]})
+    return result
+
+def round_matches(event, rid):
+    r = get_round(event, rid)
+    if not r: return []
+    ps = set(event.get("participants",[]))
+    return [m for m in r.get("matches",[]) if m.get("played") and m.get("home") in ps and m.get("away") in ps]
+
+def calc_standings_from_matches(participants, matches):
+    st = {p: {"name":p,"p":0,"w":0,"d":0,"l":0,"gf":0,"ga":0} for p in participants}
+    for m in matches:
         if not m.get("played"): continue
-        h, a, sh, sa = m["home"], m["away"], m["score_home"], m["score_away"]
-        for name, gf, ga in [(h, sh, sa), (a, sa, sh)]:
-            if name in st: st[name]["p"] += 1; st[name]["gf"] += gf; st[name]["ga"] += ga
-        if sh > sa:
-            if h in st: st[h]["w"] += 1
-            if a in st: st[a]["l"] += 1
-        elif sh < sa:
-            if a in st: st[a]["w"] += 1
-            if h in st: st[h]["l"] += 1
+        h,a,sh,sa = m["home"],m["away"],m["score_home"],m["score_away"]
+        for name,gf,ga in [(h,sh,sa),(a,sa,sh)]:
+            if name in st: st[name]["p"]+=1; st[name]["gf"]+=gf; st[name]["ga"]+=ga
+        if sh>sa:
+            if h in st: st[h]["w"]+=1
+            if a in st: st[a]["l"]+=1
+        elif sh<sa:
+            if a in st: st[a]["w"]+=1
+            if h in st: st[h]["l"]+=1
         else:
-            if h in st: st[h]["d"] += 1
-            if a in st: st[a]["d"] += 1
+            if h in st: st[h]["d"]+=1
+            if a in st: st[a]["d"]+=1
     rows = list(st.values())
-    rows.sort(key=lambda x: (x["w"]*3+x["d"], x["gf"]-x["ga"]), reverse=True)
+    rows.sort(key=lambda x:(x["w"]*3+x["d"],x["gf"]-x["ga"]), reverse=True)
     return rows
 
 # ── KEYBOARDS ──
@@ -176,7 +212,8 @@ def main_menu_kb(is_adm):
              InlineKeyboardButton("🗑 Удалить", callback_data="menu_delete")],
             [InlineKeyboardButton("😈 Грязный игрок", callback_data="menu_dirty_player"),
              InlineKeyboardButton("📢 Бегущая строка", callback_data="menu_ticker")],
-            [InlineKeyboardButton("🔗 Объединить события", callback_data="menu_group")],
+            [InlineKeyboardButton("🔗 Объединить события", callback_data="menu_group"),
+             InlineKeyboardButton("🔄 Добавить раунд", callback_data="menu_add_round")],
             [InlineKeyboardButton("👑 Добавить админа", callback_data="menu_add_admin"),
              InlineKeyboardButton("🔄 Сброс", callback_data="menu_reset")],
         ]
@@ -363,6 +400,18 @@ async def menu_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb_rows))
             return GROUP_SELECT
 
+        # ── ADD ROUND ──
+        elif action == "add_round":
+            if not is_admin(q.from_user.id, data): await q.edit_message_text("⛔ Нет доступа."); return
+            active = [e for e in data["events"] if e.get("active")]
+            if not active:
+                await q.edit_message_text("Нет активных событий.", reply_markup=back_kb()); return
+            kb = [[InlineKeyboardButton(e["name"], callback_data=f"ar_{e['id']}")] for e in active]
+            kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
+            await q.edit_message_text("🔄 *Добавить раунд*\nВыбери событие:", parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
+            # Выполняем сразу без ConversationHandler — простое действие
+            return
+
         # ── ADD ADMIN ──
         elif action == "add_admin":
             if not is_admin(q.from_user.id, data): await q.edit_message_text("⛔ Нет доступа."); return
@@ -522,7 +571,7 @@ async def ev_confirm_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             "category": ev.get("category","other"), "participation_format": ev.get("participation_format","individual"),
             "venue_type": ev.get("venue_type","offline"), "date_start": ev.get("date_start",""),
             "date_end": ev.get("date_end",""), "rules": ev.get("rules",""), "active": True,
-            "participants": [], "participant_teams": {}, "matches": [],
+            "participants": [], "participant_teams": {}, "rounds": [{"id":1,"name":"Круг 1","matches":[]}],
             "created_at": datetime.now().strftime("%d.%m.%Y %H:%M"),
         }
         data["events"].append(event)
@@ -641,6 +690,30 @@ async def match_away_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if not await lock_cb(q): return MATCH_AWAY
     try:
         ctx.user_data["match"]["away"] = q.data.replace("ma_","")
+        data = load_data(); event = get_event(data, ctx.user_data["match"]["event_id"])
+        rounds = event.get("rounds", [])
+        h, a = ctx.user_data["match"]["home"], ctx.user_data["match"]["away"]
+        if len(rounds) > 1:
+            kb = [[InlineKeyboardButton(f"🔄 {r['name']}", callback_data=f"mr_{r['id']}")] for r in rounds]
+            await q.edit_message_text(f"⚽ *{h}* vs *{a}*\nВ какой круг?", parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
+            return MATCH_ROUND
+        else:
+            ctx.user_data["match"]["round_id"] = rounds[0]["id"] if rounds else 1
+            today = datetime.now().strftime("%d.%m.%Y")
+            kb = InlineKeyboardMarkup([
+                [InlineKeyboardButton(f"📅 Сегодня ({today})", callback_data=f"md_{today}")],
+                [InlineKeyboardButton("✏️ Другая дата", callback_data="md_custom")],
+            ])
+            await q.edit_message_text(f"📅 Дата матча *{h}* vs *{a}*:", parse_mode="Markdown", reply_markup=kb)
+            return MATCH_DATE
+    finally: unlock_cb(q)
+
+async def match_round_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return MATCH_ROUND
+    try:
+        rid = int(q.data.replace("mr_",""))
+        ctx.user_data["match"]["round_id"] = rid
         today = datetime.now().strftime("%d.%m.%Y")
         h, a = ctx.user_data["match"]["home"], ctx.user_data["match"]["away"]
         kb = InlineKeyboardMarkup([
@@ -678,7 +751,12 @@ async def match_score_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     except:
         await update.message.reply_text("Формат: `2:1`", parse_mode="Markdown"); return MATCH_SCORE
     m = ctx.user_data["match"]; data = load_data(); event = get_event(data, m["event_id"])
-    event["matches"].append({
+    rid = m.get("round_id", 1)
+    rnd = get_round(event, rid)
+    if not rnd:
+        rnd = {"id": rid, "name": f"Круг {rid}", "matches": []}
+        event["rounds"].append(rnd)
+    rnd["matches"].append({
         "home": m["home"], "away": m["away"],
         "score_home": sh, "score_away": sa,
         "played": True, "date": m.get("date", datetime.now().strftime("%d.%m.%Y")),
@@ -1212,6 +1290,27 @@ async def edit_ungroup_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     finally: unlock_cb(q)
     return ConversationHandler.END
 
+async def add_round_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    if not await lock_cb(q): return
+    try:
+        eid = q.data.replace("ar_","")
+        data = load_data(); event = get_event(data, eid)
+        adm = is_admin(q.from_user.id, data)
+        if not event:
+            await q.edit_message_text("Событие не найдено.", reply_markup=back_kb()); return
+        rounds = event.get("rounds", [])
+        new_rid = max((r["id"] for r in rounds), default=0) + 1
+        new_round = {"id": new_rid, "name": f"Круг {new_rid}", "matches": []}
+        rounds.append(new_round)
+        event["rounds"] = rounds
+        ok = save_data(data)
+        round_list = "\n".join(f"· {r['name']} ({len(r.get('matches',[]))} матчей)" for r in rounds)
+        await q.edit_message_text(
+            f"{'✅ Раунд добавлен!' if ok else '⚠️ Ошибка'}\n\n*{event['name']}*\n{round_list}",
+            parse_mode="Markdown", reply_markup=main_menu_kb(adm))
+    finally: unlock_cb(q)
+
 # ── GROUP ──
 async def grp_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
@@ -1399,6 +1498,7 @@ def main():
             MATCH_EVENT: [CallbackQueryHandler(match_event_cb, pattern="^me_")],
             MATCH_HOME:  [CallbackQueryHandler(match_home_cb,  pattern="^mh_")],
             MATCH_AWAY:  [CallbackQueryHandler(match_away_cb,  pattern="^ma_")],
+            MATCH_ROUND: [CallbackQueryHandler(match_round_cb, pattern="^mr_")],
             MATCH_DATE:  [CallbackQueryHandler(match_date_cb,  pattern="^md_"),
                           MessageHandler(filters.TEXT & ~filters.COMMAND, match_date_msg)],
             MATCH_SCORE: [MessageHandler(filters.TEXT & ~filters.COMMAND, match_score_msg)],
@@ -1497,6 +1597,7 @@ def main():
     # ── GLOBAL HANDLERS ──
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(ap_start,     pattern="^menu_participants$"))
+    app.add_handler(CallbackQueryHandler(add_round_cb,  pattern="^ar_"))
     app.add_handler(CallbackQueryHandler(ap_event_cb,  pattern="^ap_"))
     app.add_handler(CallbackQueryHandler(ap_done_cb,   pattern="^ap_done$"))
     app.add_handler(CallbackQueryHandler(standings_cb, pattern="^st_"))

@@ -455,10 +455,32 @@ async function loadData() {
   renderAll();
 }
 
-function calcStandings(event) {
+// Все матчи события (все раунды)
+function allMatches(event) {
+  const ps = new Set(event.participants||[]);
+  const result = [];
+  (event.rounds||[]).forEach(r => {
+    (r.matches||[]).forEach(m => {
+      if(m.played && ps.has(m.home) && ps.has(m.away))
+        result.push({...m, _round_id: r.id, _round_name: r.name});
+    });
+  });
+  return result;
+}
+
+// Матчи конкретного раунда
+function roundMatches(event, rid) {
+  const ps = new Set(event.participants||[]);
+  const r = (event.rounds||[]).find(r=>r.id===rid);
+  if(!r) return [];
+  return (r.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away));
+}
+
+function calcStandingsFromMatches(participants, matches) {
   const st = {};
-  event.participants.forEach(p => { st[p] = {name:p,p:0,w:0,d:0,l:0,gf:0,ga:0}; });
-  (event.matches||[]).filter(m=>m.played && st[m.home] && st[m.away]).forEach(m => {
+  participants.forEach(p => { st[p] = {name:p,p:0,w:0,d:0,l:0,gf:0,ga:0}; });
+  matches.forEach(m => {
+    if(!m.played) return;
     const {home:h, away:a, score_home:sh, score_away:sa} = m;
     [[h,sh,sa],[a,sa,sh]].forEach(([name,gf,ga]) => {
       if(st[name]){st[name].p++;st[name].gf+=gf;st[name].ga+=ga;}
@@ -468,6 +490,10 @@ function calcStandings(event) {
     else{if(st[h])st[h].d++;if(st[a])st[a].d++;}
   });
   return Object.values(st).sort((a,b)=>(b.w*3+b.d)-(a.w*3+a.d)||(b.gf-b.ga)-(a.gf-a.ga));
+}
+
+function calcStandings(event) {
+  return calcStandingsFromMatches(event.participants||[], allMatches(event));
 }
 
 function openPlayer(playerName, eventId) {
@@ -485,8 +511,8 @@ function openPlayer(playerName, eventId) {
   const c = COLORS[colorIdx], bg = BGS[colorIdx];
   const icon = SPORT_ICONS[ev.category]||'🏆';
 
-  // Player matches
-  const matches = (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away) && (m.home===playerName||m.away===playerName));
+  // Player matches — из всех раундов
+  const matches = allMatches(ev).filter(m=>(m.home===playerName||m.away===playerName));
   const matchesHtml = matches.slice().reverse().map(m=>{
     const isHome = m.home===playerName;
     const myScore = isHome?m.score_home:m.score_away;
@@ -502,7 +528,7 @@ function openPlayer(playerName, eventId) {
     const homeYou = isHome;
     return `<div class="pl-match">
       <div class="pl-match-top">
-        <div class="pl-match-date">${m.date||''}</div>
+        <div class="pl-match-date">${m.date||''}${m._round_name ? ' · ' + m._round_name : ''}</div>
         <div class="pl-match-res ${resCls}">${resLbl}</div>
       </div>
       <div class="pl-match-body">
@@ -937,6 +963,23 @@ function renderGroupTable(group, container) {
 }
 
 function renderEventTable(ev, container) {
+  const rounds = ev.rounds||[];
+  if(rounds.length > 1) {
+    // Три колонки: Общая | Круг 1 | Круг 2 ...
+    const overallRows = calcStandings(ev);
+    const cols = [
+      {title: '🔗 Общая', rows: overallRows, evId: ev.id, overall: true},
+      ...rounds.map(r=>({title: r.name, rows: calcStandingsFromMatches(ev.participants||[], roundMatches(ev,r.id)), evId: ev.id, overall: false}))
+    ];
+    container.innerHTML = `<div class="group-tables">
+      ${cols.map(col=>`
+        <div class="group-table-col">
+          <div class="group-col-title ${col.overall?'overall':''}">${col.title}</div>
+          ${renderMiniTable(col.rows, col.evId)}
+        </div>`).join('')}
+    </div>`;
+    return;
+  }
   const rows = calcStandings(ev);
   if(!rows.length) {
     container.innerHTML = `<div style="padding:32px;text-align:center;color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">Участников нет</div>`;
@@ -1010,7 +1053,7 @@ function renderMatches() {
 function renderStatBlock(ev, ps, label) {
   const rows = calcStandings(ev) || [];
   const icon = SPORT_ICONS[ev.category]||'🏆';
-  const goalsRaw = (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).map(m=>m.score_home+m.score_away);
+  const goalsRaw = allMatches(ev).map(m=>m.score_home+m.score_away);
   const goals = goalsRaw.slice().reverse();
   let html = '';
   if(goals.length > 0) {
@@ -1031,7 +1074,7 @@ function renderStatBlock(ev, ps, label) {
   const n = ev.participants.length;
   const totalPairs = Math.round(n*(n-1)/2);
   if(totalPairs > 0) {
-    const playedMatches = (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away));
+    const playedMatches = allMatches(ev);
     const playedPairsSet = new Set();
     playedMatches.forEach(m=>{ playedPairsSet.add([m.home,m.away].sort().join('|||')); });
     const playedPairs = playedPairsSet.size;
@@ -1121,7 +1164,23 @@ function renderStats() {
   active.filter(e=>!groupedIds.has(e.id)).forEach(ev => {
     const ps = new Set(ev.participants||[]);
     if(!ev.participants.length) return;
-    html += renderStatBlock(ev, ps, null);
+    const rounds = ev.rounds||[];
+    if(rounds.length > 1) {
+      // Общая сверху
+      html += `<div style="margin-bottom:6px;padding:8px 14px;font-family:'DM Mono',monospace;font-size:13px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">${ev.name}</div>`;
+      html += renderStatBlock(ev, ps, 'Общая — все раунды');
+      html += `<div style="height:12px;"></div>`;
+      // Затем каждый раунд
+      rounds.forEach(r => {
+        const rMatches = roundMatches(ev, r.id);
+        const virtualEv = {...ev, rounds:[{...r, matches: r.matches}]};
+        html += `<div style="margin-bottom:4px;padding:6px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">${r.name}</div>`;
+        html += renderStatBlock(virtualEv, ps, r.name);
+        html += `<div style="height:16px;"></div>`;
+      });
+    } else {
+      html += renderStatBlock(ev, ps, null);
+    }
   });
 
   content.innerHTML = html || `<div style="padding:40px;text-align:center;color:var(--text3);">Нет данных</div>`;
