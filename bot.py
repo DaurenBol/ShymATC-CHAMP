@@ -1,6 +1,6 @@
 import os, json, base64, requests, asyncio, threading
 from datetime import datetime
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, CallbackQueryHandler,
     MessageHandler, filters, ContextTypes, ConversationHandler
@@ -171,6 +171,8 @@ def options_kb(items,prefix,cols=2):
     return InlineKeyboardMarkup(list(chunks(btns,cols)))
 
 def back_kb(): return InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Назад",callback_data="back_main")]])
+def home_kb(): return ReplyKeyboardMarkup([[KeyboardButton("🏠 Вернуться в меню")]], resize_keyboard=True, one_time_keyboard=False)
+def remove_kb(): return ReplyKeyboardRemove()
 
 async def start(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     data=load_data(); adm=is_admin(update.effective_user.id,data)
@@ -230,6 +232,7 @@ async def menu_handler(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
             if not is_admin(q.from_user.id,data): await q.edit_message_text("⛔ Нет доступа."); return
             ctx.user_data.clear()
             await q.edit_message_text("✏️ Введи *название события*:",parse_mode="Markdown")
+            await ctx.bot.send_message(q.from_user.id,"👇",reply_markup=home_kb())
             return EV_NAME
 
         elif action=="participants":
@@ -240,7 +243,8 @@ async def menu_handler(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
             if len(active)==1:
                 ctx.user_data["ap_event_id"]=active[0]["id"]
                 current=", ".join(active[0]["participants"]) or "пока никого"
-                await q.edit_message_text(f"👤 *{active[0]['name']}*\nСейчас: {current}\n\nВводи имена, /done — готово",parse_mode="Markdown")
+                await q.edit_message_text(f"👤 *{active[0]['name']}*\nСейчас: {current}\n\nВводи имена, кнопка ✅ Готово когда закончишь:",parse_mode="Markdown")
+                await ctx.bot.send_message(q.from_user.id,"👇",reply_markup=home_kb())
                 return ADD_PARTICIPANT
             kb=[[InlineKeyboardButton(e["name"],callback_data=f"ap_{e['id']}")] for e in active]
             kb.append([InlineKeyboardButton("◀️ Назад",callback_data="back_main")])
@@ -507,6 +511,7 @@ async def ticker_text_msg(update:Update, ctx:ContextTypes.DEFAULT_TYPE):
 async def ev_name(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     ctx.user_data["ev"]={"name":update.message.text.strip()}
     await update.message.reply_text("📌 *Тип события:*",parse_mode="Markdown",reply_markup=options_kb(EVENT_TYPES,"evt_"))
+    await update.message.reply_text("​",reply_markup=remove_kb())
     return EV_TYPE
 
 async def ev_type_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
@@ -638,9 +643,17 @@ async def ap_event_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
         ctx.user_data["ap_event_id"]=q.data.replace("ap_","")
         data=load_data(); event=get_event(data,ctx.user_data["ap_event_id"])
         current=", ".join(event["participants"]) or "пока никого"
-        await q.edit_message_text(f"👤 *{event['name']}*\nСейчас: {current}\n\nВводи имена, /done — готово",parse_mode="Markdown")
+        await q.edit_message_text(f"👤 *{event['name']}*\nСейчас: {current}\n\nВводи имена, кнопка ✅ Готово когда закончишь:",parse_mode="Markdown")
+        await ctx.bot.send_message(q.from_user.id,"👇",reply_markup=home_kb())
     finally: unlock_cb(q)
     return ADD_PARTICIPANT
+
+async def handle_home_btn(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
+    """Handles the home button from ReplyKeyboard in any text state"""
+    data=load_data(); adm=is_admin(update.effective_user.id,data)
+    await update.message.reply_text("🏆 *ShymATC-CHAMP*",parse_mode="Markdown",reply_markup=remove_kb())
+    await update.message.reply_text("🏆 *ShymATC-CHAMP*",parse_mode="Markdown",reply_markup=main_menu_kb(adm))
+    return ConversationHandler.END
 
 async def ap_name(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     name=update.message.text.strip()
@@ -660,6 +673,7 @@ async def ap_name(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
 async def ap_done_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     q=update.callback_query; await q.answer()
     data=load_data(); adm=is_admin(q.from_user.id,data)
+    await ctx.bot.send_message(q.from_user.id,"✅ Участники сохранены!",reply_markup=remove_kb())
     await q.edit_message_text("✅ Участники сохранены!",reply_markup=main_menu_kb(adm))
     return ConversationHandler.END
 
@@ -705,7 +719,9 @@ async def match_date_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     if not await lock_cb(q): return MATCH_DATE
     try:
         if q.data=="md_custom":
-            await q.edit_message_text("📅 Введи дату (например: 01.04.2026):"); return MATCH_DATE
+            await q.edit_message_text("📅 Введи дату (например: 01.04.2026):")
+            await ctx.bot.send_message(q.from_user.id,"👇",reply_markup=home_kb())
+            return MATCH_DATE
         ctx.user_data["match"]["date"]=q.data.replace("md_","")
         h,a=ctx.user_data["match"]["home"],ctx.user_data["match"]["away"]
         await q.edit_message_text(f"Счёт *{h}* vs *{a}*\nФормат: `2:1`",parse_mode="Markdown")
@@ -731,6 +747,7 @@ async def match_score_msg(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     ok=save_data(data)
     res=f"🏆 *{m['home']}*" if sh>sa else(f"🏆 *{m['away']}*" if sa>sh else "🤝 Ничья")
     adm=is_admin(update.effective_user.id,data)
+    await update.message.reply_text("​",reply_markup=remove_kb())
     await update.message.reply_text(
         f"{'✅ Результат сохранён!' if ok else '⚠️ Ошибка'}\n\n*{m['home']}* {sh}:{sa} *{m['away']}*\n{res}\n📅 {m.get('date','')}",
         parse_mode="Markdown",reply_markup=main_menu_kb(adm))
@@ -1000,7 +1017,7 @@ def main():
     app.add_handler(ConversationHandler(
         entry_points=[CallbackQueryHandler(menu_handler,pattern="^menu_new_event$")],
         states={
-            EV_NAME:[MessageHandler(filters.TEXT&~filters.COMMAND,ev_name)],
+            EV_NAME:[MessageHandler(filters.Regex("^🏠 Вернуться в меню$"),handle_home_btn),MessageHandler(filters.TEXT&~filters.COMMAND,ev_name)],
             EV_TYPE:[CallbackQueryHandler(ev_type_cb,pattern="^evt_")],
             EV_CATEGORY:[CallbackQueryHandler(ev_category_cb,pattern="^cat_")],
             EV_CATEGORY_CUSTOM:[MessageHandler(filters.TEXT&~filters.COMMAND,ev_category_custom)],
@@ -1020,6 +1037,7 @@ def main():
             ADD_PARTICIPANT:[
                 CallbackQueryHandler(ap_event_cb,pattern="^ap_"),
                 CallbackQueryHandler(ap_done_cb,pattern="^ap_done$"),
+                MessageHandler(filters.Regex("^🏠 Вернуться в меню$"),handle_home_btn),
                 MessageHandler(filters.TEXT&~filters.COMMAND,ap_name),
             ],
         },
@@ -1031,8 +1049,8 @@ def main():
             MATCH_EVENT:[CallbackQueryHandler(match_event_cb,pattern="^me_")],
             MATCH_HOME:[CallbackQueryHandler(match_home_cb,pattern="^mh_")],
             MATCH_AWAY:[CallbackQueryHandler(match_away_cb,pattern="^ma_")],
-            MATCH_DATE:[CallbackQueryHandler(match_date_cb,pattern="^md_"),MessageHandler(filters.TEXT&~filters.COMMAND,match_date_msg)],
-            MATCH_SCORE:[MessageHandler(filters.TEXT&~filters.COMMAND,match_score_msg)],
+            MATCH_DATE:[CallbackQueryHandler(match_date_cb,pattern="^md_"),MessageHandler(filters.Regex("^🏠 Вернуться в меню$"),handle_home_btn),MessageHandler(filters.TEXT&~filters.COMMAND,match_date_msg)],
+            MATCH_SCORE:[MessageHandler(filters.Regex("^🏠 Вернуться в меню$"),handle_home_btn),MessageHandler(filters.TEXT&~filters.COMMAND,match_score_msg)],
         },
         fallbacks=[CommandHandler("cancel",cancel),CallbackQueryHandler(back_main,pattern="^back_main$")]
     ))
@@ -1087,6 +1105,7 @@ def main():
         states={
             TICKER_INPUT:[
                 CallbackQueryHandler(ticker_cb,pattern="^tkr_"),
+                MessageHandler(filters.Regex("^🏠 Вернуться в меню$"),handle_home_btn),
                 MessageHandler(filters.TEXT&~filters.COMMAND,ticker_text_msg),
             ],
         },
