@@ -185,6 +185,7 @@ def options_kb(items, prefix, cols=2):
 def back_kb(): return InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Назад", callback_data="back_main")]])
 def skip_kb(cd): return InlineKeyboardMarkup([[InlineKeyboardButton("⏭ Пропустить", callback_data=cd)]])
 def done_kb(): return InlineKeyboardMarkup([[InlineKeyboardButton("✅ Готово", callback_data="ap_done")]])
+def home_inline_kb(): return InlineKeyboardMarkup([[InlineKeyboardButton("🏠 На главную", callback_data="back_main")]])
 
 # ── BASE HANDLERS ──
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -511,13 +512,17 @@ async def ev_confirm_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 # ── PARTICIPANTS ──
 def _ap_text(event):
-    current = ", ".join(event["participants"]) or "пока никого"
-    return (f"👤 *{event['name']}*\nУчастники: {current}\n\n"
-            f"Вводи *ИМЕНА* по одному.\n\n"
-            f"Нажми «Готово» когда закончишь:")
+    ps = event["participants"]
+    lines = "\n".join(f"· {p}" for p in ps) if ps else "_пока никого_"
+    return (f"👤 *{event['name']}*\n\n{lines}\n\n"
+            f"Вводи *ИМЕНА* по одному.\n"
+            f"_Когда закончишь — нажми «На главную»_")
 
-async def _ap_show(q, event):
-    await q.edit_message_text(_ap_text(event), parse_mode="Markdown", reply_markup=done_kb())
+async def _ap_show(q, event, ctx=None):
+    await q.edit_message_text(_ap_text(event), parse_mode="Markdown", reply_markup=home_inline_kb())
+    if ctx is not None:
+        ctx.user_data["ap_msg_id"] = q.message.message_id
+        ctx.user_data["ap_chat_id"] = q.message.chat_id
 
 async def ap_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     """Entry point for participants ConversationHandler — works from any context."""
@@ -533,7 +538,7 @@ async def ap_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             return ConversationHandler.END
         if len(active) == 1:
             ctx.user_data["ap_eid"] = active[0]["id"]
-            await _ap_show(q, active[0])
+            await _ap_show(q, active[0], ctx)
             return ADD_PARTICIPANT
         kb = [[InlineKeyboardButton(e["name"], callback_data=f"ap_{e['id']}")] for e in active]
         kb.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main")])
@@ -548,7 +553,7 @@ async def ap_event_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     try:
         ctx.user_data["ap_eid"] = q.data.replace("ap_","")
         data = load_data(); event = get_event(data, ctx.user_data["ap_eid"])
-        await _ap_show(q, event)
+        await _ap_show(q, event, ctx)
     finally: unlock_cb(q)
     return ADD_PARTICIPANT
 
@@ -564,12 +569,21 @@ async def ap_name(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     event.setdefault("participant_teams", {})[name] = "не определено"
     ok = save_data(data)
     current = ", ".join(event["participants"])
-    await update.message.reply_text(
-        f"{'✅' if ok else '⚠️'} *{name}* добавлен\n\n"
-        f"Список: {current}\n\n"
-        f"Вводи *ИМЕНА* по одному.\n"
-        f"Нажми «Готово» когда закончишь:",
-        parse_mode="Markdown", reply_markup=done_kb())
+    data2 = load_data(); event2 = get_event(data2, ctx.user_data.get("ap_eid"))
+    upd_text = _ap_text(event2) if event2 else f"✅ *{name}* добавлен"
+    msg_id  = ctx.user_data.get("ap_msg_id")
+    chat_id = ctx.user_data.get("ap_chat_id")
+    if msg_id and chat_id:
+        try:
+            await ctx.bot.edit_message_text(
+                upd_text, chat_id=chat_id, message_id=msg_id,
+                parse_mode="Markdown", reply_markup=home_inline_kb())
+            return ADD_PARTICIPANT
+        except Exception:
+            pass
+    msg = await update.message.reply_text(upd_text, parse_mode="Markdown", reply_markup=home_inline_kb())
+    ctx.user_data["ap_msg_id"]  = msg.message_id
+    ctx.user_data["ap_chat_id"] = msg.chat_id
     return ADD_PARTICIPANT
 
 async def ap_done_cb(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
