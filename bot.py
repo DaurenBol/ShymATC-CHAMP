@@ -88,9 +88,9 @@ def unlock_cb(q): _busy.discard(q.from_user.id)
     EDIT_PARTICIPANT_OLD, EDIT_PARTICIPANT_NEW,
     REMOVE_PARTICIPANT_SELECT,
     DELETE_MATCH_SELECT, DELETE_MATCH_CONFIRM,
-    DIRTY_EVENT, DIRTY_PLAYER,
+    DIRTY_EVENT, DIRTY_PLAYER, DIRTY_LABEL,
     TICKER_INPUT
-) = range(35)
+) = range(36)
 
 EVENT_TYPES = [
     ("🏆 Турнир","tournament"),("🏅 Лига","league"),("🥇 Чемпионат","championship"),
@@ -375,17 +375,54 @@ async def dirty_player_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
         adm=is_admin(q.from_user.id,data)
         if name=="CLEAR":
             event.pop("dirty_player",None)
+            event.pop("dirty_label",None)
             ok=save_data(data)
             await q.edit_message_text(
-                f"{'✅ Грязный игрок убран!' if ok else '⚠️ Ошибка'}\n\n*{event['name']}*: грязный игрок не установлен.",
+                f"{'✅ Убрано!' if ok else '⚠️ Ошибка'}\n\n*{event['name']}*: карточка убрана.",
                 parse_mode="Markdown",reply_markup=main_menu_kb(adm))
+            return ConversationHandler.END
         else:
-            event["dirty_player"]=name
-            ok=save_data(data)
+            ctx.user_data["dirty_name"]=name
+            current_label=event.get("dirty_label","Грязный игрок")
+            kb=InlineKeyboardMarkup([[InlineKeyboardButton("⏭ Оставить текущее",callback_data="dirty_lbl_keep")],
+                                     [InlineKeyboardButton("◀️ Назад",callback_data="back_main")]])
             await q.edit_message_text(
-                f"{'✅ Сохранено!' if ok else '⚠️ Ошибка'}\n\n😈 Грязный игрок *{event['name']}*:\n*{name}*",
-                parse_mode="Markdown",reply_markup=main_menu_kb(adm))
+                f"😈 Игрок выбран: *{name}*\n\nВведи название карточки (например: _Грязный игрок_, _Лучший дриблёр_, _Антигерой_)\n\nСейчас: *{current_label}*",
+                parse_mode="Markdown",reply_markup=kb)
     finally: unlock_cb(q)
+    return DIRTY_LABEL
+
+async def dirty_label_keep_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
+    q=update.callback_query
+    if not await lock_cb(q): return DIRTY_LABEL
+    try:
+        name=ctx.user_data.get("dirty_name","")
+        data=load_data(); event=get_event(data,ctx.user_data["dirty_eid"])
+        adm=is_admin(q.from_user.id,data)
+        event["dirty_player"]=name
+        ok=save_data(data)
+        label=event.get("dirty_label","Грязный игрок")
+        await q.edit_message_text(
+            f"{'✅ Сохранено!' if ok else '⚠️ Ошибка'}\n\n*{label}*: *{name}*",
+            parse_mode="Markdown",reply_markup=main_menu_kb(adm))
+    finally: unlock_cb(q)
+    return ConversationHandler.END
+
+async def dirty_label_msg(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
+    text=update.message.text.strip()
+    if text=="🏠 Вернуться в меню":
+        data=load_data(); adm=is_admin(update.effective_user.id,data)
+        await update.message.reply_text("🏠 Меню",reply_markup=main_menu_kb(adm))
+        return ConversationHandler.END
+    name=ctx.user_data.get("dirty_name","")
+    data=load_data(); event=get_event(data,ctx.user_data["dirty_eid"])
+    adm=is_admin(update.effective_user.id,data)
+    event["dirty_player"]=name
+    event["dirty_label"]=text
+    ok=save_data(data)
+    await update.message.reply_text(
+        f"{'✅ Сохранено!' if ok else '⚠️ Ошибка'}\n\n*{text}*: *{name}*",
+        parse_mode="Markdown",reply_markup=main_menu_kb(adm))
     return ConversationHandler.END
 
 
@@ -1103,6 +1140,11 @@ def main():
         states={
             DIRTY_EVENT:[CallbackQueryHandler(dirty_event_cb,pattern="^dp_ev_")],
             DIRTY_PLAYER:[CallbackQueryHandler(dirty_player_cb,pattern="^dp_pl_")],
+            DIRTY_LABEL:[
+                CallbackQueryHandler(dirty_label_keep_cb,pattern="^dirty_lbl_keep$"),
+                MessageHandler(filters.Regex("^🏠 Вернуться в меню$"),handle_home_btn),
+                MessageHandler(filters.TEXT&~filters.COMMAND,dirty_label_msg),
+            ],
         },
         fallbacks=[CommandHandler("cancel",cancel),CallbackQueryHandler(back_main,pattern="^back_main$")]
     ))

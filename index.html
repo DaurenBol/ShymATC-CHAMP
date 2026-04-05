@@ -754,6 +754,7 @@ function renderHome() {
 
   // Dirty player
   const dirtyPlayer = first ? (first.dirty_player || null) : null;
+  const dirtyLabel = first ? (first.dirty_label || 'Грязный игрок 😈') : 'Грязный игрок 😈';
   const dirtyHtml = dirtyPlayer
     ? `<div class="stat-val" style="font-size:16px;padding-top:6px;line-height:1.2">${dirtyPlayer}</div><div class="stat-sub" style="margin-top:6px">по мнению участников</div>`
     : `<div class="stat-val" style="font-size:28px;padding-top:2px">—</div><div class="stat-sub">не назначен</div>`;
@@ -762,7 +763,7 @@ function renderHome() {
     <div class="stat-card"><div class="stat-lbl">Лучшая защита 🛡</div>${bestDefenseHtml}</div>
     <div class="stat-card"><div class="stat-lbl">Топ матч ⚽</div>${topMatchHtml}</div>
     <div class="stat-card"><div class="stat-lbl">Бомбардир 🎯</div>${topScorerHtml}</div>
-    <div class="stat-card"><div class="stat-lbl">Грязный игрок 😈</div>${dirtyHtml}</div>`;
+    <div class="stat-card"><div class="stat-lbl">${dirtyLabel}</div>${dirtyHtml}</div>`;
 
   // Events list
   const listEl = document.getElementById('events-list');
