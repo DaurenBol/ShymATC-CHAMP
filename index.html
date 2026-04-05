@@ -545,7 +545,20 @@ function openPlayer(playerName, eventId) {
     const key = [m.home,m.away].sort().join('|||');
     _playedSetForTab.add(key);
   });
+  // Общий счёт не сыгранных (по всем раундам)
   const pendingCount = ev.participants.filter(p=>p!==playerName && !_playedSetForTab.has([playerName,p].sort().join('|||'))).length;
+  // По раундам
+  const pendingByRound = (ev.rounds||[]).map(r => {
+    const rSet = new Set(
+      (r.matches||[]).filter(m=>m.played && new Set(ev.participants).has(m.home) && new Set(ev.participants).has(m.away))
+        .map(m=>[m.home,m.away].sort().join('|||'))
+    );
+    const cnt = ev.participants.filter(p=>p!==playerName && !rSet.has([playerName,p].sort().join('|||'))).length;
+    return {name: r.name, count: cnt};
+  });
+  const pendingLabel = pendingByRound.length > 1
+    ? pendingByRound.map(r=>`${r.name}: ${r.count}`).join(' / ')
+    : String(pendingCount);
   const playerTeam = (ev.participant_teams && ev.participant_teams[playerName]) ? ev.participant_teams[playerName] : 'не определено';
 
   document.getElementById('player-content').innerHTML = `
@@ -572,7 +585,7 @@ function openPlayer(playerName, eventId) {
     </div>
     <div class="pl-tabs">
       <button class="pl-tab active" onclick="plTab('played','${ev.id}','${playerName}',this)">Сыграно (${matches.length})</button>
-      <button class="pl-tab" onclick="plTab('pending','${ev.id}','${playerName}',this)">Не сыграли (${pendingCount})</button>
+      <button class="pl-tab" onclick="plTab('pending','${ev.id}','${playerName}',this)">Не сыграли (${(ev.rounds||[]).length > 1 ? pendingLabel : pendingCount})</button>
     </div>
     <div class="pl-matches-wrap">
       <div id="pl-played-${ev.id}" class="pl-tab-content active">
@@ -605,26 +618,43 @@ function plTab(type, evId, playerName, btn) {
   if(type==='pending') {
     const ev = (RAW_DATA?.events||[]).find(e=>e.id===evId);
     if(!ev) return;
-    const ps = new Set(ev.participants||[]);
-    const playedSet = new Set();
-    allMatches(ev).forEach(m=>{
-      const key = [m.home,m.away].sort().join('|||');
-      playedSet.add(key);
-    });
-    const pending = ev.participants.filter(p=>p!==playerName).filter(p=>{
-      const key = [playerName,p].sort().join('|||');
-      return !playedSet.has(key);
-    });
+    const rounds = ev.rounds||[];
     const container = document.getElementById('pl-pending-list-'+evId);
-    if(!pending.length) {
-      container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-family:monospace;font-size:12px;">✅ Сыграл со всеми!</div>';
-      return;
+    if(rounds.length > 1) {
+      // Показываем по раундам
+      let html = '';
+      rounds.forEach(r => {
+        const rSet = new Set(
+          (r.matches||[]).filter(m=>m.played && ev.participants.includes(m.home) && ev.participants.includes(m.away))
+            .map(m=>[m.home,m.away].sort().join('|||'))
+        );
+        const pending = ev.participants.filter(p=>p!==playerName && !rSet.has([playerName,p].sort().join('|||')));
+        html += `<div style="padding:10px 14px 4px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;">${r.name} — не сыграли (${pending.length})</div>`;
+        if(!pending.length) {
+          html += `<div style="padding:8px 14px;font-family:monospace;font-size:12px;color:var(--accent)">✅ Все матчи сыграны</div>`;
+        } else {
+          html += pending.map(opp=>`
+            <div class="pl-pending-item">
+              <div class="pl-pending-opp">${opp}</div>
+              <div class="pl-pending-badge">не играли</div>
+            </div>`).join('');
+        }
+      });
+      container.innerHTML = html;
+    } else {
+      const playedSet = new Set();
+      allMatches(ev).forEach(m=>{ playedSet.add([m.home,m.away].sort().join('|||')); });
+      const pending = ev.participants.filter(p=>p!==playerName && !playedSet.has([playerName,p].sort().join('|||')));
+      if(!pending.length) {
+        container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-family:monospace;font-size:12px;">✅ Сыграл со всеми!</div>';
+        return;
+      }
+      container.innerHTML = pending.map(opp=>`
+        <div class="pl-pending-item">
+          <div class="pl-pending-opp">${opp}</div>
+          <div class="pl-pending-badge">не играли</div>
+        </div>`).join('');
     }
-    container.innerHTML = pending.map(opp=>`
-      <div class="pl-pending-item">
-        <div class="pl-pending-opp">${opp}</div>
-        <div class="pl-pending-badge">не играли</div>
-      </div>`).join('');
   }
 }
 
@@ -1126,6 +1156,15 @@ function renderStatBlock(ev, ps, label) {
       </div>
       <div class="pb-bar-outer"><div class="pb-bar-inner" style="width:${pct}%"></div></div>
       <div class="pb-footer"><div class="pb-pct">${pct}% пар сыграли</div><div class="pb-sub">${n} участников</div></div>
+      ${(ev.rounds||[]).length > 1 ? `<div style="padding:4px 14px 8px;display:flex;gap:12px;flex-wrap:wrap;">
+        ${(ev.rounds||[]).map(r=>{
+          const rSet = new Set((r.matches||[]).filter(m=>m.played && ps.has(m.home)&&ps.has(m.away)).map(m=>[m.home,m.away].sort().join('|||')));
+          const rTotal = Math.round(n*(n-1)/2);
+          const rPlayed = [...new Set((r.matches||[]).filter(m=>m.played&&ps.has(m.home)&&ps.has(m.away)).map(m=>[m.home,m.away].sort().join('|||')))].length;
+          const rRem = rTotal - rPlayed;
+          return `<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);">${r.name}: <span style="color:var(--accent2)">${rPlayed}</span>/<span style="color:var(--accent3)">${rTotal}</span>${rRem>0?' (ост. '+rRem+')':' ✅'}</span>`;
+        }).join('')}
+      </div>` : ''}
       ${remainingPairs>0?`<button class="pb-toggle" onclick="togglePairs('${pairsListId}','${pairsArrId}')"><span>${remainingPairs} ${remainingPairs===1?'пара':remainingPairs<5?'пары':'пар'} ещё не встречались</span><span class="pb-toggle-arr" id="${pairsArrId}">▼</span></button><div class="pb-pairs" id="${pairsListId}" style="display:none">${unplayedHtml}</div>`:`<div style="padding:10px 14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--accent)">✅ Все пары сыграли!</div>`}
     </div>`;
   }
