@@ -1092,7 +1092,7 @@ function renderStats() {
 
   // Группы — общая статистика сверху
   groups.forEach(group => {
-    const groupEvents = events.filter(e=>group.event_ids.includes(e.id));
+    const groupEvents = (RAW_DATA?.events||[]).filter(e=>group.event_ids.includes(e.id));
     if(!groupEvents.length) return;
     // Создаём виртуальное событие из всех матчей группы
     const allParticipants = [...new Set(groupEvents.flatMap(e=>e.participants||[]))];
