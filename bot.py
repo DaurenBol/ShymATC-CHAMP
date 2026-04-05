@@ -200,8 +200,7 @@ def calc_standings_from_matches(participants, matches):
 # ── KEYBOARDS ──
 def main_menu_kb(is_adm):
     kb = [[InlineKeyboardButton("📋 События", callback_data="menu_events"),
-           InlineKeyboardButton("📊 Таблица", callback_data="menu_standings")],
-          [InlineKeyboardButton("⚡ Матчи", callback_data="menu_matches")]]
+           InlineKeyboardButton("📊 Таблица", callback_data="menu_standings")]]
     if is_adm:
         kb += [
             [InlineKeyboardButton("➕ Создать событие", callback_data="menu_new_event")],
@@ -756,6 +755,19 @@ async def match_score_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if not rnd:
         rnd = {"id": rid, "name": f"Круг {rid}", "matches": []}
         event["rounds"].append(rnd)
+    # Проверка: эта пара уже играла в этом раунде?
+    ps = set(event.get("participants",[]))
+    already = any(
+        x.get("played") and ps.issuperset({x.get("home",""),x.get("away","")}) and
+        {x.get("home"),x.get("away")} == {m["home"], m["away"]}
+        for x in rnd.get("matches",[])
+    )
+    if already:
+        adm = is_admin(update.effective_user.id, data)
+        await update.message.reply_text(
+            f"⚠️ *{m['home']}* vs *{m['away']}* уже играли в {rnd['name']}!\n\nВыбери другую пару.",
+            parse_mode="Markdown", reply_markup=main_menu_kb(adm))
+        return ConversationHandler.END
     rnd["matches"].append({
         "home": m["home"], "away": m["away"],
         "score_home": sh, "score_away": sa,
