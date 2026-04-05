@@ -708,9 +708,11 @@ async def ap_name(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"*{name}* уже есть.",parse_mode="Markdown"); return ADD_PARTICIPANT
     ctx.user_data["ap_pending_name"]=name
     kb=InlineKeyboardMarkup([[InlineKeyboardButton("⏭ Пропустить",callback_data="ap_team_skip")]])
-    await update.message.reply_text(
+    msg=await update.message.reply_text(
         f"👤 *{name}*\n\n*Введи название команды/клуба*\n_например: Барселона, Real Madrid_\n\nИли нажми «Пропустить»:",
         parse_mode="Markdown",reply_markup=kb)
+    ctx.user_data["ap_prompt_msg_id"]=msg.message_id
+    ctx.user_data["ap_prompt_chat_id"]=msg.chat_id
     return AP_TEAM_COMMENT
 
 async def ap_team_skip_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
@@ -725,7 +727,7 @@ async def ap_team_skip_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     current=", ".join(event["participants"])
     kb=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Готово",callback_data="ap_done")]])
     await q.edit_message_text(
-        f"{'✅' if ok else '⚠️'} *{name}* добавлен\nКоманда: _не определено_\nСписок: {current}\n\n*Ещё имя* или нажми «Готово»:",
+        f"{'✅' if ok else '⚠️'} *{name}* добавлен · _не определено_\nСписок: {current}\n\n*Ещё имя* или нажми «Готово»:",
         parse_mode="Markdown",reply_markup=kb)
     return ADD_PARTICIPANT
 
@@ -745,9 +747,16 @@ async def ap_team_msg(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
     ok=save_data(data)
     current=", ".join(event["participants"])
     kb=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Готово",callback_data="ap_done")]])
-    await update.message.reply_text(
-        f"{'✅' if ok else '⚠️'} *{name}* добавлен\nКоманда: *{team}*\nСписок: {current}\n\n*Ещё имя* или нажми «Готово»:",
-        parse_mode="Markdown",reply_markup=kb)
+    # Edit the prompt message to avoid stale buttons in chat
+    chat_id=ctx.user_data.get("ap_prompt_chat_id")
+    msg_id=ctx.user_data.get("ap_prompt_msg_id")
+    text=f"{'✅' if ok else '⚠️'} *{name}* добавлен · *{team}*\nСписок: {current}\n\n*Ещё имя* или нажми «Готово»:"
+    if chat_id and msg_id:
+        try:
+            await ctx.bot.edit_message_text(text,chat_id=chat_id,message_id=msg_id,parse_mode="Markdown",reply_markup=kb)
+        except: await update.message.reply_text(text,parse_mode="Markdown",reply_markup=kb)
+    else:
+        await update.message.reply_text(text,parse_mode="Markdown",reply_markup=kb)
     return ADD_PARTICIPANT
 
 async def ap_done_cb(update:Update,ctx:ContextTypes.DEFAULT_TYPE):
