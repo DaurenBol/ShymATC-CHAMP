@@ -540,7 +540,7 @@ function openPlayer(playerName, eventId) {
   }).join('');
 
   const _playedSetForTab = new Set();
-  (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).forEach(m=>{
+  allMatches(ev).forEach(m=>{
     const key = [m.home,m.away].sort().join('|||');
     _playedSetForTab.add(key);
   });
@@ -606,7 +606,7 @@ function plTab(type, evId, playerName, btn) {
     if(!ev) return;
     const ps = new Set(ev.participants||[]);
     const playedSet = new Set();
-    (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).forEach(m=>{
+    allMatches(ev).forEach(m=>{
       const key = [m.home,m.away].sort().join('|||');
       playedSet.add(key);
     });
@@ -655,7 +655,7 @@ function getTickerText() {
   if(mode === 'custom') return RAW_DATA?.ticker || '';
   if(!ev) return '';
   const ps = new Set(ev.participants||[]);
-  const played = (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away));
+  const played = allMatches(ev);
   if(mode === 'last_match') {
     if(!played.length) return '';
     const last = played[played.length-1];
@@ -712,7 +712,7 @@ function renderHome() {
   // Hero
   const heroWrap = document.getElementById('home-hero-wrap');
   if(first) {
-    const mp = (first.matches||[]).filter(m=>m.played).length;
+    const mp = allMatches(first).length;
     const icon = SPORT_ICONS[first.category] || '🏆';
     const venue = VENUE_ICONS[first.venue_type] || '📍';
     const typeLabel = TYPE_LABELS[first.event_type] || 'Событие';
@@ -747,12 +747,12 @@ function renderHome() {
   const statsEl = document.getElementById('home-stats');
   const totalMatches = events.reduce((s,e)=>{
     const ps = new Set(e.participants||[]);
-    return s+(e.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).length;
+    return s+allMatches(e).length;
   },0);
   const lastMatch = (() => {
     if(!first) return null;
     const ps = new Set(first.participants||[]);
-    const played = (first.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away));
+    const played = allMatches(first);
     return played.length ? played[played.length-1] : null;
   })();
   const totalParticipants = [...new Set(events.flatMap(e=>e.participants||[]))].length;
@@ -771,7 +771,7 @@ function renderHome() {
   const topMatch = (() => {
     if(!first) return null;
     const ps = new Set(first.participants||[]);
-    const played = (first.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away));
+    const played = allMatches(first);
     if(!played.length) return null;
     return played.reduce((best,m)=>(m.score_home+m.score_away)>(best.score_home+best.score_away)?m:best);
   })();
@@ -812,7 +812,7 @@ function renderHome() {
   listEl.innerHTML = events.map((e,i) => {
     const icon = SPORT_ICONS[e.category] || '🏆';
     const ps = new Set(e.participants||[]);
-    const mp = (e.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).length;
+    const mp = allMatches(e).length;
     const badge = e.active
       ? `<div class="badge badge-live">Live</div>`
       : `<div class="badge badge-done">Done</div>`;
@@ -906,8 +906,8 @@ function calcGroupStandings(eventIds) {
   allParticipants.forEach(p => { st[p]={name:p,p:0,w:0,d:0,l:0,gf:0,ga:0}; });
   events.forEach(ev => {
     const ps = new Set(ev.participants||[]);
-    (ev.matches||[]).forEach(m => {
-      if(!m.played || !ps.has(m.home) || !ps.has(m.away)) return;
+    allMatches(ev).forEach(m => {
+      if(!m.played) return;
       const {home:h,away:a,score_home:sh,score_away:sa} = m;
       if(st[h]){st[h].p++;st[h].gf+=sh;st[h].ga+=sa;}
       if(st[a]){st[a].p++;st[a].gf+=sa;st[a].ga+=sh;}
@@ -1026,20 +1026,24 @@ function renderEventTable(ev, container) {
 function renderMatches() {
   const events = RAW_DATA?.events || [];
   const content = document.getElementById('matches-content');
-  const allMatches = [];
-  events.forEach(ev => {
-    const ps = new Set(ev.participants||[]);
-    (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away)).forEach(m => allMatches.unshift({...m, eventName: ev.name}));
-  });
-  if(!allMatches.length) {
+
+  const hasAny = events.some(ev => allMatches(ev).length > 0);
+  if(!hasAny) {
     content.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);font-family:'DM Mono',monospace;font-size:12px;">Матчей пока нет</div>`;
     return;
   }
-  content.innerHTML = `<div class="ms-lbl">🏁 Последние результаты</div>` +
-    allMatches.map(m => {
-      const hw=m.score_home>m.score_away, aw=m.score_away>m.score_home;
+
+  let html = '';
+  events.forEach(ev => {
+    const matches = allMatches(ev).slice().reverse(); // новейшие сверху
+    if(!matches.length) return;
+    const icon = SPORT_ICONS[ev.category] || '🏆';
+    html += `<div class="ms-lbl">${icon} ${ev.name}</div>`;
+    html += matches.map(m => {
+      const hw = m.score_home > m.score_away, aw = m.score_away > m.score_home;
+      const roundLabel = m._round_name ? ` · ${m._round_name}` : '';
       return `<div class="match-card">
-        <div class="m-date">${m.date||''} · ${m.eventName}</div>
+        <div class="m-date">${m.date||''}${roundLabel}</div>
         <div class="m-body">
           <div class="m-team m-home ${hw?'mw':'ml'}">${m.home}</div>
           <div class="m-score">${m.score_home} : ${m.score_away}</div>
@@ -1047,6 +1051,9 @@ function renderMatches() {
         </div>
       </div>`;
     }).join('');
+  });
+
+  content.innerHTML = html;
 }
 
 // ── STATS ──
@@ -1108,7 +1115,7 @@ function renderStatBlock(ev, ps, label) {
         const pts=r.w*3+r.d;
         const c=COLORS[i%COLORS.length], bg=BGS[i%BGS.length];
         const done = ev.participants.filter(o=>o!==r.name).every(o=>new Set(
-          (ev.matches||[]).filter(m=>m.played&&ps.has(m.home)&&ps.has(m.away)).map(m=>[m.home,m.away].sort().join('|||'))
+          allMatches(ev).map(m=>[m.home,m.away].sort().join('|||'))
         ).has([r.name,o].sort().join('|||')));
         return `<div class="sc-row">
           <div class="sc-rk">${medal(i)}</div>
@@ -1141,7 +1148,7 @@ function renderStats() {
     const allParticipants = [...new Set(groupEvents.flatMap(e=>e.participants||[]))];
     const allMatches = groupEvents.flatMap(ev => {
       const ps = new Set(ev.participants||[]);
-      return (ev.matches||[]).filter(m=>m.played && ps.has(m.home) && ps.has(m.away));
+      return allMatches(ev);
     });
     const virtualEv = {id:'grp_'+group.id, name:group.name, category:'other', participants:allParticipants, matches:allMatches};
     const ps = new Set(allParticipants);
