@@ -561,6 +561,14 @@
               "score_away": 6,
               "played": true,
               "date": "06.04.2026"
+            },
+            {
+              "home": "Акмаль",
+              "away": "Ерлан",
+              "score_home": 7,
+              "score_away": 0,
+              "played": true,
+              "date": "06.04.2026"
             }
           ]
         },
