@@ -608,6 +608,6 @@
     2070550,
     552027474
   ],
-  "ticker_mode": "last_match",
+  "ticker_mode": "rounds_progress",
   "groups": []
 }
