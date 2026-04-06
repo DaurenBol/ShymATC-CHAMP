@@ -380,7 +380,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
             Tournament Operator&nbsp;<span style="color:var(--accent2);letter-spacing:2px;transition:color .3s;">ЕСЫМХАН</span>
           </div>
           <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:2px;transition:color .3s;">
-            v5.8
+            v5.9
           </div>
         </div>
       </div>
@@ -730,6 +730,20 @@ function getTickerText() {
     const dirty = ev.dirty_player;
     if(!dirty) return '';
     return `😈 САМЫЙ ГРЯЗНЫЙ ИГРОК ПО МНЕНИЮ УЧАСТНИКОВ: ${dirty.toUpperCase()}`;
+  }
+  if(mode === 'rounds_progress') {
+    const rounds = ev.rounds||[];
+    const n = ev.participants.length;
+    const totalPairs = Math.round(n*(n-1)/2);
+    if(!rounds.length || !totalPairs) return '';
+    const parts = rounds.map(r => {
+      const rSet = new Set((r.matches||[]).filter(m=>m.played&&ps.has(m.home)&&ps.has(m.away)).map(m=>[m.home,m.away].sort().join('|||')));
+      const played = rSet.size;
+      const rem = totalPairs - played;
+      const pct = Math.round(played/totalPairs*100);
+      return `${r.name.toUpperCase()}: ${played}/${totalPairs} (${pct}%) — ОСТАЛОСЬ ${rem}`;
+    });
+    return `📊 ${ev.name.toUpperCase()} — ${parts.join(' ◆ ')}`;
   }
   return '';
 }
