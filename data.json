@@ -553,6 +553,14 @@
               "score_away": 2,
               "played": true,
               "date": "03.04.2026"
+            },
+            {
+              "home": "Ерлан",
+              "away": "Бақберген",
+              "score_home": 1,
+              "score_away": 6,
+              "played": true,
+              "date": "06.04.2026"
             }
           ]
         },
