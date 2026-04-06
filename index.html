@@ -1154,32 +1154,42 @@ function renderStatBlock(ev, ps, label) {
     </div>`;
   }
   const n = ev.participants.length;
+  const rounds = ev.rounds||[];
   const totalPairs = Math.round(n*(n-1)/2);
   if(totalPairs > 0) {
+    const isMultiRound = rounds.length > 1;
+    // Для общей (multi-round): считаем слоты = пары × кол-во раундов
+    const totalSlots = isMultiRound ? totalPairs * rounds.length : totalPairs;
     const playedMatches = allMatches(ev);
+    const playedSlots = playedMatches.length; // каждый сыгранный матч = один слот
+    // Уникальные пары сыгравшие хотя бы раз (для одиночного режима)
     const playedPairsSet = new Set();
     playedMatches.forEach(m=>{ playedPairsSet.add([m.home,m.away].sort().join('|||')); });
-    const playedPairs = playedPairsSet.size;
-    const remainingPairs = totalPairs - playedPairs;
-    const pct = Math.round(playedPairs/totalPairs*100);
+    const playedPairs = isMultiRound ? playedSlots : playedPairsSet.size;
+    const totalForCalc = isMultiRound ? totalSlots : totalPairs;
+    const remainingPairs = totalForCalc - playedPairs;
+    const pct = Math.round(playedPairs/totalForCalc*100);
+    // Для unplayed — по раундам
     const unplayed = [];
-    for(let i=0;i<ev.participants.length;i++)
-      for(let j=i+1;j<ev.participants.length;j++){
-        const key=[ev.participants[i],ev.participants[j]].sort().join('|||');
-        if(!playedPairsSet.has(key)) unplayed.push([ev.participants[i],ev.participants[j]]);
-      }
+    if(!isMultiRound) {
+      for(let i=0;i<ev.participants.length;i++)
+        for(let j=i+1;j<ev.participants.length;j++){
+          const key=[ev.participants[i],ev.participants[j]].sort().join('|||');
+          if(!playedPairsSet.has(key)) unplayed.push([ev.participants[i],ev.participants[j]]);
+        }
+    }
     const completedPlayers = ev.participants.filter(p=>ev.participants.filter(o=>o!==p).every(o=>playedPairsSet.has([p,o].sort().join('|||'))));
     const uid = ev.id+'-'+Math.random().toString(36).slice(2);
     const pairsListId='pairs-list-'+uid, pairsArrId='pairs-arr-'+uid;
     const unplayedHtml = unplayed.map(([a,b])=>`<div class="pb-pair"><span class="pb-pair-names">${a}<span class="pb-pair-sep">vs</span>${b}</span><span class="pb-pair-badge">не играли</span></div>`).join('');
     html += `<div class="prog-block">
       <div class="pb-nums">
-        <div class="pb-n"><div class="pb-val" style="color:var(--accent2)">${playedPairs}</div><div class="pb-lbl">сыграли</div></div>
+        <div class="pb-n"><div class="pb-val" style="color:var(--accent2)">${playedPairs}</div><div class="pb-lbl">${isMultiRound?'матчей':'сыграли'}</div></div>
         <div class="pb-n"><div class="pb-val" style="color:var(--accent3)">${remainingPairs}</div><div class="pb-lbl">осталось</div></div>
-        <div class="pb-n"><div class="pb-val" style="color:var(--text3)">${totalPairs}</div><div class="pb-lbl">всего пар</div></div>
+        <div class="pb-n"><div class="pb-val" style="color:var(--text3)">${totalForCalc}</div><div class="pb-lbl">${isMultiRound?'всего матчей':'всего пар'}</div></div>
       </div>
       <div class="pb-bar-outer"><div class="pb-bar-inner" style="width:${pct}%"></div></div>
-      <div class="pb-footer"><div class="pb-pct">${pct}% пар сыграли</div><div class="pb-sub">${n} участников</div></div>
+      <div class="pb-footer"><div class="pb-pct">${pct}% ${isMultiRound?'матчей':'пар'} сыграли</div><div class="pb-sub">${n} участников · ${rounds.length} круга</div></div>
       ${(()=>{
         const rounds = ev.rounds||[];
         if(rounds.length > 1) {
