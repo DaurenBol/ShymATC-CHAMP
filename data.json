@@ -631,6 +631,14 @@
               "score_away": 3,
               "played": true,
               "date": "07.04.2026"
+            },
+            {
+              "home": "Алмат",
+              "away": "Мейірлан",
+              "score_home": 2,
+              "score_away": 3,
+              "played": true,
+              "date": "07.04.2026"
             }
           ]
         },
