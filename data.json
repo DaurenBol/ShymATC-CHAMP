@@ -599,6 +599,14 @@
               "score_away": 3,
               "played": true,
               "date": "07.04.2026"
+            },
+            {
+              "home": "Али",
+              "away": "Қазбек",
+              "score_home": 5,
+              "score_away": 8,
+              "played": true,
+              "date": "07.04.2026"
             }
           ]
         },
