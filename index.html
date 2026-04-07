@@ -1308,8 +1308,8 @@ function renderStats() {
       html += `<div style="margin-bottom:6px;padding:8px 14px;font-family:'DM Mono',monospace;font-size:13px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">${ev.name}</div>`;
       html += renderStatBlock(ev, ps, 'Общая — все раунды');
       html += `<div style="height:12px;"></div>`;
-      // Затем каждый раунд
-      rounds.forEach(r => {
+      // Затем каждый раунд — последний (актуальный) сверху
+      rounds.slice().reverse().forEach(r => {
         const rMatches = roundMatches(ev, r.id);
         const virtualEv = {...ev, rounds:[{...r, matches: r.matches}]};
         html += `<div style="margin-bottom:4px;padding:6px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;">${r.name}</div>`;
