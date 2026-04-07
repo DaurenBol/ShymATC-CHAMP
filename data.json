@@ -615,6 +615,14 @@
               "score_away": 2,
               "played": true,
               "date": "07.04.2026"
+            },
+            {
+              "home": "Ерлан",
+              "away": "Қазбек",
+              "score_home": 5,
+              "score_away": 3,
+              "played": true,
+              "date": "07.04.2026"
             }
           ]
         },
