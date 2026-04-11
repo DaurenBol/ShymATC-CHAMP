@@ -663,7 +663,9 @@
           "name": "Круг 2",
           "matches": []
         }
-      ]
+      ],
+      "dirty_player": "Ерлан",
+      "dirty_label": "Underdog"
     }
   ],
   "admins": [
