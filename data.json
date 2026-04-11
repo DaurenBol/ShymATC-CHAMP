@@ -682,7 +682,12 @@
         }
       ],
       "dirty_player": "Ерлан",
-      "dirty_label": "Underdog"
+      "dirty_label": "Underdog",
+      "round_teams": {
+        "2": {
+          "Мақсат М": "МЮ"
+        }
+      }
     }
   ],
   "admins": [
