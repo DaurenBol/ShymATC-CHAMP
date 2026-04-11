@@ -677,6 +677,14 @@
               "score_away": 0,
               "played": true,
               "date": "11.04.2026"
+            },
+            {
+              "home": "Азиз",
+              "away": "Қазбек",
+              "score_home": 8,
+              "score_away": 2,
+              "played": true,
+              "date": "11.04.2026"
             }
           ]
         }
