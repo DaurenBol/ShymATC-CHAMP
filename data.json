@@ -685,6 +685,14 @@
               "score_away": 2,
               "played": true,
               "date": "11.04.2026"
+            },
+            {
+              "home": "Абылай",
+              "away": "Қазбек",
+              "score_home": 7,
+              "score_away": 0,
+              "played": true,
+              "date": "11.04.2026"
             }
           ]
         }
