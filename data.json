@@ -661,7 +661,16 @@
         {
           "id": 2,
           "name": "Круг 2",
-          "matches": []
+          "matches": [
+            {
+              "home": "Ерлан",
+              "away": "Мақсат М",
+              "score_home": 2,
+              "score_away": 3,
+              "played": true,
+              "date": "11.04.2026"
+            }
+          ]
         }
       ],
       "dirty_player": "Ерлан",
