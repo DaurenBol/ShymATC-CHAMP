@@ -647,6 +647,14 @@
               "score_away": 4,
               "played": true,
               "date": "11.04.2026"
+            },
+            {
+              "home": "Мақсат М",
+              "away": "Ерлан",
+              "score_home": 5,
+              "score_away": 6,
+              "played": true,
+              "date": "11.04.2026"
             }
           ]
         },
