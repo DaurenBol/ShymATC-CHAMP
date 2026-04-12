@@ -754,28 +754,17 @@
       "active": true,
       "participants": [
         "таоо",
-        "ууу",
         "🏠 Вернуться в меню"
       ],
       "participant_teams": {
         "таоо": "не определено",
-        "ууу": "не определено",
         "🏠 Вернуться в меню": "не определено"
       },
       "rounds": [
         {
           "id": 1,
           "name": "Круг 1",
-          "matches": [
-            {
-              "home": "ууу",
-              "away": "таоо",
-              "score_home": 2,
-              "score_away": 1,
-              "played": true,
-              "date": "12.04.2026"
-            }
-          ]
+          "matches": []
         }
       ],
       "created_at": "12.04.2026 13:26"
