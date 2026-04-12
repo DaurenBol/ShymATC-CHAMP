@@ -740,28 +740,6 @@
           "Алмат": "Астон Вилла"
         }
       }
-    },
-    {
-      "id": "ev_002",
-      "name": "тест2",
-      "event_type": "league",
-      "category": "football",
-      "participation_format": "individual",
-      "venue_type": "playstation",
-      "date_start": "",
-      "date_end": "",
-      "rules": "",
-      "active": true,
-      "participants": [],
-      "participant_teams": {},
-      "rounds": [
-        {
-          "id": 1,
-          "name": "Круг 1",
-          "matches": []
-        }
-      ],
-      "created_at": "12.04.2026 13:26"
     }
   ],
   "admins": [
