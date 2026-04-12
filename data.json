@@ -752,12 +752,8 @@
       "date_end": "",
       "rules": "",
       "active": true,
-      "participants": [
-        "таоо"
-      ],
-      "participant_teams": {
-        "таоо": "не определено"
-      },
+      "participants": [],
+      "participant_teams": {},
       "rounds": [
         {
           "id": 1,
