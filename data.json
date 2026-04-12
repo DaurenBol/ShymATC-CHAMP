@@ -766,7 +766,16 @@
         {
           "id": 1,
           "name": "Круг 1",
-          "matches": []
+          "matches": [
+            {
+              "home": "ууу",
+              "away": "таоо",
+              "score_home": 2,
+              "score_away": 1,
+              "played": true,
+              "date": "12.04.2026"
+            }
+          ]
         }
       ],
       "created_at": "12.04.2026 13:26"
