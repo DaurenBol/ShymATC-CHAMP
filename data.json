@@ -733,6 +733,14 @@
               "score_away": 2,
               "played": true,
               "date": "13.04.2026"
+            },
+            {
+              "home": "Мақсат С",
+              "away": "Алмат",
+              "score_home": 8,
+              "score_away": 1,
+              "played": true,
+              "date": "13.04.2026"
             }
           ]
         }
