@@ -717,6 +717,14 @@
               "score_away": 5,
               "played": true,
               "date": "11.04.2026"
+            },
+            {
+              "home": "Мақсат С",
+              "away": "Есімхан",
+              "score_home": 2,
+              "score_away": 5,
+              "played": true,
+              "date": "13.04.2026"
             }
           ]
         }
