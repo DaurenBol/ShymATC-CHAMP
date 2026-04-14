@@ -781,6 +781,14 @@
               "score_away": 3,
               "played": true,
               "date": "14.04.2026"
+            },
+            {
+              "home": "Есімхан",
+              "away": "Максим",
+              "score_home": 4,
+              "score_away": 1,
+              "played": true,
+              "date": "14.04.2026"
             }
           ]
         }
