@@ -757,6 +757,14 @@
               "score_away": 4,
               "played": true,
               "date": "14.04.2026"
+            },
+            {
+              "home": "Мақсат С",
+              "away": "Максим",
+              "score_home": 6,
+              "score_away": 4,
+              "played": true,
+              "date": "14.04.2026"
             }
           ]
         }
