@@ -813,6 +813,14 @@
               "score_away": 3,
               "played": true,
               "date": "14.04.2026"
+            },
+            {
+              "home": "Максим",
+              "away": "Алмат",
+              "score_home": 7,
+              "score_away": 5,
+              "played": true,
+              "date": "14.04.2026"
             }
           ]
         }
