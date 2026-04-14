@@ -391,7 +391,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple
       <div class="footer-credit">
         <div class="footer-line"><span></span>Created by <b>DAUREN BOL</b><span></span></div>
         <div class="footer-line">Tournament Operator <b>ЕСЫМХАН</b></div>
-        <div class="footer-line" style="opacity:.4">v6.1</div>
+        <div class="footer-line" style="opacity:.4">v6.2</div>
       </div>
     </div>
   </div>
@@ -684,7 +684,7 @@ function renderHome(){
   const heroWrap=document.getElementById('home-hero-wrap');
   if(first){const mp=allMatches(first).length;const icon=SPORT_ICONS[first.category]||svgi(SVG.trophy,18);const venue=VENUE_ICONS[first.venue_type]||svgi(SVG.pin,14);const typeLabel=TYPE_LABELS[first.event_type]||'Событие';
     heroWrap.innerHTML=`<div class="hero-card"><div class="hero-bg"></div><div class="hero-eyebrow">${icon} ${typeLabel}</div><div class="hero-title">${first.name}</div><div class="hero-sub">${venue} ${first.venue_type||''} · ${first.participants.length} участников</div>
-    <div class="hero-stats"><div class="hero-stat glass"><div class="hero-stat-val">${first.participants.length}</div><div class="hero-stat-lbl">Участников</div></div><div class="hero-stat glass"><div class="hero-stat-val">${mp}</div><div class="hero-stat-lbl">Матчей</div></div><div class="hero-stat glass"><div class="hero-stat-val">${active.length}</div><div class="hero-stat-lbl">Событий</div></div></div></div>`;}
+    <div class="hero-stats"><div class="hero-stat glass"><div class="hero-stat-val">${first.participants.length}</div><div class="hero-stat-lbl">Участников</div></div><div class="hero-stat glass"><div class="hero-stat-val">${mp}</div><div class="hero-stat-lbl">Матчей</div></div><div class="hero-stat glass"><div class="hero-stat-val">${(()=>{const n=first.participants.length;const perRound=Math.round(n*(n-1)/2);const rounds=(first.rounds||[]).length;return Math.max(0,perRound*rounds-mp);})()}</div><div class="hero-stat-lbl">Осталось</div></div></div></div>`;}
   else{heroWrap.innerHTML=`<div class="hero-card"><div class="hero-bg"></div><div class="hero-eyebrow">Нет активных</div><div class="hero-title">ShymATC-CHAMP</div><div class="hero-sub">Создай событие через бота</div></div>`;}
 
   // Live match — rotate all matches from last play day
