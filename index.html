@@ -6,7 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>ShymATC-CHAMP</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ── THEME TOKENS ── */
 [data-theme="dark"] {
@@ -43,7 +45,7 @@
 /* ── RESET ── */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;}
-body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,sans-serif;transition:background .25s,color .25s;}
+body{background:var(--bg);color:var(--text);font-family:'Manrope',system-ui,-apple-system,sans-serif;font-optical-sizing:auto;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;transition:background .25s,color .25s;}
 
 /* ── HEADER ── */
 .header{position:fixed;top:0;left:0;right:0;height:54px;background:var(--header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100;transition:background .25s,border-color .25s;}
@@ -136,13 +138,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple
 .hero-card::before{content:'';position:absolute;top:-30px;left:-30px;width:120px;height:120px;
   background:radial-gradient(circle,var(--primary-dim) 0%,transparent 70%);animation:glowPulse 6s ease-in-out infinite;pointer-events:none;}
 .hero-eyebrow{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:4px;position:relative;z-index:1;}
-.hero-title{font-size:26px;font-weight:900;letter-spacing:-.4px;margin-bottom:2px;position:relative;z-index:1;}
+.hero-title{font-size:26px;font-weight:800;letter-spacing:-.4px;margin-bottom:2px;position:relative;z-index:1;}
 .hero-sub{font-size:14px;color:var(--text2);margin-bottom:14px;font-weight:500;position:relative;z-index:1;}
 .hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;position:relative;z-index:1;}
 .hero-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 6px;text-align:center;
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:all .25s;}
 [data-theme="light"] .hero-stat{background:rgba(255,255,255,.65);border-color:rgba(255,255,255,.5);}
-.hero-stat-val{font-size:24px;font-weight:900;color:var(--primary);line-height:1;}
+.hero-stat-val{font-size:24px;font-weight:800;color:var(--primary);line-height:1;}
 .hero-stat-lbl{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-top:2px;}
 
 /* ── HOME: LIVE MATCH ── */
@@ -160,7 +162,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple
 .lm-badge img{width:28px;height:28px;object-fit:contain;}
 .lm-name{font-size:14px;font-weight:700;text-align:center;max-width:85px;line-height:1.2;color:var(--text);transition:color .25s;}
 .lm-score-wrap{text-align:center;}
-.lm-score{font-size:38px;font-weight:900;letter-spacing:2px;color:var(--text);}
+.lm-score{font-size:38px;font-weight:800;letter-spacing:2px;color:var(--text);}
 .lm-score-sub{font-size:11px;color:var(--text3);margin-top:1px;font-weight:500;}
 
 /* ── HOME: STAT CARDS ── */
@@ -172,7 +174,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple
 .stat-card:nth-child(3)::before{background:var(--green);}
 .stat-card:nth-child(4)::before{background:var(--gold);}
 .stat-lbl{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.3px;text-transform:uppercase;margin-bottom:4px;transition:color .25s;}
-.stat-val{font-size:29px;font-weight:900;line-height:1;}
+.stat-val{font-size:29px;font-weight:800;line-height:1;}
 .stat-card:nth-child(1) .stat-val{color:var(--primary);}
 .stat-card:nth-child(2) .stat-val{color:var(--accent);}
 .stat-card:nth-child(3) .stat-val{color:var(--green);}
@@ -213,7 +215,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple
 .t-badge{width:18px;height:18px;object-fit:contain;flex-shrink:0;}
 .t-nm{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .25s;}
 .cn{font-size:13px;font-weight:600;color:var(--text2);text-align:center;transition:color .25s;}
-.cp{font-size:18px;font-weight:900;text-align:center;color:var(--primary);}
+.cp{font-size:18px;font-weight:800;text-align:center;color:var(--primary);}
 .gp{color:var(--green)!important;}.gn{color:var(--accent)!important;}
 .legend{display:flex;gap:10px;margin:8px 16px 0;flex-wrap:wrap;}
 .leg-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3);font-weight:500;}
@@ -239,7 +241,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple
 .m-badge{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);transition:all .25s;}
 .m-badge img{width:18px;height:18px;object-fit:contain;}
 .m-badge-txt{font-size:11px;font-weight:800;}
-.m-score{font-size:24px;font-weight:900;text-align:center;color:var(--text);min-width:56px;padding:3px 6px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);transition:all .25s;}
+.m-score{font-size:24px;font-weight:800;text-align:center;color:var(--text);min-width:56px;padding:3px 6px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);transition:all .25s;}
 .mw{color:var(--text)!important;}.ml{color:var(--text3)!important;}
 
 /* ── STATS ── */
@@ -257,7 +259,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple
 .prog-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px;transition:all .25s;}
 .pb-nums{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:12px 12px 8px;}
 .pb-n{text-align:center;}
-.pb-val{font-size:26px;font-weight:900;line-height:1;}
+.pb-val{font-size:26px;font-weight:800;line-height:1;}
 .pb-lbl{font-size:11px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;color:var(--text3);margin-top:2px;}
 .pb-bar-outer{height:4px;background:var(--surface3);margin:0 12px 6px;border-radius:3px;overflow:hidden;}
 .pb-bar-inner{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--primary),#6aa3ff);transition:width .8s ease;position:relative;overflow:hidden;}
@@ -286,7 +288,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple
 .sc-inf{flex:1;}
 .sc-nm{font-size:16px;font-weight:700;margin-bottom:1px;transition:color .25s;}
 .sc-tm{font-size:12px;color:var(--text3);font-weight:500;}
-.sc-g{font-size:24px;font-weight:900;color:var(--primary);}
+.sc-g{font-size:24px;font-weight:800;color:var(--primary);}
 
 /* ── PLAYER ── */
 .player-profile-page{padding:0;}
@@ -302,7 +304,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple
 .pl-stats4{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:6px;}
 .pl-stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
 .pl-sc{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 4px;text-align:center;transition:all .25s;}
-.pl-sv{font-size:24px;font-weight:900;line-height:1;}
+.pl-sv{font-size:24px;font-weight:800;line-height:1;}
 .pl-sl{font-size:10px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--text3);margin-top:1px;}
 .pl-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--surface);transition:all .25s;}
 .pl-tab{flex:1;padding:9px;text-align:center;font-size:13px;font-weight:700;letter-spacing:.2px;text-transform:uppercase;cursor:pointer;color:var(--text3);border:none;background:none;border-bottom:2px solid transparent;transition:all .15s;font-family:inherit;}
@@ -320,7 +322,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple
 .pl-match-team{font-size:16px;font-weight:700;transition:color .25s;}
 .pl-match-you{color:var(--primary);}
 .pl-mh{text-align:right;}.pl-ma{text-align:left;}
-.pl-match-score{font-size:24px;font-weight:900;text-align:center;border-radius:8px;padding:2px 8px;min-width:54px;}
+.pl-match-score{font-size:24px;font-weight:800;text-align:center;border-radius:8px;padding:2px 8px;min-width:54px;}
 .pl-score-win{color:var(--green);background:var(--green-dim);}
 .pl-score-draw{color:var(--text2);background:var(--surface3);}
 .pl-score-lose{color:var(--accent);background:var(--accent-dim);}
@@ -342,6 +344,22 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple
 .footer-line{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;}
 .footer-line span{width:16px;height:1px;background:var(--border2);}
 .footer-line b{color:var(--primary);font-weight:700;}
+
+/* ── MINIMALIST TYPOGRAPHY REFINEMENTS ── */
+/* tighter, calmer hierarchy + tabular figures for all numeric/score values */
+.hero-stat-val,.lm-score,.lm-score-sub,.stat-val,.cn,.cp,.rk,.pb-val,.pb-pct,.sc-g,.sc-rk,
+.m-score,.pl-sv,.pl-match-score,.th{font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1,'cv11' 1;}
+/* big display numbers: tighten tracking for a refined, minimal look */
+.hero-stat-val,.stat-val,.lm-score,.pb-val,.sc-g,.m-score,.pl-sv,.pl-match-score{letter-spacing:-.5px;}
+.lm-score{letter-spacing:1px;}
+/* headings: tighter optical tracking, calmer line-height */
+.section-title{letter-spacing:-.4px;line-height:1.2;}
+.hero-title,.player-nm{letter-spacing:-.5px;line-height:1.15;}
+/* micro uppercase labels: lighten weight, keep readable tracking */
+.hero-eyebrow,.hero-stat-lbl,.stat-lbl,.pb-lbl,.pl-sl,.th,.cs-title,.group-col-title,
+.ms-lbl,.chart-title,.player-ev,.player-hdr-title,.footer-line{font-weight:600;}
+/* body copy: softer weight for a lighter, more minimal feel */
+.hero-sub,.stat-sub,.ev-meta,.sc-tm,.pb-sub{font-weight:400;}
 </style>
 </head>
 <body>
