@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex">
+<title>ShymATC-CHAMP · Админ</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ── THEME TOKENS (как на сайте) ── */
+[data-theme="dark"] {
+  --bg:#0c0c14; --surface:#14141f; --surface2:#1a1a28; --surface3:#22222f;
+  --border:rgba(255,255,255,.06); --border2:rgba(255,255,255,.1);
+  --primary:#4a8cff; --primary-dim:rgba(74,140,255,.12); --primary-solid:#3a7bf0;
+  --accent:#ef4444; --accent-dim:rgba(239,68,68,.12);
+  --green:#22c55e; --green-dim:rgba(34,197,94,.12);
+  --gold:#eab308; --gold-dim:rgba(234,179,8,.12);
+  --text:#e8eaf0; --text2:#8b8fa8; --text3:#55586e;
+  --shadow:0 1px 4px rgba(0,0,0,.4);
+  --header-bg:rgba(12,12,20,.92);
+}
+[data-theme="light"] {
+  --bg:#f0f1f5; --surface:#ffffff; --surface2:#f6f7fa; --surface3:#ecedf2;
+  --border:rgba(0,0,0,.06); --border2:rgba(0,0,0,.1);
+  --primary:#2563eb; --primary-dim:rgba(37,99,235,.08); --primary-solid:#1d4ed8;
+  --accent:#dc2626; --accent-dim:rgba(220,38,38,.08);
+  --green:#16a34a; --green-dim:rgba(22,163,74,.08);
+  --gold:#ca8a04; --gold-dim:rgba(202,138,4,.08);
+  --text:#0f172a; --text2:#64748b; --text3:#94a3b8;
+  --shadow:0 1px 3px rgba(0,0,0,.06);
+  --header-bg:rgba(255,255,255,.92);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,sans-serif;transition:background .25s,color .25s;}
+.header{position:fixed;top:0;left:0;right:0;height:54px;background:var(--header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100;}
+.logo{display:flex;align-items:center;gap:9px;cursor:pointer;}
+.logo-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--primary),#6aa3ff);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 2px 8px rgba(74,140,255,.3);font-size:16px;}
+.logo-text{font-weight:800;font-size:17px;letter-spacing:-.2px;}
+.logo-text span{color:var(--primary);}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+.hdr-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;color:var(--text);text-decoration:none;}
+.hdr-btn:active{transform:scale(.92);}
+.wrap{max-width:560px;margin:0 auto;padding:70px 14px 40px;}
+.section-title{font-size:21px;font-weight:800;letter-spacing:-.3px;padding:12px 2px 10px;display:flex;align-items:center;gap:8px;}
+.muted{color:var(--text2);font-size:13px;line-height:1.5;}
+.small{font-size:12px;color:var(--text3);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow);}
+.menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.menu-btn{display:flex;flex-direction:column;align-items:flex-start;gap:6px;background:var(--surface);border:1px solid var(--border2);border-radius:13px;padding:13px 12px;cursor:pointer;font-family:inherit;color:var(--text);text-align:left;transition:border-color .15s, background .15s;}
+.menu-btn:hover{border-color:var(--primary);background:var(--primary-dim);}
+.menu-btn .mi{font-size:21px;line-height:1;}
+.menu-btn .ml{font-size:13.5px;font-weight:700;}
+.menu-btn .ms{font-size:11px;color:var(--text3);font-weight:500;}
+.menu-btn.danger:hover{border-color:var(--accent);background:var(--accent-dim);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:10px;padding:11px 16px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--primary),#6aa3ff);color:#fff;box-shadow:0 2px 10px rgba(74,140,255,.25);transition:opacity .15s,transform .1s;}
+.btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn.sec{background:var(--surface3);color:var(--text);box-shadow:none;border:1px solid var(--border2);}
+.btn.danger{background:linear-gradient(135deg,var(--accent),#f87171);box-shadow:0 2px 10px rgba(239,68,68,.25);}
+.btn.green{background:linear-gradient(135deg,var(--green),#4ade80);box-shadow:0 2px 10px rgba(34,197,94,.25);}
+.btn.full{width:100%;}
+.btn-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;}
+input[type=text],input[type=password],input[type=number],textarea,select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:inherit;font-size:15px;padding:11px 12px;outline:none;transition:border-color .15s;}
+input:focus,textarea:focus,select:focus{border-color:var(--primary);}
+textarea{resize:vertical;min-height:80px;}
+.opt-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
+.opt{border:1px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:9px;padding:9px 10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:left;}
+.opt.active{background:var(--primary-dim);border-color:var(--primary);color:var(--primary);}
+.list-item{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:11px 12px;margin-bottom:7px;cursor:pointer;transition:border-color .15s;}
+.list-item:hover{border-color:var(--primary);}
+.list-item .li-main{flex:1;min-width:0;}
+.list-item .li-title{font-size:14.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.list-item .li-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+.li-actions{display:flex;gap:6px;flex-shrink:0;}
+.icon-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text);}
+.icon-btn.danger{color:var(--accent);border-color:rgba(239,68,68,.35);}
+.badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.3px;}
+.badge.on{background:var(--green-dim);color:var(--green);}
+.badge.off{background:var(--surface3);color:var(--text3);}
+.badge.gold{background:var(--gold-dim);color:var(--gold);}
+table.stand{width:100%;border-collapse:collapse;font-size:13px;}
+table.stand th{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;text-align:center;padding:7px 4px;border-bottom:1px solid var(--border);}
+table.stand td{padding:8px 4px;text-align:center;border-bottom:1px solid var(--border);font-weight:600;}
+table.stand td.name,table.stand th.name{text-align:left;}
+table.stand tr:last-child td{border-bottom:none;}
+.pos{width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:var(--surface3);color:var(--text2);}
+tr:nth-child(1) .pos{background:var(--gold-dim);color:var(--gold);}
+.back-link{display:inline-flex;align-items:center;gap:5px;color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;margin-bottom:4px;background:none;border:none;font-family:inherit;}
+.back-link:hover{color:var(--primary);}
+.chip-row{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none;}
+.chip-row::-webkit-scrollbar{display:none;}
+.chip{flex-shrink:0;padding:7px 13px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);font-family:inherit;}
+.chip.active{background:linear-gradient(135deg,var(--primary),#6aa3ff);border-color:var(--primary);color:#fff;}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface3);border:1px solid var(--border2);color:var(--text);padding:11px 18px;border-radius:11px;font-size:14px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.35);transition:transform .25s;z-index:300;max-width:90vw;text-align:center;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+#toast.ok{border-color:rgba(34,197,94,.4);}
+#toast.err{border-color:rgba(239,68,68,.4);}
+.saving-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold);animation:blink 1s infinite;vertical-align:middle;margin-left:6px;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:18px;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.5);}
+.modal h3{font-size:16px;font-weight:800;margin-bottom:8px;}
+.modal p{font-size:13.5px;color:var(--text2);line-height:1.5;margin-bottom:14px;}
+.score-row{display:flex;align-items:center;gap:10px;justify-content:center;margin:8px 0;}
+.score-row input{width:70px;text-align:center;font-size:22px;font-weight:800;padding:10px 4px;}
+.score-vs{font-size:14px;font-weight:800;color:var(--text3);}
+.hint-box{background:var(--primary-dim);border:1px solid rgba(74,140,255,.25);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--text2);line-height:1.55;margin-bottom:12px;}
+.hint-box b{color:var(--text);}
+.hint-box a{color:var(--primary);}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo" onclick="go('home')">
+    <div class="logo-icon">⚙️</div>
+    <div class="logo-text">ShymATC<span>-CHAMP</span>&nbsp;<span style="color:var(--text3);font-weight:600;font-size:13px;">Админ</span></div>
+  </div>
+  <div class="hdr-right">
+    <span id="save-ind"></span>
+    <a class="hdr-btn" href="index.html" title="На сайт">🏠</a>
+    <button class="hdr-btn" id="theme-btn" title="Тема" onclick="toggleTheme()">🌙</button>
+    <button class="hdr-btn" id="logout-btn" title="Выйти" onclick="logout()" style="display:none;">🚪</button>
+  </div>
+</header>
+
+<div class="wrap" id="app"></div>
+<div id="toast"></div>
+
+<script>
+/* ══════════ КОНФИГ (как в bot.py) ══════════ */
+const GITHUB_REPO = "DaurenBol/ShymATC-CHAMP";
+const DATA_FILE   = "data.json";
+const BRANCH      = "main";
+const API = `https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE}`;
+
+const EVENT_TYPES = [["🏆 Турнир","tournament"],["🏅 Лига","league"],["🥇 Чемпионат","championship"],["🏆 Кубок","cup"],["⚡ Разовое","single"],["🤝 Встреча","meetup"],["🎯 Тренировка","training"],["📝 Регистрация","registration"],["🔧 Другое","other"]];
+const CATEGORIES  = [["⚽ Футбол","football"],["🎮 Киберфутбол","efootball"],["🥊 UFC","ufc"],["♟ Шахматы","chess"],["🎾 Теннис","tennis"],["🏀 Баскетбол","basketball"],["💼 Бизнес","business"],["🎓 Обучение","education"],["✏️ Другое","other_cat"]];
+const FORMATS     = [["👤 Индивидуальный","individual"],["👥 Командный","team"],["👫 Парный","pair"],["👨‍👩‍👧‍👦 Групповой","group"],["🔀 Смешанный","mixed"]];
+const VENUES      = [["📍 Офлайн","offline"],["🌐 Онлайн","online"],["🎮 PlayStation","playstation"],["💻 PC","pc"],["🎯 Xbox","xbox"],["📱 Mobile","mobile"],["✈️ Telegram","telegram"],["📹 Zoom","zoom"],["🔧 Другое","other_venue"]];
+const TICKER_MODES = [["last_match","⚽ Последний матч"],["leader","🏆 Лидер турнира"],["top_scorer","🎯 Лучший бомбардир"],["top_match","🔥 Самый результативный матч"],["dirty","😈 Грязный игрок"],["rounds_progress","📊 Прогресс кругов"]];
+
+/* ══════════ СОСТОЯНИЕ ══════════ */
+let TOKEN = localStorage.getItem("shym_gh_token") || "";
+let DATA = null, SHA = null, SAVING = false;
+
+/* ══════════ УТИЛИТЫ ══════════ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function lbl(items,val){const f=items.find(([l,v])=>v===val);return f?f[0]:val;}
+function toast(msg, cls){const t=$("toast");t.textContent=msg;t.className=cls||"";t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2600);}
+function today(){const d=new Date();return String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+"."+d.getFullYear();}
+function b64encode(str){const bytes=new TextEncoder().encode(str);let bin="";bytes.forEach(b=>bin+=String.fromCharCode(b));return btoa(bin);}
+function b64decode(b64){const bin=atob(b64.replace(/\n/g,""));const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));return new TextDecoder().decode(bytes);}
+
+/* ── Тема ── */
+function applyTheme(t){document.documentElement.setAttribute("data-theme",t);$("theme-btn").textContent=t==="dark"?"🌙":"☀️";localStorage.setItem("shym_admin_theme",t);}
+function toggleTheme(){applyTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark");}
+
+/* ── Данные (логика из bot.py) ── */
+function migrateEvent(ev){if(!("rounds" in ev)){const old=ev.matches||[];delete ev.matches;ev.rounds=[{id:1,name:"Круг 1",matches:old}];}return ev;}
+function genId(){let i=1;const ids=(DATA.events||[]).map(e=>e.id);while(ids.includes(`ev_${String(i).padStart(3,"0")}`))i++;return `ev_${String(i).padStart(3,"0")}`;}
+function genGroupId(){let i=1;const ids=(DATA.groups||[]).map(g=>g.id);while(ids.includes(`grp_${String(i).padStart(3,"0")}`))i++;return `grp_${String(i).padStart(3,"0")}`;}
+function getEvent(eid){return (DATA.events||[]).find(e=>e.id===eid);}
+function getRound(ev,rid){return (ev.rounds||[]).find(r=>r.id===rid);}
+function allMatches(ev){const ps=new Set(ev.participants||[]);const out=[];(ev.rounds||[]).forEach(r=>(r.matches||[]).forEach(m=>{if(m.played&&ps.has(m.home)&&ps.has(m.away))out.push({...m,_rid:r.id,_rname:r.name});}));return out;}
+function calcStandingsFrom(participants,matches){
+  const st={};participants.forEach(p=>st[p]={name:p,p:0,w:0,d:0,l:0,gf:0,ga:0});
+  matches.forEach(m=>{if(!m.played)return;const{home:h,away:a,score_home:sh,score_away:sa}=m;
+    [[h,sh,sa],[a,sa,sh]].forEach(([n,gf,ga])=>{if(st[n]){st[n].p++;st[n].gf+=gf;st[n].ga+=ga;}});
+    if(sh>sa){if(st[h])st[h].w++;if(st[a])st[a].l++;}
+    else if(sh<sa){if(st[a])st[a].w++;if(st[h])st[h].l++;}
+    else{if(st[h])st[h].d++;if(st[a])st[a].d++;}});
+  return Object.values(st).sort((x,y)=>(y.w*3+y.d)-(x.w*3+x.d)||(y.gf-y.ga)-(x.gf-x.ga));
+}
+function calcStandings(ev){return calcStandingsFrom(ev.participants||[],allMatches(ev));}
+function activeEvents(){return (DATA.events||[]).filter(e=>e.active);}
+
+/* ── GitHub API ── */
+function ghHeaders(){return {"Authorization":"token "+TOKEN,"Accept":"application/vnd.github.v3+json"};}
+async function apiLoad(){
+  const r = await fetch(`${API}?ref=${BRANCH}&t=${Date.now()}`,{headers:ghHeaders()});
+  if(r.status===401||r.status===403) throw new Error("AUTH");
+  if(!r.ok) throw new Error("Ошибка загрузки: "+r.status);
+  const c = await r.json();
+  SHA = c.sha;
+  DATA = JSON.parse(b64decode(c.content));
+  (DATA.events||[]).forEach(migrateEvent);
+  if(!DATA.events) DATA.events=[];
+}
+async function apiSave(msg){
+  const payload = {message: msg||"update via web-admin", content: b64encode(JSON.stringify(DATA,null,2)), branch: BRANCH};
+  if(SHA) payload.sha = SHA;
+  const r = await fetch(API,{method:"PUT",headers:{...ghHeaders(),"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  if(r.status===409){await apiLoad();throw new Error("Конфликт версий — данные обновлены, повтори действие.");}
+  if(r.status===401||r.status===403) throw new Error("Нет доступа. Проверь токен (нужны права Contents: Read and write).");
+  if(!r.ok) throw new Error("Ошибка сохранения: "+r.status);
+  const j = await r.json();
+  SHA = j.content && j.content.sha || SHA;
+}
+async function save(okMsg, msg){
+  if(SAVING) return false;
+  SAVING = true; $("save-ind").innerHTML = '<span class="saving-dot"></span>';
+  try{ await apiSave(msg); toast(okMsg||"✅ Сохранено!","ok"); return true; }
+  catch(e){ toast("⚠️ "+e.message,"err"); return false; }
+  finally{ SAVING=false; $("save-ind").innerHTML=""; }
+}
+
+/* ══════════ НАВИГАЦИЯ ══════════ */
+function view(html){$("app").innerHTML = html; window.scrollTo(0,0);}
+function back(fn){return `<button class="back-link" onclick="${fn||"go('home')"}">◀️ Назад</button>`;}
+function go(screen, ...args){SCREENS[screen](...args);}
+
+/* ══════════ ЭКРАНЫ ══════════ */
+const SCREENS = {};
+
+/* ── Вход ── */
+SCREENS.login = () => {
+  $("logout-btn").style.display="none";
+  view(`
+  <div class="section-title">🔐 Вход в админ-панель</div>
+  <div class="card">
+    <div class="hint-box">
+      Это веб-версия телеграм-бота: те же функции — события, участники, матчи, бегущая строка.<br><br>
+      Для сохранения изменений нужен <b>GitHub-токен</b> с правом <b>Contents: Read and write</b> для репозитория <b>${GITHUB_REPO}</b>.<br>
+      Создать: <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com → Settings → Fine-grained tokens</a>
+    </div>
+    <div class="field">
+      <label>GitHub Token</label>
+      <input type="password" id="tok-input" placeholder="github_pat_… или ghp_…" value="${esc(TOKEN)}">
+    </div>
+    <button class="btn full" onclick="doLogin()">Войти</button>
+  </div>`);
+};
+async function doLogin(){
+  const t = $("tok-input").value.trim();
+  if(!t){toast("Введи токен","err");return;}
+  TOKEN = t;
+  try{
+    await apiLoad();
+    localStorage.setItem("shym_gh_token", TOKEN);
+    toast("👋 Добро пожаловать!","ok");
+    go("home");
+  }catch(e){
+    if(e.message==="AUTH") toast("⛔ Токен не подошёл. Проверь права доступа.","err");
+    else toast("⚠️ "+e.message,"err");
+  }
+}
+function logout(){localStorage.removeItem("shym_gh_token");TOKEN="";DATA=null;SHA=null;go("login");}
+
+/* ── Главное меню (как main_menu_kb в боте) ── */
+SCREENS.home = () => {
+  if(!DATA){go("login");return;}
+  $("logout-btn").style.display="";
+  const act = activeEvents().length, tot = (DATA.events||[]).length;
+  const menu = [
+    ["📋","События",`${tot} всего · ${act} активных`,"go('events')"],
+    ["📊","Таблица","турнирная таблица","go('standings')"],
+    ["➕","Создать событие","новый турнир / лига","go('newEvent')"],
+    ["👤","Участники","добавить / изменить","go('participants')"],
+    ["⚽","Добавить матч","внести результат","go('addMatch')"],
+    ["✏️","Редактировать","счёт, имена, команды","go('editMenu')"],
+    ["🔄","Круги","добавить / удалить круг","go('roundsMenu')"],
+    ["😈","Грязный игрок","карточка на сайте","go('dirty')"],
+    ["📢","Бегущая строка","текст на сайте","go('ticker')"],
+    ["🔗","Объединить события","общие группы","go('groups')"],
+    ["🏁","Завершить","закрыть событие","go('finish')"],
+    ["👑","Админы бота","Telegram ID","go('admins')"],
+  ];
+  view(`
+  <div class="section-title">🏆 Панель управления</div>
+  <div class="menu-grid">
+    ${menu.map(([i,l,s,fn])=>`<button class="menu-btn" onclick="${fn}"><span class="mi">${i}</span><span class="ml">${l}</span><span class="ms">${s}</span></button>`).join("")}
+    <button class="menu-btn danger" onclick="go('deleteEvent')"><span class="mi">🗑</span><span class="ml">Удалить событие</span><span class="ms">безвозвратно</span></button>
+    <button class="menu-btn danger" onclick="go('reset')"><span class="mi">💣</span><span class="ml">Сброс</span><span class="ms">очистить все данные</span></button>
+  </div>`);
+};
+
+/* ── Выбор события (общий помощник) ── */
+function eventPicker(title, events, onPickFn, backFn){
+  if(!events.length) return view(`${back(backFn)}<div class="section-title">${title}</div><div class="card muted">Нет подходящих событий.</div>`);
+  view(`${back(backFn)}<div class="section-title">${title}</div>
+    ${events.map(e=>`<div class="list-item" onclick="${onPickFn}('${e.id}')">
+      <div class="li-main"><div class="li-title">${esc(e.name)}</div>
+      <div class="li-sub">${lbl(EVENT_TYPES,e.event_type)} · ${(e.participants||[]).length} участников</div></div>
+      <span class="badge ${e.active?"on":"off"}">${e.active?"активно":"завершено"}</span>
+    </div>`).join("")}`);
+}
+
+/* ── 📋 События ── */
+SCREENS.events = () => {
+  const evs = DATA.events||[];
+  if(!evs.length) return view(`${back()}<div class="section-title">📋 События</div><div class="card muted">Событий пока нет. Создай первое!</div><button class="btn" onclick="go('newEvent')">➕ Создать событие</button>`);
+  view(`${back()}<div class="section-title">📋 События</div>
+    ${evs.map(e=>{
+      const played = allMatches(e).length;
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div style="font-size:16px;font-weight:800;">${esc(e.name)}</div>
+          <span class="badge ${e.active?"on":"off"}">${e.active?"активно":"завершено"}</span>
+        </div>
+        <div class="muted" style="margin-top:6px;">
+          ${lbl(EVENT_TYPES,e.event_type)} · ${lbl(CATEGORIES,e.category)} · ${lbl(VENUES,e.venue_type)}<br>
+          👥 ${(e.participants||[]).length} участников · ⚽ ${played} матчей · 🔄 ${(e.rounds||[]).length} круг(а)
+          ${e.date_start?`<br>📅 ${esc(e.date_start)}${e.date_end?" → "+esc(e.date_end):""}`:""}
+          ${e.dirty_player?`<br>😈 ${esc(e.dirty_label||"Грязный игрок")}: <b>${esc(e.dirty_player)}</b>`:""}
+        </div>
+        <div class="btn-row">
+          <button class="btn sec" onclick="go('standings','${e.id}')">📊 Таблица</button>
+          <button class="btn sec" onclick="renameEventPrompt('${e.id}')">✏️ Название</button>
+        </div>
+      </div>`;}).join("")}`);
+};
+
+/* ── 📊 Таблица ── */
+SCREENS.standings = (eid, rid) => {
+  const evs = DATA.events||[];
+  if(!evs.length) return view(`${back()}<div class="section-title">📊 Таблица</div><div class="card muted">Событий нет.</div>`);
+  const ev = getEvent(eid) || activeEvents()[0] || evs[0];
+  const rounds = ev.rounds||[];
+  const useRid = rid!==undefined ? rid : null;
+  const matches = useRid===null ? allMatches(ev) : allMatches(ev).filter(m=>m._rid===useRid);
+  const rows = calcStandingsFrom(ev.participants||[], matches);
+  view(`${back()}<div class="section-title">📊 ${esc(ev.name)}</div>
+    ${evs.length>1?`<div class="chip-row">${evs.map(e=>`<button class="chip ${e.id===ev.id?"active":""}" onclick="go('standings','${e.id}')">${esc(e.name)}</button>`).join("")}</div>`:""}
+    ${rounds.length>1?`<div class="chip-row">
+      <button class="chip ${useRid===null?"active":""}" onclick="go('standings','${ev.id}')">Общая</button>
+      ${rounds.map(r=>`<button class="chip ${useRid===r.id?"active":""}" onclick="go('standings','${ev.id}',${r.id})">${esc(r.name)}</button>`).join("")}
+    </div>`:""}
+    <div class="card">
+    ${rows.length?`<table class="stand">
+      <tr><th>#</th><th class="name">Игрок</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>ГЗ-ГП</th><th>О</th></tr>
+      ${rows.map((r,i)=>`<tr><td><span class="pos">${i+1}</span></td><td class="name">${esc(r.name)}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td>${r.gf}-${r.ga}</td><td><b>${r.w*3+r.d}</b></td></tr>`).join("")}
+    </table>`:`<div class="muted">Участников пока нет.</div>`}
+    </div>`);
+};
+
+/* ── ➕ Создать событие (мастер бота одной формой) ── */
+SCREENS.newEvent = () => {
+  view(`${back()}<div class="section-title">➕ Создать событие</div>
+  <div class="card">
+    <div class="field"><label>📌 Название</label><input type="text" id="ev-name" placeholder="Например: FC26 CHAMP"></div>
+    <div class="field"><label>🏷 Тип</label><div class="opt-grid" id="ev-type">${EVENT_TYPES.map(([l,v],i)=>`<button class="opt ${i===0?"active":""}" data-v="${v}">${l}</button>`).join("")}</div></div>
+    <div class="field"><label>🎯 Категория</label><div class="opt-grid" id="ev-cat">${CATEGORIES.map(([l,v],i)=>`<button class="opt ${i===0?"active":""}" data-v="${v}">${l}</button>`).join("")}</div></div>
+    <div class="field"><label>👥 Формат</label><div class="opt-grid" id="ev-fmt">${FORMATS.map(([l,v],i)=>`<button class="opt ${i===0?"active":""}" data-v="${v}">${l}</button>`).join("")}</div></div>
+    <div class="field"><label>📍 Площадка</label><div class="opt-grid" id="ev-ven">${VENUES.map(([l,v],i)=>`<button class="opt ${i===0?"active":""}" data-v="${v}">${l}</button>`).join("")}</div></div>
+    <div class="field"><label>📅 Дата начала (необязательно)</label><input type="text" id="ev-ds" placeholder="01.04.2026"></div>
+    <div class="field"><label>📅 Дата окончания (необязательно)</label><input type="text" id="ev-de" placeholder="30.04.2026"></div>
+    <div class="field"><label>📜 Правила (необязательно)</label><textarea id="ev-rules" placeholder="Круговая система, 3 очка за победу…"></textarea></div>
+    <button class="btn full" onclick="createNewEvent()">✅ Создать</button>
+  </div>`);
+  ["ev-type","ev-cat","ev-fmt","ev-ven"].forEach(id=>{
+    $(id).addEventListener("click",e=>{const b=e.target.closest(".opt");if(!b)return;$(id).querySelectorAll(".opt").forEach(o=>o.classList.remove("active"));b.classList.add("active");});
+  });
+};
+function pickVal(id){const b=$(id).querySelector(".opt.active");return b?b.dataset.v:"";}
+async function createNewEvent(){
+  const name = $("ev-name").value.trim();
+  if(!name){toast("Введи название","err");return;}
+  const d = new Date();
+  const created = today()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  DATA.events.push({
+    id: genId(), name,
+    event_type: pickVal("ev-type"), category: pickVal("ev-cat"),
+    participation_format: pickVal("ev-fmt"), venue_type: pickVal("ev-ven"),
+    date_start: $("ev-ds").value.trim(), date_end: $("ev-de").value.trim(),
+    rules: $("ev-rules").value.trim(), active: true,
+    participants: [], participant_teams: {},
+    rounds: [{id:1,name:"Круг 1",matches:[]}],
+    created_at: created,
+  });
+  if(await save(`🎉 «${name}» создано!`)) go("participants");
+  else DATA.events.pop();
+}
+
+/* ── 👤 Участники ── */
+SCREENS.participants = (eid) => {
+  const evs = activeEvents();
+  if(!eid){
+    if(evs.length===1) return SCREENS.participants(evs[0].id);
+    return eventPicker("👤 Выбери событие", evs, "pickPartEv", "go('home')");
+  }
+  const ev = getEvent(eid); if(!ev) return go("home");
+  const rounds = ev.rounds||[];
+  const rt = ev.round_teams||{}; const pt = ev.participant_teams||{};
+  const teamOf = p => {for(let i=rounds.length-1;i>=0;i--){const t=(rt[String(rounds[i].id)]||{})[p];if(t)return t;}return pt[p]||"";};
+  view(`${back()}<div class="section-title">👤 ${esc(ev.name)}</div>
+  <div class="card">
+    <div class="field"><label>Добавить участников (по одному в строке)</label>
+    <textarea id="ap-input" placeholder="Азамат&#10;Данияр&#10;Ерлан"></textarea></div>
+    <button class="btn full" onclick="addParticipants('${ev.id}')">➕ Добавить</button>
+  </div>
+  ${(ev.participants||[]).length?`<div class="section-title" style="font-size:15px;">Список (${ev.participants.length})</div>
+    ${ev.participants.map(p=>`<div class="list-item" style="cursor:default;">
+      <div class="li-main"><div class="li-title">${esc(p)}</div>${teamOf(p)?`<div class="li-sub">🎮 ${esc(teamOf(p))}</div>`:""}</div>
+      <div class="li-actions">
+        <button class="icon-btn" title="Переименовать" onclick="renameParticipant('${ev.id}',${JSON.stringify(p).replace(/"/g,"&quot;")})">✏️</button>
+        <button class="icon-btn" title="Команда" onclick="setTeam('${ev.id}',${JSON.stringify(p).replace(/"/g,"&quot;")})">🎮</button>
+        <button class="icon-btn danger" title="Удалить" onclick="removeParticipant('${ev.id}',${JSON.stringify(p).replace(/"/g,"&quot;")})">🗑</button>
+      </div>
+    </div>`).join("")}`:`<div class="card muted">Пока никого.</div>`}`);
+};
+function pickPartEv(eid){go("participants",eid);}
+async function addParticipants(eid){
+  const ev = getEvent(eid);
+  const names = $("ap-input").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  if(!names.length){toast("Введи имена","err");return;}
+  const before = ev.participants.slice();
+  let added=0, dup=0;
+  names.forEach(n=>{if(ev.participants.includes(n))dup++;else{ev.participants.push(n);added++;}});
+  if(!added){toast("⚠️ Все уже есть в списке","err");return;}
+  if(await save(`✅ Добавлено: ${added}`+(dup?` (пропущено дублей: ${dup})`:""))) go("participants",eid);
+  else ev.participants = before;
+}
+async function renameParticipant(eid, oldName){
+  const ev = getEvent(eid);
+  const newName = prompt(`Новое имя для «${oldName}»:`, oldName);
+  if(!newName||!newName.trim()||newName.trim()===oldName) return;
+  const nn = newName.trim();
+  const snapshot = JSON.stringify(ev);
+  const i = ev.participants.indexOf(oldName);
+  if(i>=0) ev.participants[i]=nn;
+  (ev.rounds||[]).forEach(r=>(r.matches||[]).forEach(m=>{if(m.home===oldName)m.home=nn;if(m.away===oldName)m.away=nn;}));
+  const pt=ev.participant_teams||{}; if(oldName in pt){pt[nn]=pt[oldName];delete pt[oldName];}
+  Object.values(ev.round_teams||{}).forEach(rt=>{if(oldName in rt){rt[nn]=rt[oldName];delete rt[oldName];}});
+  if(ev.dirty_player===oldName) ev.dirty_player=nn;
+  if(await save(`✅ ${oldName} → ${nn}`)) go("participants",eid);
+  else Object.assign(ev, JSON.parse(snapshot));
+}
+async function setTeam(eid, pname){
+  const ev = getEvent(eid);
+  const rounds = ev.rounds||[];
+  let rid = rounds.length?rounds[0].id:null;
+  if(rounds.length>1){
+    const ans = prompt(`В каком круге? Введи номер:\n${rounds.map(r=>`${r.id} — ${r.name}`).join("\n")}`, String(rounds[rounds.length-1].id));
+    if(ans===null) return;
+    rid = parseInt(ans);
+    if(!getRound(ev,rid)){toast("Нет такого круга","err");return;}
+  }
+  const rt = ev.round_teams||{}; const cur = (rt[String(rid)]||{})[pname] || (ev.participant_teams||{})[pname] || "";
+  const team = prompt(`🎮 Команда для «${pname}»${rounds.length>1?` (${getRound(ev,rid).name})`:""}:`, cur);
+  if(team===null||!team.trim()) return;
+  if(!ev.round_teams) ev.round_teams={};
+  if(!ev.round_teams[String(rid)]) ev.round_teams[String(rid)]={};
+  const prev = ev.round_teams[String(rid)][pname];
+  ev.round_teams[String(rid)][pname] = team.trim();
+  if(await save(`✅ ${pname} · 🎮 ${team.trim()}`)) go("participants",eid);
+  else {if(prev===undefined)delete ev.round_teams[String(rid)][pname];else ev.round_teams[String(rid)][pname]=prev;}
+}
+async function removeParticipant(eid, name){
+  const ev = getEvent(eid);
+  if(!confirm(`Удалить «${name}»? Все его матчи тоже будут удалены.`)) return;
+  const snapshot = JSON.stringify(ev);
+  ev.participants = ev.participants.filter(p=>p!==name);
+  if(ev.participant_teams) delete ev.participant_teams[name];
+  let removed=0;
+  (ev.rounds||[]).forEach(r=>{const b=(r.matches||[]).length;r.matches=(r.matches||[]).filter(m=>m.home!==name&&m.away!==name);removed+=b-r.matches.length;});
+  if(await save(`✅ ${name} удалён`+(removed?` (матчей: ${removed})`:""))) go("participants",eid);
+  else Object.assign(ev, JSON.parse(snapshot));
+}
+async function renameEventPrompt(eid){
+  const ev = getEvent(eid);
+  const nn = prompt("Новое название события:", ev.name);
+  if(!nn||!nn.trim()||nn.trim()===ev.name) return;
+  const old = ev.name; ev.name = nn.trim();
+  if(await save(`✅ «${old}» → «${ev.name}»`)) go("events");
+  else ev.name = old;
+}
+
+/* ── ⚽ Добавить матч ── */
+SCREENS.addMatch = (eid) => {
+  const evs = activeEvents();
+  if(!eid){
+    if(!evs.length) return view(`${back()}<div class="section-title">⚽ Добавить матч</div><div class="card muted">Нет активных событий.</div>`);
+    if(evs.length===1) return SCREENS.addMatch(evs[0].id);
+    return eventPicker("⚽ Выбери событие", evs, "pickMatchEv", "go('home')");
+  }
+  const ev = getEvent(eid); if(!ev) return go("home");
+  const ps = ev.participants||[];
+  if(ps.length<2) return view(`${back()}<div class="section-title">⚽ ${esc(ev.name)}</div><div class="card muted">Нужно минимум 2 участника.</div><button class="btn" onclick="go('participants','${ev.id}')">👤 Добавить участников</button>`);
+  const rounds = ev.rounds||[];
+  view(`${back()}<div class="section-title">⚽ ${esc(ev.name)}</div>
+  <div class="card">
+    ${rounds.length>1?`<div class="field"><label>🔄 Круг</label><select id="m-round">${rounds.map((r,i)=>`<option value="${r.id}" ${i===rounds.length-1?"selected":""}>${esc(r.name)}</option>`).join("")}</select></div>`:`<input type="hidden" id="m-round" value="${rounds.length?rounds[0].id:1}">`}
+    <div class="field"><label>Кто первый</label><select id="m-home" onchange="updAwayOptions('${ev.id}')"><option value="">— выбери —</option>${ps.map(p=>`<option>${esc(p)}</option>`).join("")}</select></div>
+    <div class="field"><label>Кто второй</label><select id="m-away"><option value="">— выбери —</option></select></div>
+    <div class="field"><label>📅 Дата</label><input type="text" id="m-date" value="${today()}"></div>
+    <div class="field"><label>Счёт</label>
+      <div class="score-row"><input type="number" id="m-sh" min="0" placeholder="0"><span class="score-vs">:</span><input type="number" id="m-sa" min="0" placeholder="0"></div>
+    </div>
+    <button class="btn full green" onclick="saveMatch('${ev.id}')">✅ Сохранить результат</button>
+  </div>`);
+  if(rounds.length>1) $("m-round").addEventListener("change",()=>updAwayOptions(ev.id));
+};
+function pickMatchEv(eid){go("addMatch",eid);}
+function updAwayOptions(eid){
+  const ev = getEvent(eid);
+  const home = $("m-home").value;
+  const rid = parseInt($("m-round").value);
+  const rnd = getRound(ev,rid);
+  const sel = $("m-away");
+  if(!home){sel.innerHTML='<option value="">— выбери —</option>';return;}
+  // как в боте: в рамках круга исключаем тех, с кем уже сыграл
+  const playedAgainst = new Set((rnd&&rnd.matches||[]).filter(m=>m.played&&(m.home===home||m.away===home)).map(m=>m.home===home?m.away:m.home));
+  const others = (ev.participants||[]).filter(p=>p!==home&&!playedAgainst.has(p));
+  sel.innerHTML = others.length
+    ? '<option value="">— выбери —</option>'+others.map(p=>`<option>${esc(p)}</option>`).join("")
+    : '<option value="">⚠️ уже сыграл со всеми в этом круге</option>';
+}
+async function saveMatch(eid){
+  const ev = getEvent(eid);
+  const home=$("m-home").value, away=$("m-away").value;
+  const sh=parseInt($("m-sh").value), sa=parseInt($("m-sa").value);
+  const date=$("m-date").value.trim()||today();
+  const rid=parseInt($("m-round").value);
+  if(!home||!away){toast("Выбери обоих игроков","err");return;}
+  if(isNaN(sh)||isNaN(sa)||sh<0||sa<0){toast("Введи счёт (например 2:1)","err");return;}
+  let rnd = getRound(ev,rid);
+  if(!rnd){rnd={id:rid,name:`Круг ${rid}`,matches:[]};ev.rounds.push(rnd);}
+  const pair = [home,away].sort().join("|||");
+  if((rnd.matches||[]).some(m=>m.played&&[m.home,m.away].sort().join("|||")===pair)){
+    toast(`⚠️ ${home} и ${away} уже играли в ${rnd.name}!`,"err");return;
+  }
+  rnd.matches.push({home,away,score_home:sh,score_away:sa,played:true,date});
+  const res = sh>sa?`🏆 ${home}`:(sa>sh?`🏆 ${away}`:"🤝 Ничья");
+  if(await save(`✅ ${home} ${sh}:${sa} ${away} · ${res}`)) go("addMatch",eid);
+  else rnd.matches.pop();
+}
+
+/* ── ✏️ Редактировать ── */
+SCREENS.editMenu = () => {
+  view(`${back()}<div class="section-title">✏️ Редактировать</div>
+  <div class="menu-grid">
+    <button class="menu-btn" onclick="go('editMatches')"><span class="mi">⚽</span><span class="ml">Матчи</span><span class="ms">счёт / удалить</span></button>
+    <button class="menu-btn" onclick="go('events')"><span class="mi">📌</span><span class="ml">Название события</span><span class="ms">через список событий</span></button>
+    <button class="menu-btn" onclick="go('participants')"><span class="mi">👤</span><span class="ml">Участники</span><span class="ms">имя / команда / удалить</span></button>
+    <button class="menu-btn" onclick="go('groupsEdit')"><span class="mi">🔗</span><span class="ml">Группы</span><span class="ms">переименовать / разъединить</span></button>
+  </div>`);
+};
+
+SCREENS.editMatches = (eid) => {
+  const evs = activeEvents().filter(e=>allMatches(e).length);
+  if(!eid){
+    if(!evs.length) return view(`${back("go('editMenu')")}<div class="section-title">⚽ Матчи</div><div class="card muted">Нет сыгранных матчей.</div>`);
+    if(evs.length===1) return SCREENS.editMatches(evs[0].id);
+    return eventPicker("⚽ Выбери событие", evs, "pickEditMatchEv", "go('editMenu')");
+  }
+  const ev = getEvent(eid); if(!ev) return go("editMenu");
+  const ps = new Set(ev.participants||[]);
+  const items = [];
+  (ev.rounds||[]).forEach((r,ri)=>(r.matches||[]).forEach((m,mi)=>{
+    if(m.played&&ps.has(m.home)&&ps.has(m.away)) items.push({ri,mi,rname:r.name,m});
+  }));
+  view(`${back("go('editMenu')")}<div class="section-title">⚽ ${esc(ev.name)}</div>
+    ${items.length?items.map(({ri,mi,rname,m})=>`<div class="list-item" style="cursor:default;">
+      <div class="li-main">
+        <div class="li-title">${esc(m.home)} <span style="color:var(--primary);">${m.score_home}:${m.score_away}</span> ${esc(m.away)}</div>
+        <div class="li-sub">${esc(rname)} · 📅 ${esc(m.date||"")}</div>
+      </div>
+      <div class="li-actions">
+        <button class="icon-btn" title="Изменить счёт" onclick="editScore('${ev.id}',${ri},${mi})">✏️</button>
+        <button class="icon-btn danger" title="Удалить матч" onclick="deleteMatch('${ev.id}',${ri},${mi})">🗑</button>
+      </div>
+    </div>`).join(""):`<div class="card muted">Нет сыгранных матчей.</div>`}`);
+};
+function pickEditMatchEv(eid){go("editMatches",eid);}
+async function editScore(eid,ri,mi){
+  const ev = getEvent(eid);
+  const m = ev.rounds[ri].matches[mi];
+  const ans = prompt(`${m.home} vs ${m.away}\nНовый счёт (формат 2:1):`, `${m.score_home}:${m.score_away}`);
+  if(ans===null) return;
+  const t = ans.trim().replace(/-/g,":").replace(/\s/g,"");
+  const parts = t.split(":");
+  const sh = parseInt(parts[0]), sa = parseInt(parts[1]);
+  if(parts.length!==2||isNaN(sh)||isNaN(sa)||sh<0||sa<0){toast("Формат: 2:1","err");return;}
+  const old = `${m.score_home}:${m.score_away}`;
+  m.score_home=sh; m.score_away=sa;
+  if(await save(`✅ ${m.home} ${old} → ${sh}:${sa} ${m.away}`)) go("editMatches",eid);
+  else {const [osh,osa]=old.split(":").map(Number);m.score_home=osh;m.score_away=osa;}
+}
+async function deleteMatch(eid,ri,mi){
+  const ev = getEvent(eid);
+  const m = ev.rounds[ri].matches[mi];
+  if(!confirm(`Удалить матч ${m.home} ${m.score_home}:${m.score_away} ${m.away} (${m.date||""})?`)) return;
+  const removed = ev.rounds[ri].matches.splice(mi,1)[0];
+  if(await save("✅ Матч удалён")) go("editMatches",eid);
+  else ev.rounds[ri].matches.splice(mi,0,removed);
+}
+
+/* ── 🔄 Круги ── */
+SCREENS.roundsMenu = (eid) => {
+  const evs = activeEvents();
+  if(!eid){
+    if(!evs.length) return view(`${back()}<div class="section-title">🔄 Круги</div><div class="card muted">Нет активных событий.</div>`);
+    if(evs.length===1) return SCREENS.roundsMenu(evs[0].id);
+    return eventPicker("🔄 Выбери событие", evs, "pickRoundsEv", "go('home')");
+  }
+  const ev = getEvent(eid); if(!ev) return go("home");
+  const rounds = ev.rounds||[];
+  view(`${back()}<div class="section-title">🔄 ${esc(ev.name)}</div>
+    ${rounds.map(r=>`<div class="list-item" style="cursor:default;">
+      <div class="li-main"><div class="li-title">${esc(r.name)}</div><div class="li-sub">${(r.matches||[]).length} матчей</div></div>
+      ${rounds.length>1?`<button class="icon-btn danger" title="Удалить круг" onclick="deleteRound('${ev.id}',${r.id})">🗑</button>`:""}
+    </div>`).join("")}
+    <button class="btn full" style="margin-top:6px;" onclick="addRound('${ev.id}')">➕ Добавить круг</button>`);
+};
+function pickRoundsEv(eid){go("roundsMenu",eid);}
+async function addRound(eid){
+  const ev = getEvent(eid);
+  const rounds = ev.rounds||[];
+  const rid = Math.max(0,...rounds.map(r=>r.id))+1;
+  rounds.push({id:rid,name:`Круг ${rid}`,matches:[]});
+  ev.rounds = rounds;
+  if(await save(`✅ Круг ${rid} добавлен`)) go("roundsMenu",eid);
+  else ev.rounds = rounds.filter(r=>r.id!==rid);
+}
+async function deleteRound(eid,rid){
+  const ev = getEvent(eid);
+  if((ev.rounds||[]).length<=1){toast("Нельзя удалить единственный круг","err");return;}
+  const rnd = getRound(ev,rid); if(!rnd) return;
+  if(!confirm(`Удалить «${rnd.name}» вместе с ${(rnd.matches||[]).length} матчами?`)) return;
+  const snapshot = JSON.stringify(ev);
+  ev.rounds = ev.rounds.filter(r=>r.id!==rid);
+  if(ev.round_teams) delete ev.round_teams[String(rid)];
+  if(await save(`✅ ${rnd.name} удалён`)) go("roundsMenu",eid);
+  else Object.assign(ev, JSON.parse(snapshot));
+}
+
+/* ── 😈 Грязный игрок ── */
+SCREENS.dirty = (eid) => {
+  const evs = activeEvents().filter(e=>(e.participants||[]).length);
+  if(!eid){
+    if(!evs.length) return view(`${back()}<div class="section-title">😈 Грязный игрок</div><div class="card muted">Нет активных событий с участниками.</div>`);
+    if(evs.length===1) return SCREENS.dirty(evs[0].id);
+    return eventPicker("😈 Выбери событие", evs, "pickDirtyEv", "go('home')");
+  }
+  const ev = getEvent(eid); if(!ev) return go("home");
+  view(`${back()}<div class="section-title">😈 ${esc(ev.name)}</div>
+  <div class="card">
+    <div class="muted" style="margin-bottom:10px;">Сейчас: ${ev.dirty_player?`<b>${esc(ev.dirty_label||"Грязный игрок")}: ${esc(ev.dirty_player)}</b>`:"не установлен"}</div>
+    <div class="field"><label>Игрок</label><select id="dp-player">${(ev.participants||[]).map(p=>`<option ${p===ev.dirty_player?"selected":""}>${esc(p)}</option>`).join("")}</select></div>
+    <div class="field"><label>Название карточки</label><input type="text" id="dp-label" value="${esc(ev.dirty_label||"Грязный игрок")}" placeholder="Грязный игрок, Антигерой…"></div>
+    <div class="btn-row">
+      <button class="btn" onclick="setDirty('${ev.id}')">✅ Сохранить</button>
+      ${ev.dirty_player?`<button class="btn danger" onclick="clearDirty('${ev.id}')">🗑 Убрать карточку</button>`:""}
+    </div>
+  </div>`);
+};
+function pickDirtyEv(eid){go("dirty",eid);}
+async function setDirty(eid){
+  const ev = getEvent(eid);
+  const p = $("dp-player").value, l = $("dp-label").value.trim()||"Грязный игрок";
+  const prev = {dp:ev.dirty_player, dl:ev.dirty_label};
+  ev.dirty_player=p; ev.dirty_label=l;
+  if(await save(`✅ ${l}: ${p}`)) go("dirty",eid);
+  else {ev.dirty_player=prev.dp;ev.dirty_label=prev.dl;}
+}
+async function clearDirty(eid){
+  const ev = getEvent(eid);
+  const prev = {dp:ev.dirty_player, dl:ev.dirty_label};
+  delete ev.dirty_player; delete ev.dirty_label;
+  if(await save("✅ Карточка убрана")) go("dirty",eid);
+  else {ev.dirty_player=prev.dp;if(prev.dl!==undefined)ev.dirty_label=prev.dl;}
+}
+
+/* ── 📢 Бегущая строка ── */
+SCREENS.ticker = () => {
+  const mode = DATA.ticker_mode||"";
+  const custom = DATA.ticker||"";
+  const modeLbl = (TICKER_MODES.find(([v])=>v===mode)||[])[1] || mode;
+  const cur = mode==="custom"&&custom ? `Свой текст: «${esc(custom)}»` : mode ? "Авто: "+modeLbl : "не установлена";
+  view(`${back()}<div class="section-title">📢 Бегущая строка</div>
+  <div class="card">
+    <div class="muted" style="margin-bottom:12px;">Сейчас: <b>${cur}</b><br>Авто-режим обновляется при каждом матче.</div>
+    ${TICKER_MODES.map(([v,l])=>`<button class="opt ${mode===v?"active":""}" style="display:block;width:100%;margin-bottom:6px;" onclick="setTickerMode('${v}')">${mode===v?"✅ ":""}${l}</button>`).join("")}
+    <div class="field" style="margin-top:12px;"><label>✏️ Свой текст</label><input type="text" id="tkr-text" value="${mode==="custom"?esc(custom):""}" placeholder="СЛЕДУЮЩИЙ ТУР 10.04.2026"></div>
+    <div class="btn-row">
+      <button class="btn" onclick="setTickerCustom()">✅ Установить текст</button>
+      ${mode?`<button class="btn danger" onclick="clearTicker()">🗑 Убрать строку</button>`:""}
+    </div>
+  </div>`);
+};
+async function setTickerMode(m){
+  const prev={mode:DATA.ticker_mode,text:DATA.ticker};
+  DATA.ticker_mode=m; delete DATA.ticker;
+  if(await save("✅ Установлен авто-режим")) go("ticker");
+  else {DATA.ticker_mode=prev.mode;if(prev.text!==undefined)DATA.ticker=prev.text;}
+}
+async function setTickerCustom(){
+  const t = $("tkr-text").value.trim().toUpperCase();
+  if(!t){toast("Введи текст","err");return;}
+  const prev={mode:DATA.ticker_mode,text:DATA.ticker};
+  DATA.ticker=t; DATA.ticker_mode="custom";
+  if(await save("✅ Строка установлена")) go("ticker");
+  else {DATA.ticker_mode=prev.mode;DATA.ticker=prev.text;if(prev.text===undefined)delete DATA.ticker;}
+}
+async function clearTicker(){
+  const prev={mode:DATA.ticker_mode,text:DATA.ticker};
+  delete DATA.ticker; delete DATA.ticker_mode;
+  if(await save("✅ Строка убрана")) go("ticker");
+  else {if(prev.mode!==undefined)DATA.ticker_mode=prev.mode;if(prev.text!==undefined)DATA.ticker=prev.text;}
+}
+
+/* ── 🔗 Группы (объединение событий) ── */
+let GRP_SELECTED = [];
+SCREENS.groups = () => {
+  GRP_SELECTED = [];
+  const evs = DATA.events||[];
+  if(evs.length<2) return view(`${back()}<div class="section-title">🔗 Объединить события</div><div class="card muted">Нужно минимум 2 события.</div>`);
+  view(`${back()}<div class="section-title">🔗 Объединить события</div>
+  <div class="card">
+    <div class="muted" style="margin-bottom:10px;">Выбери минимум 2 события — на сайте появится общая объединённая таблица.</div>
+    <div id="grp-list">${evs.map(e=>`<button class="opt" style="display:block;width:100%;margin-bottom:6px;" data-eid="${e.id}" onclick="toggleGrpEv(this)">${esc(e.name)}</button>`).join("")}</div>
+    <div class="field" style="margin-top:10px;"><label>Название группы (пусто = автоматически)</label><input type="text" id="grp-name" placeholder="Общая таблица"></div>
+    <button class="btn full" onclick="createGroup()">✅ Создать группу</button>
+  </div>
+  ${(DATA.groups||[]).length?`<div class="section-title" style="font-size:15px;">Существующие группы</div>
+    ${DATA.groups.map(g=>`<div class="list-item" style="cursor:default;">
+      <div class="li-main"><div class="li-title">🔗 ${esc(g.name)}</div>
+      <div class="li-sub">${(g.event_ids||[]).map(id=>{const e=getEvent(id);return e?esc(e.name):id;}).join(" + ")}</div></div>
+      <div class="li-actions">
+        <button class="icon-btn" title="Переименовать" onclick="renameGroup('${g.id}')">✏️</button>
+        <button class="icon-btn danger" title="Разъединить" onclick="deleteGroup('${g.id}')">🔓</button>
+      </div>
+    </div>`).join("")}`:""}`);
+};
+SCREENS.groupsEdit = SCREENS.groups;
+function toggleGrpEv(btn){
+  const eid = btn.dataset.eid;
+  const i = GRP_SELECTED.indexOf(eid);
+  if(i>=0){GRP_SELECTED.splice(i,1);btn.classList.remove("active");}
+  else{GRP_SELECTED.push(eid);btn.classList.add("active");}
+}
+async function createGroup(){
+  if(GRP_SELECTED.length<2){toast("Выбери минимум 2 события","err");return;}
+  const names = GRP_SELECTED.map(id=>getEvent(id)).filter(Boolean).map(e=>e.name);
+  const name = $("grp-name").value.trim() || names.join(" + ")+" — Общая";
+  if(!DATA.groups) DATA.groups=[];
+  DATA.groups.push({id:genGroupId(), name, event_ids:GRP_SELECTED.slice()});
+  if(await save(`✅ Группа «${name}» создана`)) go("groups");
+  else DATA.groups.pop();
+}
+async function renameGroup(gid){
+  const g = (DATA.groups||[]).find(g=>g.id===gid); if(!g) return;
+  const nn = prompt("Новое название группы:", g.name);
+  if(!nn||!nn.trim()||nn.trim()===g.name) return;
+  const old=g.name; g.name=nn.trim();
+  if(await save(`✅ «${old}» → «${g.name}»`)) go("groups");
+  else g.name=old;
+}
+async function deleteGroup(gid){
+  const g = (DATA.groups||[]).find(g=>g.id===gid); if(!g) return;
+  if(!confirm(`Разъединить группу «${g.name}»? События останутся нетронутыми.`)) return;
+  const before = DATA.groups.slice();
+  DATA.groups = DATA.groups.filter(x=>x.id!==gid);
+  if(await save(`✅ Группа «${g.name}» удалена`)) go("groups");
+  else DATA.groups = before;
+}
+
+/* ── 🏁 Завершить ── */
+SCREENS.finish = () => {
+  const evs = activeEvents();
+  if(!evs.length) return view(`${back()}<div class="section-title">🏁 Завершить событие</div><div class="card muted">Нет активных событий.</div>`);
+  eventPicker("🏁 Выбери событие для завершения", evs, "finishEvent", "go('home')");
+};
+async function finishEvent(eid){
+  const ev = getEvent(eid);
+  if(!confirm(`Завершить «${ev.name}»? Событие станет неактивным.`)) return;
+  ev.active = false;
+  if(await save(`🏁 «${ev.name}» завершено`)) go("standings",eid);
+  else ev.active = true;
+}
+
+/* ── 🗑 Удалить событие ── */
+SCREENS.deleteEvent = () => {
+  const evs = DATA.events||[];
+  if(!evs.length) return view(`${back()}<div class="section-title">🗑 Удалить событие</div><div class="card muted">Событий нет.</div>`);
+  eventPicker("🗑 Выбери событие для удаления", evs, "deleteEventConfirm", "go('home')");
+};
+async function deleteEventConfirm(eid){
+  const ev = getEvent(eid);
+  if(!confirm(`УДАЛИТЬ «${ev.name}» безвозвратно?\nВсе участники и матчи будут потеряны.`)) return;
+  const snapEvents = DATA.events.slice(), snapGroups = (DATA.groups||[]).slice();
+  DATA.events = DATA.events.filter(e=>e.id!==eid);
+  const removedGroups = (DATA.groups||[]).filter(g=>(g.event_ids||[]).includes(eid)).map(g=>g.name);
+  if(DATA.groups) DATA.groups = DATA.groups.filter(g=>!(g.event_ids||[]).includes(eid));
+  if(await save(`✅ «${ev.name}» удалено`+(removedGroups.length?` (и группы: ${removedGroups.join(", ")})`:""))) go("home");
+  else {DATA.events=snapEvents;DATA.groups=snapGroups;}
+}
+
+/* ── 👑 Админы бота ── */
+SCREENS.admins = () => {
+  const admins = DATA.admins||[];
+  view(`${back()}<div class="section-title">👑 Админы бота</div>
+  <div class="card">
+    <div class="muted" style="margin-bottom:10px;">Telegram ID пользователей с правами админа в боте. Свой ID можно узнать у @userinfobot.</div>
+    ${admins.map(a=>`<div class="list-item" style="cursor:default;">
+      <div class="li-main"><div class="li-title">ID: ${a}</div></div>
+      ${admins.length>1?`<button class="icon-btn danger" onclick="removeAdmin(${a})">🗑</button>`:""}
+    </div>`).join("")}
+    <div class="field" style="margin-top:10px;"><label>Добавить админа (числовой ID)</label><input type="number" id="adm-id" placeholder="123456789"></div>
+    <button class="btn full" onclick="addAdmin()">➕ Добавить</button>
+  </div>`);
+};
+async function addAdmin(){
+  const id = parseInt($("adm-id").value);
+  if(isNaN(id)){toast("Введи числовой ID","err");return;}
+  if(!DATA.admins) DATA.admins=[];
+  if(DATA.admins.includes(id)){toast("Уже админ","err");return;}
+  DATA.admins.push(id);
+  if(await save(`✅ Админ ${id} добавлен`)) go("admins");
+  else DATA.admins = DATA.admins.filter(a=>a!==id);
+}
+async function removeAdmin(id){
+  if(!confirm(`Убрать админа ${id}?`)) return;
+  const before = DATA.admins.slice();
+  DATA.admins = DATA.admins.filter(a=>a!==id);
+  if(await save(`✅ Админ ${id} удалён`)) go("admins");
+  else DATA.admins = before;
+}
+
+/* ── 💣 Сброс ── */
+SCREENS.reset = () => {
+  view(`${back()}<div class="section-title">💣 Полный сброс</div>
+  <div class="card">
+    <div class="muted" style="margin-bottom:12px;">Удаляет <b>ВСЕ события, матчи и группы</b>. Список админов сохраняется. Действие необратимо!</div>
+    <div class="field"><label>Для подтверждения введи: УДАЛИТЬ</label><input type="text" id="reset-confirm" placeholder="УДАЛИТЬ"></div>
+    <button class="btn danger full" onclick="doReset()">💣 Очистить все данные</button>
+  </div>`);
+};
+async function doReset(){
+  if($("reset-confirm").value.trim()!=="УДАЛИТЬ"){toast("Введи слово УДАЛИТЬ для подтверждения","err");return;}
+  const snapshot = JSON.stringify(DATA);
+  const admins = DATA.admins||[2070550];
+  DATA = {events:[], admins};
+  if(await save("✅ Все данные очищены")) go("home");
+  else DATA = JSON.parse(snapshot);
+}
+
+/* ══════════ СТАРТ ══════════ */
+applyTheme(localStorage.getItem("shym_admin_theme")||"dark");
+(async ()=>{
+  if(TOKEN){
+    try{ await apiLoad(); go("home"); return; }
+    catch(e){ if(e.message!=="AUTH") toast("⚠️ "+e.message,"err"); }
+  }
+  go("login");
+})();
+</script>
+</body>
+</html>
